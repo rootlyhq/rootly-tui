@@ -281,16 +281,16 @@ func (m IncidentsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("Teams", strings.Join(inc.Teams, ", ")))
 	}
 
-	// External links
+	// External links (clickable)
 	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" {
 		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Links"))
 		b.WriteString("\n")
 		if inc.SlackChannelURL != "" {
-			b.WriteString(m.renderDetailRow("Slack", inc.SlackChannelURL))
+			b.WriteString(m.renderLinkRow("Slack", inc.SlackChannelURL))
 		}
 		if inc.JiraIssueURL != "" {
-			b.WriteString(m.renderDetailRow("Jira", inc.JiraIssueURL))
+			b.WriteString(m.renderLinkRow("Jira", inc.JiraIssueURL))
 		}
 	}
 
@@ -300,6 +300,10 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 func (m IncidentsModel) renderDetailRow(label, value string) string {
 	return styles.DetailLabel.Render(label+":") + " " + styles.DetailValue.Render(value) + "\n"
+}
+
+func (m IncidentsModel) renderLinkRow(label, url string) string {
+	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, url) + "\n"
 }
 
 func formatTime(t time.Time) string {

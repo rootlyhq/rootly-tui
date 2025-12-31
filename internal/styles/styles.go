@@ -428,3 +428,18 @@ func AlertSourceName(source string) string {
 func RenderHelpItem(key, desc string) string {
 	return HelpKey.Render(key) + " " + HelpDesc.Render(desc)
 }
+
+// RenderLink renders a clickable hyperlink using OSC 8 escape sequences
+// Most modern terminals support this (iTerm2, Kitty, Windows Terminal, etc.)
+func RenderLink(url, text string) string {
+	if text == "" {
+		text = url
+	}
+	// OSC 8 hyperlink format: \x1b]8;;URL\x1b\\TEXT\x1b]8;;\x1b\\
+	return "\x1b]8;;" + url + "\x1b\\" + Info.Underline(true).Render(text) + "\x1b]8;;\x1b\\"
+}
+
+// RenderURL renders a URL as a clickable link (URL is both the link and display text)
+func RenderURL(url string) string {
+	return RenderLink(url, url)
+}

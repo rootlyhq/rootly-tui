@@ -269,10 +269,10 @@ func (m AlertsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("Groups", strings.Join(alert.Groups, ", ")))
 	}
 
-	// External URL
+	// External URL (clickable)
 	if alert.ExternalURL != "" {
 		b.WriteString("\n")
-		b.WriteString(m.renderDetailRow("External URL", alert.ExternalURL))
+		b.WriteString(m.renderLinkRow("External URL", alert.ExternalURL))
 	}
 
 	// Labels (sorted for consistent display)
@@ -296,6 +296,10 @@ func (m AlertsModel) renderDetail(height int) string {
 
 func (m AlertsModel) renderDetailRow(label, value string) string {
 	return styles.DetailLabel.Render(label+":") + " " + styles.DetailValue.Render(value) + "\n"
+}
+
+func (m AlertsModel) renderLinkRow(label, url string) string {
+	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, url) + "\n"
 }
 
 func formatAlertTime(t time.Time) string {
