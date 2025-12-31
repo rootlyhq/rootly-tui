@@ -128,8 +128,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Always allow quit
+		// Handle quit - if on setup screen with valid config, return to main instead of exiting
 		if key.Matches(msg, m.keys.Quit) {
+			if m.screen == ScreenSetup && m.cfg != nil && m.cfg.IsValid() {
+				// Return to main screen
+				m.screen = ScreenMain
+				return m, nil
+			}
 			return m, tea.Quit
 		}
 
