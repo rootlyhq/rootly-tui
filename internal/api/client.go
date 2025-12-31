@@ -266,9 +266,9 @@ func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult,
 	for _, d := range result.Data {
 		incident := Incident{
 			ID:      d.ID,
-			Title:   d.Attributes.Title,
-			Summary: d.Attributes.Summary,
-			Status:  d.Attributes.Status,
+			Title:   strings.TrimSpace(d.Attributes.Title),
+			Summary: strings.TrimSpace(d.Attributes.Summary),
+			Status:  strings.TrimSpace(d.Attributes.Status),
 			Kind:    d.Attributes.Kind,
 		}
 
@@ -433,8 +433,8 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 	for _, d := range result.Data {
 		alert := Alert{
 			ID:      d.ID,
-			Summary: d.Attributes.Summary,
-			Status:  d.Attributes.Status,
+			Summary: strings.TrimSpace(d.Attributes.Summary),
+			Status:  strings.TrimSpace(d.Attributes.Status),
 			Labels:  make(map[string]string),
 		}
 
@@ -443,10 +443,10 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		}
 
 		if d.Attributes.ShortID != nil {
-			alert.ShortID = *d.Attributes.ShortID
+			alert.ShortID = strings.TrimSpace(*d.Attributes.ShortID)
 		}
 		if d.Attributes.Description != nil {
-			alert.Description = *d.Attributes.Description
+			alert.Description = strings.TrimSpace(*d.Attributes.Description)
 		}
 		if d.Attributes.ExternalURL != nil {
 			alert.ExternalURL = *d.Attributes.ExternalURL
