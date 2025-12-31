@@ -574,7 +574,7 @@ func TestRenderMarkdownNoLeftMargin(t *testing.T) {
 	result := RenderMarkdown(text, 80)
 
 	// The result should not start with spaces (no left margin)
-	if len(result) > 0 && result[0] == ' ' {
+	if result != "" && result[0] == ' ' {
 		t.Errorf("RenderMarkdown should not have left margin, got %q", result)
 	}
 }

@@ -73,7 +73,7 @@ var LanguageNames = map[Language]string{
 	LangHindi:      "हिन्दी",
 	LangArabic:     "العربية",
 	LangBengali:    "বাংলা",
-	LangPortuguese: "Portugues",
+	LangPortuguese: "Português",
 	LangRussian:    "Русский",
 	LangJapanese:   "日本語",
 }

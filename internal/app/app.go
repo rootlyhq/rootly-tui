@@ -184,6 +184,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.setup.Init()
 
 		case key.Matches(msg, m.keys.Tab):
+			// Clear focus when switching tabs
+			m.incidents.SetDetailFocused(false)
+			m.alerts.SetDetailFocused(false)
 			if m.activeTab == TabIncidents {
 				m.activeTab = TabAlerts
 			} else {
@@ -229,18 +232,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case key.Matches(msg, m.keys.Enter):
-			// Fetch detailed data for selected item
+			// Fetch detailed data for selected item, or focus detail pane for scrolling if already loaded
 			if m.activeTab == TabIncidents {
 				inc := m.incidents.SelectedIncident()
-				if inc != nil && !inc.DetailLoaded {
-					m.incidents.SetDetailLoading(true)
-					return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, inc.UpdatedAt, m.incidents.SelectedIndex()))
+				if inc != nil {
+					if !inc.DetailLoaded {
+						m.incidents.SetDetailLoading(true)
+						return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, inc.UpdatedAt, m.incidents.SelectedIndex()))
+					}
+					// Detail already loaded, focus the detail pane for scrolling
+					m.incidents.SetDetailFocused(true)
 				}
 			} else {
 				alert := m.alerts.SelectedAlert()
-				if alert != nil && !alert.DetailLoaded {
-					m.alerts.SetDetailLoading(true)
-					return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, alert.UpdatedAt, m.alerts.SelectedIndex()))
+				if alert != nil {
+					if !alert.DetailLoaded {
+						m.alerts.SetDetailLoading(true)
+						return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, alert.UpdatedAt, m.alerts.SelectedIndex()))
+					}
+					// Detail already loaded, focus the detail pane for scrolling
+					m.alerts.SetDetailFocused(true)
 				}
 			}
 			return m, nil
@@ -374,6 +385,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if msg.Incident != nil {
 			m.incidents.UpdateIncidentDetail(msg.Index, msg.Incident)
 			m.errorMsg = ""
+			// Auto-focus detail pane for scrolling after load completes
+			m.incidents.SetDetailFocused(true)
 		}
 		return m, nil
 
@@ -384,6 +397,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if msg.Alert != nil {
 			m.alerts.UpdateAlertDetail(msg.Index, msg.Alert)
 			m.errorMsg = ""
+			// Auto-focus detail pane for scrolling after load completes
+			m.alerts.SetDetailFocused(true)
 		}
 		return m, nil
 

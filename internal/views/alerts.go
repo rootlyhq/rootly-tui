@@ -57,15 +57,14 @@ type AlertsModel struct {
 	// Detail viewport for scrollable content
 	detailViewport      viewport.Model
 	detailViewportReady bool
-	lastDisplayedCursor int // Track which item is displayed to reset scroll on change
+	detailFocused       bool // Whether detail pane has focus (for scrolling)
 }
 
 func NewAlertsModel() AlertsModel {
 	return AlertsModel{
-		alerts:              []api.Alert{},
-		cursor:              0,
-		currentPage:         1,
-		lastDisplayedCursor: -1, // Force initial content update
+		alerts:      []api.Alert{},
+		cursor:      0,
+		currentPage: 1,
 	}
 }
 
@@ -79,51 +78,77 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// When detail is focused, handle scrolling keys
+		if m.detailFocused {
+			switch msg.String() {
+			case "esc", "q":
+				// Return focus to list
+				m.detailFocused = false
+				return m, nil
+			case "j", "down":
+				if m.detailViewportReady {
+					m.detailViewport.ScrollDown(3)
+				}
+				return m, nil
+			case "k", "up":
+				if m.detailViewportReady {
+					m.detailViewport.ScrollUp(3)
+				}
+				return m, nil
+			case "g":
+				if m.detailViewportReady {
+					m.detailViewport.GotoTop()
+				}
+				return m, nil
+			case "G":
+				if m.detailViewportReady {
+					m.detailViewport.GotoBottom()
+				}
+				return m, nil
+			case "d", "pgdown":
+				if m.detailViewportReady {
+					m.detailViewport.HalfPageDown()
+				}
+				return m, nil
+			case "u", "pgup":
+				if m.detailViewportReady {
+					m.detailViewport.HalfPageUp()
+				}
+				return m, nil
+			}
+			// Forward other keys to viewport
+			if m.detailViewportReady {
+				m.detailViewport, cmd = m.detailViewport.Update(msg)
+				cmds = append(cmds, cmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
+
+		// Normal list navigation when detail is not focused
 		switch msg.String() {
 		case "j", "down":
 			if m.cursor < len(m.alerts)-1 {
 				m.cursor++
+				m.updateViewportContent() // Update content when cursor changes
 			}
 			return m, nil
 
 		case "k", "up":
 			if m.cursor > 0 {
 				m.cursor--
+				m.updateViewportContent() // Update content when cursor changes
 			}
 			return m, nil
 
 		case "g":
 			m.cursor = 0
+			m.updateViewportContent()
 			return m, nil
 
 		case "G":
 			if len(m.alerts) > 0 {
 				m.cursor = len(m.alerts) - 1
-			}
-			return m, nil
-
-		// Detail viewport scrolling (Shift+j/k = J/K)
-		case "J":
-			if m.detailViewportReady {
-				m.detailViewport.ScrollDown(3)
-			}
-			return m, nil
-
-		case "K":
-			if m.detailViewportReady {
-				m.detailViewport.ScrollUp(3)
-			}
-			return m, nil
-
-		case "pgdown":
-			if m.detailViewportReady {
-				m.detailViewport.HalfPageDown()
-			}
-			return m, nil
-
-		case "pgup":
-			if m.detailViewportReady {
-				m.detailViewport.HalfPageUp()
+				m.updateViewportContent()
 			}
 			return m, nil
 		}
@@ -132,15 +157,40 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateDimensions()
+		m.updateViewportContent()
 	}
 
-	// Forward all messages to viewport (handles mouse wheel, arrow keys, pgup/pgdown, etc.)
-	if m.detailViewportReady {
+	// Forward mouse messages to viewport for scrolling
+	if m.detailViewportReady && m.detailFocused {
 		m.detailViewport, cmd = m.detailViewport.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+// updateViewportContent updates the viewport content when data changes
+func (m *AlertsModel) updateViewportContent() {
+	if !m.detailViewportReady {
+		return
+	}
+	alert := m.SelectedAlert()
+	if alert == nil {
+		return
+	}
+	content := m.generateDetailContent(alert)
+	m.detailViewport.SetContent(content)
+	m.detailViewport.GotoTop()
+}
+
+// SetDetailFocused sets focus on the detail pane for scrolling
+func (m *AlertsModel) SetDetailFocused(focused bool) {
+	m.detailFocused = focused
+}
+
+// IsDetailFocused returns whether the detail pane has focus
+func (m AlertsModel) IsDetailFocused() bool {
+	return m.detailFocused
 }
 
 func (m *AlertsModel) updateDimensions() {
@@ -184,6 +234,7 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 	if m.cursor >= len(alerts) && len(alerts) > 0 {
 		m.cursor = len(alerts) - 1
 	}
+	m.updateViewportContent()
 }
 
 func (m *AlertsModel) SetLoading(loading bool) {
@@ -254,6 +305,11 @@ func (m AlertsModel) IsDetailLoading() bool {
 func (m *AlertsModel) UpdateAlertDetail(index int, alert *api.Alert) {
 	if index >= 0 && index < len(m.alerts) && alert != nil {
 		m.alerts[index] = *alert
+		// Update viewport content without resetting scroll (detail just loaded)
+		if m.detailViewportReady && index == m.cursor {
+			content := m.generateDetailContent(alert)
+			m.detailViewport.SetContent(content)
+		}
 	}
 }
 
@@ -376,7 +432,7 @@ func (m AlertsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
-func (m *AlertsModel) renderDetail(height int) string {
+func (m AlertsModel) renderDetail(height int) string {
 	alert := m.SelectedAlert()
 	if alert == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
@@ -384,23 +440,9 @@ func (m *AlertsModel) renderDetail(height int) string {
 		)
 	}
 
-	// Generate detail content
-	content := m.generateDetailContent(alert)
-
-	// Update viewport content if cursor changed or content needs refresh
-	if m.cursor != m.lastDisplayedCursor || !m.detailViewportReady {
-		m.lastDisplayedCursor = m.cursor
-		if m.detailViewportReady {
-			m.detailViewport.SetContent(content)
-			m.detailViewport.GotoTop()
-		}
-	} else if m.detailViewportReady {
-		// Update content without resetting scroll position (for detail loading)
-		m.detailViewport.SetContent(content)
-	}
-
 	// Render with or without viewport
 	if !m.detailViewportReady {
+		content := m.generateDetailContent(alert)
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(content)
 	}
 
@@ -408,7 +450,11 @@ func (m *AlertsModel) renderDetail(height int) string {
 	var footer string
 	if m.detailViewport.TotalLineCount() > m.detailViewport.VisibleLineCount() {
 		scrollPercent := int(m.detailViewport.ScrollPercent() * 100)
-		footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (J/K or mouse scroll) ───", scrollPercent))
+		if m.detailFocused {
+			footer = styles.Primary.Render(fmt.Sprintf("─── %d%% (j/k scroll, Esc to exit) ───", scrollPercent))
+		} else {
+			footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (Enter to scroll) ───", scrollPercent))
+		}
 	}
 
 	// Use viewport for rendering
@@ -417,7 +463,12 @@ func (m *AlertsModel) renderDetail(height int) string {
 		viewportContent = viewportContent + "\n" + footer
 	}
 
-	return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(viewportContent)
+	// Use focused style when detail has focus
+	containerStyle := styles.DetailContainer
+	if m.detailFocused {
+		containerStyle = styles.DetailContainerFocused
+	}
+	return containerStyle.Width(m.detailWidth).Height(height).Render(viewportContent)
 }
 
 func (m AlertsModel) generateDetailContent(alert *api.Alert) string {

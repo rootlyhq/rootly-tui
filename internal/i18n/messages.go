@@ -79,15 +79,15 @@ const (
 	MsgPressToClose      = "press_to_close"
 
 	// Logs view
-	MsgDebugLogs            = "debug_logs"
-	MsgNoLogsYet            = "no_logs_yet"
-	MsgShowingLines         = "showing_lines"
-	MsgOf                   = "of"
-	MsgCopied               = "copied"
-	MsgClipboardUnavail     = "clipboard_unavailable"
-	MsgLogsHelp             = "logs_help"
-	MsgLogsHelpNoClipboard  = "logs_help_no_clipboard"
-	MsgLoadingDetails       = "loading_details"
+	MsgDebugLogs           = "debug_logs"
+	MsgNoLogsYet           = "no_logs_yet"
+	MsgShowingLines        = "showing_lines"
+	MsgOf                  = "of"
+	MsgCopied              = "copied"
+	MsgClipboardUnavail    = "clipboard_unavailable"
+	MsgLogsHelp            = "logs_help"
+	MsgLogsHelpNoClipboard = "logs_help_no_clipboard"
+	MsgLoadingDetails      = "loading_details"
 
 	// Help bar items
 	MsgNavigate = "navigate"
