@@ -52,8 +52,8 @@ type AlertsModel struct {
 	hasPrev     bool
 	// Loading spinner (passed from app)
 	spinnerView string
-	// Detail loading state
-	detailLoading bool
+	// Detail loading state - tracks which alert ID is currently loading (empty = not loading)
+	detailLoadingID string
 	// Detail viewport for scrollable content
 	detailViewport      viewport.Model
 	detailViewportReady bool
@@ -294,12 +294,21 @@ func (m AlertsModel) SelectedIndex() int {
 	return m.cursor
 }
 
-func (m *AlertsModel) SetDetailLoading(loading bool) {
-	m.detailLoading = loading
+func (m *AlertsModel) SetDetailLoading(id string) {
+	m.detailLoadingID = id
+}
+
+func (m *AlertsModel) ClearDetailLoading() {
+	m.detailLoadingID = ""
 }
 
 func (m AlertsModel) IsDetailLoading() bool {
-	return m.detailLoading
+	return m.detailLoadingID != ""
+}
+
+// IsLoadingAlert returns true if the specified alert ID is currently loading
+func (m AlertsModel) IsLoadingAlert(id string) bool {
+	return m.detailLoadingID == id
 }
 
 func (m *AlertsModel) UpdateAlertDetail(index int, alert *api.Alert) {
@@ -573,9 +582,9 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	}
 
 	// Show loading spinner or hint if detail not loaded
-	if m.detailLoading {
+	if m.IsLoadingAlert(alert.ID) {
 		b.WriteString("\n")
-		b.WriteString(fmt.Sprintf("%s %s", m.spinnerView, i18n.T("loading_details")))
+		_, _ = fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
 	} else if !alert.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))

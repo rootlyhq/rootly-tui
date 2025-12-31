@@ -463,19 +463,27 @@ func TestIncidentsModelSelectedIndex(t *testing.T) {
 func TestIncidentsModelSetDetailLoading(t *testing.T) {
 	m := NewIncidentsModel()
 
-	// Default should be false
-	if m.detailLoading {
-		t.Error("expected detailLoading to be false initially")
+	// Default should not be loading
+	if m.IsDetailLoading() {
+		t.Error("expected IsDetailLoading to be false initially")
 	}
 
-	m.SetDetailLoading(true)
-	if !m.detailLoading {
-		t.Error("expected detailLoading to be true after SetDetailLoading(true)")
+	// Set loading for a specific incident ID
+	m.SetDetailLoading("incident-123")
+	if !m.IsDetailLoading() {
+		t.Error("expected IsDetailLoading to be true after SetDetailLoading")
+	}
+	if !m.IsLoadingIncident("incident-123") {
+		t.Error("expected IsLoadingIncident to be true for incident-123")
+	}
+	if m.IsLoadingIncident("incident-456") {
+		t.Error("expected IsLoadingIncident to be false for different incident ID")
 	}
 
-	m.SetDetailLoading(false)
-	if m.detailLoading {
-		t.Error("expected detailLoading to be false after SetDetailLoading(false)")
+	// Clear loading
+	m.ClearDetailLoading()
+	if m.IsDetailLoading() {
+		t.Error("expected IsDetailLoading to be false after ClearDetailLoading")
 	}
 }
 

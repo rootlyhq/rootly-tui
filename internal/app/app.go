@@ -237,7 +237,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				inc := m.incidents.SelectedIncident()
 				if inc != nil {
 					if !inc.DetailLoaded {
-						m.incidents.SetDetailLoading(true)
+						m.incidents.SetDetailLoading(inc.ID)
 						return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, inc.UpdatedAt, m.incidents.SelectedIndex()))
 					}
 					// Detail already loaded, focus the detail pane for scrolling
@@ -247,7 +247,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				alert := m.alerts.SelectedAlert()
 				if alert != nil {
 					if !alert.DetailLoaded {
-						m.alerts.SetDetailLoading(true)
+						m.alerts.SetDetailLoading(alert.ID)
 						return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, alert.UpdatedAt, m.alerts.SelectedIndex()))
 					}
 					// Detail already loaded, focus the detail pane for scrolling
@@ -379,7 +379,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case IncidentDetailLoadedMsg:
-		m.incidents.SetDetailLoading(false)
+		m.incidents.ClearDetailLoading()
 		if msg.Err != nil {
 			m.errorMsg = msg.Err.Error()
 		} else if msg.Incident != nil {
@@ -391,7 +391,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case AlertDetailLoadedMsg:
-		m.alerts.SetDetailLoading(false)
+		m.alerts.ClearDetailLoading()
 		if msg.Err != nil {
 			m.errorMsg = msg.Err.Error()
 		} else if msg.Alert != nil {
