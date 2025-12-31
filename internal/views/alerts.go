@@ -385,7 +385,6 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
-		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Labels"))
 		b.WriteString("\n")
 		keys := make([]string, 0, len(alert.Labels))
@@ -431,8 +430,8 @@ func (m AlertsModel) renderDetailRow(label, value string) string {
 
 func (m AlertsModel) renderLinkRow(label, url string) string {
 	// Calculate available width for URL display
-	// Account for label, colon, space, and container padding (~10 chars)
-	maxURLLen := m.detailWidth - len(label) - 12
+	// Account for label, colon, space, container padding, and border (~20 chars)
+	maxURLLen := m.detailWidth - len(label) - 20
 	if maxURLLen < 20 {
 		maxURLLen = 20
 	}
