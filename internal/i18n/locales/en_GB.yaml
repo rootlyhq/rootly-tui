@@ -24,7 +24,7 @@ test_connection:
 save_and_continue:
   other: "Save & Continue"
 setup_help:
-  other: "Tab/Arrow keys to navigate, Enter to select, q to quit"
+  other: "Tab/Arrow keys to navigate, Enter to select, q/Esc to quit"
 error:
   other: "Error"
 

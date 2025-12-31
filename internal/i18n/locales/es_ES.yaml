@@ -24,7 +24,7 @@ test_connection:
 save_and_continue:
   other: "Guardar y continuar"
 setup_help:
-  other: "Tab/Flechas para navegar, Enter para seleccionar, q para salir"
+  other: "Tab/Flechas para navegar, Enter para seleccionar, q/Esc para salir"
 error:
   other: "Error"
 

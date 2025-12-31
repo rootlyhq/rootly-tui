@@ -24,7 +24,7 @@ test_connection:
 save_and_continue:
   other: "सहेजें और जारी रखें"
 setup_help:
-  other: "Tab/तीर नेविगेट करें, Enter चुनें, q बाहर निकलें"
+  other: "Tab/तीर नेविगेट करें, Enter चुनें, q/Esc बाहर निकलें"
 error:
   other: "त्रुटि"
 

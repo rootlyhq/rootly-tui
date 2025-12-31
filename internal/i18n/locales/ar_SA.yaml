@@ -24,7 +24,7 @@ test_connection:
 save_and_continue:
   other: "حفظ ومتابعة"
 setup_help:
-  other: "Tab/الاسهم للتنقل، Enter للاختيار، q للخروج"
+  other: "Tab/الاسهم للتنقل، Enter للاختيار، q/Esc للخروج"
 error:
   other: "خطا"
 

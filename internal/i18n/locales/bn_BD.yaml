@@ -24,7 +24,7 @@ test_connection:
 save_and_continue:
   other: "সংরক্ষণ করুন এবং চালিয়ে যান"
 setup_help:
-  other: "Tab/তীর নেভিগেট, Enter নির্বাচন, q প্রস্থান"
+  other: "Tab/তীর নেভিগেট, Enter নির্বাচন, q/Esc প্রস্থান"
 error:
   other: "ত্রুটি"
 
