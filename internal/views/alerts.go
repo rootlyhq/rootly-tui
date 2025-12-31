@@ -13,6 +13,7 @@ import (
 	"github.com/evertras/bubble-table/table"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
+	"github.com/rootlyhq/rootly-tui/internal/components"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
@@ -50,6 +51,16 @@ const (
 // Row indicator for selected row (same as incidents)
 const alertRowIndicator = "▶"
 
+// AlertSortField represents the field to sort alerts by
+type AlertSortField int
+
+const (
+	AlertSortByNone AlertSortField = iota
+	AlertSortByStatus
+	AlertSortBySource
+	AlertSortByCreated
+)
+
 type AlertsModel struct {
 	alerts      []api.Alert
 	width       int
@@ -72,6 +83,9 @@ type AlertsModel struct {
 	detailFocused       bool // Whether detail pane has focus (for scrolling)
 	// Table for list view
 	table table.Model
+	// Sorting
+	sortState *components.SortState
+	sortMenu  *components.SortMenuModel
 }
 
 func NewAlertsModel() AlertsModel {
@@ -91,10 +105,19 @@ func NewAlertsModel() AlertsModel {
 		HighlightStyle(lipgloss.NewStyle()). // No background highlight, arrow shows selection
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
 
+	// Initialize sort menu with alert-specific options
+	sortOptions := []components.SortOption{
+		{Label: i18n.T("status"), Description: i18n.T("sort_status_desc"), Value: AlertSortByStatus},
+		{Label: i18n.T("source"), Description: i18n.T("sort_source_desc"), Value: AlertSortBySource},
+		{Label: i18n.T("created"), Description: i18n.T("sort_created_desc"), Value: AlertSortByCreated},
+	}
+
 	return AlertsModel{
 		alerts:      []api.Alert{},
 		currentPage: 1,
 		table:       t,
+		sortState:   components.NewSortState(),
+		sortMenu:    components.NewSortMenu(sortOptions),
 	}
 }
 
@@ -325,6 +348,9 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
 
+	// Apply sorting if enabled
+	m.sortAlerts()
+
 	// Build table rows from alerts with styled cells
 	rows := make([]table.Row, len(alerts))
 	cursor := m.table.GetHighlightedRowIndex()
@@ -508,6 +534,11 @@ func (m AlertsModel) renderList(height int) string {
 	// Item count
 	if len(m.alerts) > 0 {
 		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.table.GetHighlightedRowIndex()+1, len(m.alerts))))
+	}
+
+	// Sort indicator
+	if sortInfo := m.GetSortInfo(); sortInfo != "" {
+		footer.WriteString(styles.TextDim.Render("  " + sortInfo))
 	}
 
 	b.WriteString(footer.String())
@@ -700,4 +731,83 @@ func formatAlertTime(t time.Time) string {
 		return localStr + " (" + utcStr + ")"
 	}
 	return localStr
+}
+
+// SetSort sets the sort field and direction
+func (m *AlertsModel) SetSort(field AlertSortField) {
+	m.sortState.Toggle(field)
+	m.sortAlerts()
+	m.updateRowIndicators()
+	m.updateViewportContent()
+}
+
+// sortAlerts sorts the alerts slice based on current sort settings
+func (m *AlertsModel) sortAlerts() {
+	if !m.sortState.IsEnabled() {
+		return
+	}
+
+	sort.SliceStable(m.alerts, func(i, j int) bool {
+		var less bool
+		switch m.sortState.Field {
+		case AlertSortByStatus:
+			less = strings.ToLower(m.alerts[i].Status) < strings.ToLower(m.alerts[j].Status)
+
+		case AlertSortBySource:
+			less = strings.ToLower(m.alerts[i].Source) < strings.ToLower(m.alerts[j].Source)
+
+		case AlertSortByCreated:
+			less = m.alerts[i].CreatedAt.Before(m.alerts[j].CreatedAt)
+
+		default:
+			return false
+		}
+
+		return m.sortState.ApplyDirection(less)
+	})
+}
+
+// GetSortInfo returns a string describing the current sort
+func (m AlertsModel) GetSortInfo() string {
+	if !m.sortState.IsEnabled() {
+		return ""
+	}
+
+	var fieldName string
+	switch m.sortState.Field {
+	case AlertSortByStatus:
+		fieldName = i18n.T("status")
+	case AlertSortBySource:
+		fieldName = i18n.T("source")
+	case AlertSortByCreated:
+		fieldName = i18n.T("created")
+	default:
+		return ""
+	}
+
+	return m.sortState.GetInfo(fieldName)
+}
+
+// ToggleSortMenu toggles the visibility of the sort menu
+func (m *AlertsModel) ToggleSortMenu() {
+	m.sortMenu.Toggle()
+}
+
+// IsSortMenuVisible returns whether the sort menu is visible
+func (m AlertsModel) IsSortMenuVisible() bool {
+	return m.sortMenu.IsVisible()
+}
+
+// HandleSortMenuKey handles keyboard input for the sort menu
+func (m *AlertsModel) HandleSortMenuKey(key string) {
+	if selected, shouldApply := m.sortMenu.HandleKey(key); shouldApply {
+		if field, ok := selected.(AlertSortField); ok {
+			m.SetSort(field)
+		}
+	}
+}
+
+// RenderSortMenu renders the sort menu overlay
+func (m AlertsModel) RenderSortMenu() string {
+	return m.sortMenu.Render(m.sortState.Field, m.sortState.Direction)
 }

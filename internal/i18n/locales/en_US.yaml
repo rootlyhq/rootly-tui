@@ -175,6 +175,8 @@ sort_created_desc:
   other: "Most recently created first"
 sort_updated_desc:
   other: "Most recently updated first"
+sort_source_desc:
+  other: "Alphabetically by alert source"
 sort_menu_help:
   other: "j/k navigate | Enter select | Esc close"
 

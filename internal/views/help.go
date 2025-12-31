@@ -82,8 +82,8 @@ func renderHelpLine(key, desc string) string {
 // RenderHelpBar renders the bottom help bar
 // hasSelection indicates whether an incident or alert is currently selected
 // isLoading indicates whether data is currently being loaded
-// isIncidentsTab indicates whether we're on the incidents tab (for sorting hints)
-func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) string {
+// showSort indicates whether to show the sort hint (incidents and alerts tabs)
+func RenderHelpBar(width int, hasSelection, isLoading, showSort bool) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", i18n.T("navigate")),
 		styles.RenderHelpItem("[/]", i18n.T("page_nav")),
@@ -95,8 +95,8 @@ func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) stri
 			items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
 		}
 	}
-	// Show sorting hint only on incidents tab
-	if isIncidentsTab {
+	// Show sorting hint for tabs that support it
+	if showSort {
 		items = append(items, styles.RenderHelpItem("S", i18n.T("sort")))
 	}
 	items = append(items,

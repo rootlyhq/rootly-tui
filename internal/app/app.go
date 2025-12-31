@@ -174,6 +174,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.incidents.HandleSortMenuKey(msg.String())
 			return m, nil
 		}
+		if m.activeTab == TabAlerts && m.alerts.IsSortMenuVisible() {
+			m.alerts.HandleSortMenuKey(msg.String())
+			return m, nil
+		}
 
 		// Handle setup screen
 		if m.screen == ScreenSetup {
@@ -310,9 +314,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case key.Matches(msg, m.keys.Sort):
-			// Toggle sort menu for incidents tab
+			// Toggle sort menu for current tab
 			if m.activeTab == TabIncidents {
 				m.incidents.ToggleSortMenu()
+			} else if m.activeTab == TabAlerts {
+				m.alerts.ToggleSortMenu()
 			}
 			return m, nil
 
@@ -503,8 +509,9 @@ func (m Model) View() string {
 	} else {
 		hasSelection = m.alerts.SelectedAlert() != nil
 	}
-	isIncidentsTab := m.activeTab == TabIncidents
-	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading, isIncidentsTab))
+	// Show sort hint for both incidents and alerts tabs
+	showSort := m.activeTab == TabIncidents || m.activeTab == TabAlerts
+	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading, showSort))
 
 	// Wrap content
 	content := styles.App.Render(b.String())
@@ -527,9 +534,13 @@ func (m Model) View() string {
 		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, aboutDialog)
 	}
 
-	// Sort menu overlay (incidents tab only)
+	// Sort menu overlay
 	if m.activeTab == TabIncidents && m.incidents.IsSortMenuVisible() {
 		sortMenu := m.incidents.RenderSortMenu()
+		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, sortMenu)
+	}
+	if m.activeTab == TabAlerts && m.alerts.IsSortMenuVisible() {
+		sortMenu := m.alerts.RenderSortMenu()
 		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, sortMenu)
 	}
 
