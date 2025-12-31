@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/evertras/bubble-table/table"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
+	"github.com/rootlyhq/rootly-tui/internal/components"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
@@ -49,6 +51,17 @@ const (
 // Row indicator for selected row
 const rowIndicator = "▶"
 
+// SortField represents the field to sort by
+type SortField int
+
+const (
+	SortByNone SortField = iota
+	SortBySeverity
+	SortByStatus
+	SortByCreated
+	SortByUpdated
+)
+
 type IncidentsModel struct {
 	incidents   []api.Incident
 	width       int
@@ -71,6 +84,9 @@ type IncidentsModel struct {
 	detailFocused       bool // Whether detail pane has focus (for scrolling)
 	// Table for list view
 	table table.Model
+	// Sorting
+	sortState *components.SortState
+	sortMenu  *components.SortMenuModel
 }
 
 // borderNoDividers creates a rounded border without vertical column dividers
@@ -113,10 +129,20 @@ func NewIncidentsModel() IncidentsModel {
 		HighlightStyle(lipgloss.NewStyle()). // No background highlight, arrow shows selection
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
 
+	// Initialize sort menu with incident-specific options
+	sortOptions := []components.SortOption{
+		{Label: i18n.T("severity"), Description: i18n.T("sort_severity_desc"), Value: SortBySeverity},
+		{Label: i18n.T("status"), Description: i18n.T("sort_status_desc"), Value: SortByStatus},
+		{Label: i18n.T("created"), Description: i18n.T("sort_created_desc"), Value: SortByCreated},
+		{Label: i18n.T("updated"), Description: i18n.T("sort_updated_desc"), Value: SortByUpdated},
+	}
+
 	return IncidentsModel{
 		incidents:   []api.Incident{},
 		currentPage: 1,
 		table:       t,
+		sortState:   components.NewSortState(),
+		sortMenu:    components.NewSortMenu(sortOptions),
 	}
 }
 
@@ -342,10 +368,13 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
 
+	// Apply sorting if enabled
+	m.sortIncidents()
+
 	// Build table rows from incidents with styled cells
-	rows := make([]table.Row, len(incidents))
+	rows := make([]table.Row, len(m.incidents))
 	cursor := m.table.GetHighlightedRowIndex()
-	for i, inc := range incidents {
+	for i, inc := range m.incidents {
 		seqID := inc.SequentialID
 		if seqID == "" {
 			seqID = "INC-?"
@@ -545,6 +574,11 @@ func (m IncidentsModel) renderList(height int) string {
 	// Item count
 	if len(m.incidents) > 0 {
 		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.table.GetHighlightedRowIndex()+1, len(m.incidents))))
+	}
+
+	// Sort indicator
+	if sortInfo := m.GetSortInfo(); sortInfo != "" {
+		footer.WriteString(styles.TextDim.Render("  " + sortInfo))
 	}
 
 	b.WriteString(footer.String())
@@ -794,6 +828,99 @@ func statusStyle(status string) lipgloss.Style {
 	default:
 		return lipgloss.NewStyle().Foreground(styles.ColorPastelGray)
 	}
+}
+
+// SetSort sets the sort field and direction
+func (m *IncidentsModel) SetSort(field SortField) {
+	m.sortState.Toggle(field)
+	m.sortIncidents()
+	m.updateRowIndicators()
+	m.updateViewportContent()
+}
+
+// sortIncidents sorts the incidents slice based on current sort settings
+func (m *IncidentsModel) sortIncidents() {
+	if !m.sortState.IsEnabled() {
+		return
+	}
+
+	sort.SliceStable(m.incidents, func(i, j int) bool {
+		var less bool
+		switch m.sortState.Field {
+		case SortBySeverity:
+			// Define severity order: critical > high > medium > low > unknown
+			sevOrder := map[string]int{
+				"critical": 4, "Critical": 4, "CRITICAL": 4, "sev0": 4, "SEV0": 4,
+				"high": 3, "High": 3, "HIGH": 3, "sev1": 3, "SEV1": 3,
+				"medium": 2, "Medium": 2, "MEDIUM": 2, "sev2": 2, "SEV2": 2,
+				"low": 1, "Low": 1, "LOW": 1, "sev3": 1, "SEV3": 1,
+			}
+			iSev := sevOrder[m.incidents[i].Severity]
+			jSev := sevOrder[m.incidents[j].Severity]
+			less = iSev < jSev
+
+		case SortByStatus:
+			less = strings.ToLower(m.incidents[i].Status) < strings.ToLower(m.incidents[j].Status)
+
+		case SortByCreated:
+			less = m.incidents[i].CreatedAt.Before(m.incidents[j].CreatedAt)
+
+		case SortByUpdated:
+			less = m.incidents[i].UpdatedAt.Before(m.incidents[j].UpdatedAt)
+
+		default:
+			return false
+		}
+
+		return m.sortState.ApplyDirection(less)
+	})
+}
+
+// GetSortInfo returns a string describing the current sort
+func (m IncidentsModel) GetSortInfo() string {
+	if !m.sortState.IsEnabled() {
+		return ""
+	}
+
+	var fieldName string
+	switch m.sortState.Field {
+	case SortBySeverity:
+		fieldName = i18n.T("severity")
+	case SortByStatus:
+		fieldName = i18n.T("status")
+	case SortByCreated:
+		fieldName = i18n.T("created")
+	case SortByUpdated:
+		fieldName = i18n.T("updated")
+	default:
+		return ""
+	}
+
+	return m.sortState.GetInfo(fieldName)
+}
+
+// ToggleSortMenu toggles the visibility of the sort menu
+func (m *IncidentsModel) ToggleSortMenu() {
+	m.sortMenu.Toggle()
+}
+
+// IsSortMenuVisible returns whether the sort menu is visible
+func (m IncidentsModel) IsSortMenuVisible() bool {
+	return m.sortMenu.IsVisible()
+}
+
+// HandleSortMenuKey handles keyboard input for the sort menu
+func (m *IncidentsModel) HandleSortMenuKey(key string) {
+	if selected, shouldApply := m.sortMenu.HandleKey(key); shouldApply {
+		if field, ok := selected.(SortField); ok {
+			m.SetSort(field)
+		}
+	}
+}
+
+// RenderSortMenu renders the sort menu overlay
+func (m IncidentsModel) RenderSortMenu() string {
+	return m.sortMenu.Render(m.sortState.Field, m.sortState.Direction)
 }
 
 func formatTime(t time.Time) string {
