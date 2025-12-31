@@ -1,6 +1,10 @@
 package styles
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 // Color palette (Rootly brand colors)
 var (
@@ -306,18 +310,64 @@ func RenderStatusDot(status string) string {
 
 func RenderAlertSource(source string) string {
 	switch source {
+	// Major monitoring platforms
 	case "datadog":
-		return Info.Render("[DD]")
+		return Info.Render("🐶DD")
 	case "pagerduty":
-		return Success.Render("[PD]")
+		return Success.Render("📟PD")
 	case "grafana":
-		return Warning.Render("[GF]")
+		return Warning.Render("📊GF")
+	case "new_relic":
+		return Info.Render("🔮NR")
+	case "prometheus", "alertmanager":
+		return Danger.Render("🔥PM")
+	case "opsgenie":
+		return Info.Render("🔔OG")
+	case "sentry":
+		return Danger.Render("🐛SE")
+	case "splunk":
+		return Success.Render("📈SP")
+	case "honeycomb":
+		return Warning.Render("🍯HC")
+	case "chronosphere":
+		return Info.Render("⏱️CS")
+
+	// Cloud providers
+	case "cloud_watch", "cloudwatch":
+		return Warning.Render("☁️CW")
+	case "azure":
+		return Info.Render("☁️AZ")
+	case "google_cloud":
+		return Info.Render("☁️GC")
+
+	// Communication
 	case "slack":
-		return Primary.Render("[SL]")
+		return Primary.Render("💬SL")
+	case "email":
+		return Muted.Render("📧EM")
+
+	// Other
+	case "generic_webhook":
+		return Muted.Render("🔗GW")
+	case "api":
+		return Muted.Render("🔌AP")
 	case "manual":
-		return Muted.Render("[MN]")
+		return Muted.Render("✋MN")
+	case "jira":
+		return Info.Render("📋JI")
+	case "zendesk":
+		return Success.Render("🎫ZD")
+	case "rollbar":
+		return Danger.Render("🪵RB")
+	case "bugsnag", "bug_snag":
+		return Danger.Render("🐞BS")
+
 	default:
-		return Muted.Render("[" + source[:2] + "]")
+		// Fallback: first 2 chars uppercase
+		if len(source) >= 2 {
+			return Muted.Render("📡" + strings.ToUpper(source[:2]))
+		}
+		return Muted.Render("📡??")
 	}
 }
 

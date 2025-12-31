@@ -434,7 +434,7 @@ func TestListAlertsWithLabels(t *testing.T) {
 						"created_at": "2025-01-01T10:00:00Z",
 						"labels": []map[string]interface{}{
 							{"key": "priority", "value": "high"},
-							{"key": "count", "value": 42}, // numeric value
+							{"key": "count", "value": 42},     // numeric value
 							{"key": "enabled", "value": true}, // boolean value
 						},
 						"services": []map[string]interface{}{
@@ -509,19 +509,19 @@ func TestListIncidentsWithTimestamps(t *testing.T) {
 				{
 					"id": "inc_full",
 					"attributes": map[string]interface{}{
-						"sequential_id":    123,
-						"title":            "Full Incident",
-						"summary":          "Complete incident",
-						"status":           "resolved",
-						"kind":             "incident",
-						"created_at":       "2025-01-01T10:00:00Z",
-						"started_at":       "2025-01-01T10:01:00Z",
-						"detected_at":      "2025-01-01T10:02:00Z",
-						"acknowledged_at":  "2025-01-01T10:03:00Z",
-						"mitigated_at":     "2025-01-01T10:04:00Z",
-						"resolved_at":      "2025-01-01T10:05:00Z",
+						"sequential_id":     123,
+						"title":             "Full Incident",
+						"summary":           "Complete incident",
+						"status":            "resolved",
+						"kind":              "incident",
+						"created_at":        "2025-01-01T10:00:00Z",
+						"started_at":        "2025-01-01T10:01:00Z",
+						"detected_at":       "2025-01-01T10:02:00Z",
+						"acknowledged_at":   "2025-01-01T10:03:00Z",
+						"mitigated_at":      "2025-01-01T10:04:00Z",
+						"resolved_at":       "2025-01-01T10:05:00Z",
 						"slack_channel_url": "https://slack.com/channel",
-						"jira_issue_url":   "https://jira.com/issue",
+						"jira_issue_url":    "https://jira.com/issue",
 						"severity": map[string]interface{}{
 							"data": map[string]interface{}{
 								"attributes": map[string]interface{}{

@@ -122,11 +122,20 @@ func TestRenderAlertSource(t *testing.T) {
 		source   string
 		expected string
 	}{
-		{"datadog", "[DD]"},
-		{"pagerduty", "[PD]"},
-		{"grafana", "[GF]"},
-		{"slack", "[SL]"},
-		{"manual", "[MN]"},
+		{"datadog", "DD"},
+		{"pagerduty", "PD"},
+		{"grafana", "GF"},
+		{"slack", "SL"},
+		{"manual", "MN"},
+		{"new_relic", "NR"},
+		{"prometheus", "PM"},
+		{"alertmanager", "PM"},
+		{"opsgenie", "OG"},
+		{"sentry", "SE"},
+		{"generic_webhook", "GW"},
+		{"cloud_watch", "CW"},
+		{"api", "AP"},
+		{"unknown_source", "UN"}, // fallback uses first 2 chars uppercase
 	}
 
 	for _, tt := range tests {
@@ -136,6 +145,14 @@ func TestRenderAlertSource(t *testing.T) {
 				t.Errorf("RenderAlertSource(%s) = %s, expected to contain %s", tt.source, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestRenderAlertSourceShortFallback(t *testing.T) {
+	// Test very short source name
+	result := RenderAlertSource("x")
+	if !strings.Contains(result, "??") {
+		t.Errorf("expected '??' for single char source, got %s", result)
 	}
 }
 
