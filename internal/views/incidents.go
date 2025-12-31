@@ -39,11 +39,15 @@ func renderBulletList(title string, items []string) string {
 
 // Column keys for incidents table
 const (
-	colKeySev    = "sev"
-	colKeyID     = "id"
-	colKeyStatus = "status"
-	colKeyTitle  = "title"
+	colKeyIndicator = "indicator"
+	colKeySev       = "sev"
+	colKeyID        = "id"
+	colKeyStatus    = "status"
+	colKeyTitle     = "title"
 )
+
+// Row indicator for selected row
+const rowIndicator = "▶"
 
 type IncidentsModel struct {
 	incidents   []api.Incident
@@ -95,6 +99,7 @@ func borderNoDividers() table.Border {
 func NewIncidentsModel() IncidentsModel {
 	// Define table columns with i18n headers using evertras/bubble-table
 	columns := []table.Column{
+		table.NewColumn(colKeyIndicator, "", 2), // Selection indicator column
 		table.NewColumn(colKeySev, i18n.T("col_sev"), 4),
 		table.NewColumn(colKeyID, i18n.T("col_id"), 10),
 		table.NewColumn(colKeyStatus, i18n.T("status"), 12),
@@ -180,6 +185,7 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 			cursor := m.table.GetHighlightedRowIndex()
 			if cursor < len(m.incidents)-1 {
 				m.table = m.table.WithHighlightedRow(cursor + 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -187,18 +193,21 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 			cursor := m.table.GetHighlightedRowIndex()
 			if cursor > 0 {
 				m.table = m.table.WithHighlightedRow(cursor - 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
 		case "g":
 			// Go to first row
 			m.table = m.table.WithHighlightedRow(0)
+			m.updateRowIndicators()
 			m.updateViewportContent()
 			return m, nil
 		case "G":
 			// Go to last row
 			if len(m.incidents) > 0 {
 				m.table = m.table.WithHighlightedRow(len(m.incidents) - 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -227,6 +236,48 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+// updateRowIndicators updates the arrow indicator to show on the current row
+func (m *IncidentsModel) updateRowIndicators() {
+	if len(m.incidents) == 0 {
+		return
+	}
+	cursor := m.table.GetHighlightedRowIndex()
+	rows := make([]table.Row, len(m.incidents))
+	for i, inc := range m.incidents {
+		seqID := inc.SequentialID
+		if seqID == "" {
+			seqID = "INC-?"
+		}
+		status := inc.Status
+		if len(status) > 12 {
+			status = status[:12]
+		}
+		title := inc.Summary
+		if title == "" {
+			title = inc.Title
+		}
+		title = strings.ReplaceAll(title, "\n", " ")
+		title = strings.ReplaceAll(title, "\r", "")
+
+		sevCell := table.NewStyledCell(severitySignalPlain(inc.Severity), severityStyle(inc.Severity))
+		statusCell := table.NewStyledCell(status, statusStyle(status))
+
+		indicator := ""
+		if i == cursor {
+			indicator = rowIndicator
+		}
+
+		rows[i] = table.NewRow(table.RowData{
+			colKeyIndicator: indicator,
+			colKeySev:       sevCell,
+			colKeyID:        seqID,
+			colKeyStatus:    statusCell,
+			colKeyTitle:     title,
+		})
+	}
+	m.table = m.table.WithRows(rows)
 }
 
 // updateViewportContent updates the viewport content when data changes
@@ -293,6 +344,7 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 
 	// Build table rows from incidents with styled cells
 	rows := make([]table.Row, len(incidents))
+	cursor := m.table.GetHighlightedRowIndex()
 	for i, inc := range incidents {
 		seqID := inc.SequentialID
 		if seqID == "" {
@@ -313,17 +365,23 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 		sevCell := table.NewStyledCell(severitySignalPlain(inc.Severity), severityStyle(inc.Severity))
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Show indicator for highlighted row
+		indicator := ""
+		if i == cursor {
+			indicator = rowIndicator
+		}
+
 		rows[i] = table.NewRow(table.RowData{
-			colKeySev:    sevCell,
-			colKeyID:     seqID,
-			colKeyStatus: statusCell,
-			colKeyTitle:  title,
+			colKeyIndicator: indicator,
+			colKeySev:       sevCell,
+			colKeyID:        seqID,
+			colKeyStatus:    statusCell,
+			colKeyTitle:     title,
 		})
 	}
 	m.table = m.table.WithRows(rows)
 
 	// Adjust cursor if needed
-	cursor := m.table.GetHighlightedRowIndex()
 	if cursor >= len(incidents) && len(incidents) > 0 {
 		m.table = m.table.WithHighlightedRow(len(incidents) - 1)
 	}

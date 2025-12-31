@@ -40,11 +40,15 @@ func renderAlertBulletList(title string, items []string) string {
 
 // Column keys for alerts table
 const (
-	alertColKeySource = "source"
-	alertColKeyID     = "id"
-	alertColKeyStatus = "status"
-	alertColKeyTitle  = "title"
+	alertColKeyIndicator = "indicator"
+	alertColKeySource    = "source"
+	alertColKeyID        = "id"
+	alertColKeyStatus    = "status"
+	alertColKeyTitle     = "title"
 )
+
+// Row indicator for selected row (same as incidents)
+const alertRowIndicator = "▶"
 
 type AlertsModel struct {
 	alerts      []api.Alert
@@ -73,6 +77,7 @@ type AlertsModel struct {
 func NewAlertsModel() AlertsModel {
 	// Define table columns with i18n headers using evertras/bubble-table
 	columns := []table.Column{
+		table.NewColumn(alertColKeyIndicator, "", 2), // Selection indicator column
 		table.NewColumn(alertColKeySource, i18n.T("source"), 4),
 		table.NewColumn(alertColKeyID, i18n.T("col_id"), 8),
 		table.NewColumn(alertColKeyStatus, i18n.T("status"), 10),
@@ -158,6 +163,7 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 			cursor := m.table.GetHighlightedRowIndex()
 			if cursor < len(m.alerts)-1 {
 				m.table = m.table.WithHighlightedRow(cursor + 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -165,18 +171,21 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 			cursor := m.table.GetHighlightedRowIndex()
 			if cursor > 0 {
 				m.table = m.table.WithHighlightedRow(cursor - 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
 		case "g":
 			// Go to first row
 			m.table = m.table.WithHighlightedRow(0)
+			m.updateRowIndicators()
 			m.updateViewportContent()
 			return m, nil
 		case "G":
 			// Go to last row
 			if len(m.alerts) > 0 {
 				m.table = m.table.WithHighlightedRow(len(m.alerts) - 1)
+				m.updateRowIndicators()
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -219,6 +228,43 @@ func (m *AlertsModel) updateViewportContent() {
 	content := m.generateDetailContent(alert)
 	m.detailViewport.SetContent(content)
 	m.detailViewport.GotoTop()
+}
+
+// updateRowIndicators updates the arrow indicator to show on the current row
+func (m *AlertsModel) updateRowIndicators() {
+	if len(m.alerts) == 0 {
+		return
+	}
+	cursor := m.table.GetHighlightedRowIndex()
+	rows := make([]table.Row, len(m.alerts))
+	for i, alert := range m.alerts {
+		shortID := alert.ShortID
+		if shortID == "" {
+			shortID = "---"
+		}
+		status := alert.Status
+		if len(status) > 10 {
+			status = status[:10]
+		}
+		summary := strings.ReplaceAll(alert.Summary, "\n", " ")
+		summary = strings.ReplaceAll(summary, "\r", "")
+
+		statusCell := table.NewStyledCell(status, statusStyle(status))
+
+		indicator := ""
+		if i == cursor {
+			indicator = alertRowIndicator
+		}
+
+		rows[i] = table.NewRow(table.RowData{
+			alertColKeyIndicator: indicator,
+			alertColKeySource:    styles.AlertSourceIcon(alert.Source),
+			alertColKeyID:        shortID,
+			alertColKeyStatus:    statusCell,
+			alertColKeyTitle:     summary,
+		})
+	}
+	m.table = m.table.WithRows(rows)
 }
 
 // SetDetailFocused sets focus on the detail pane for scrolling
@@ -281,6 +327,7 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 
 	// Build table rows from alerts with styled cells
 	rows := make([]table.Row, len(alerts))
+	cursor := m.table.GetHighlightedRowIndex()
 	for i, alert := range alerts {
 		shortID := alert.ShortID
 		if shortID == "" {
@@ -296,17 +343,23 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 		// Create styled cells using evertras/bubble-table
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Show indicator for highlighted row
+		indicator := ""
+		if i == cursor {
+			indicator = alertRowIndicator
+		}
+
 		rows[i] = table.NewRow(table.RowData{
-			alertColKeySource: styles.AlertSourceIcon(alert.Source),
-			alertColKeyID:     shortID,
-			alertColKeyStatus: statusCell,
-			alertColKeyTitle:  summary,
+			alertColKeyIndicator: indicator,
+			alertColKeySource:    styles.AlertSourceIcon(alert.Source),
+			alertColKeyID:        shortID,
+			alertColKeyStatus:    statusCell,
+			alertColKeyTitle:     summary,
 		})
 	}
 	m.table = m.table.WithRows(rows)
 
 	// Adjust cursor if needed
-	cursor := m.table.GetHighlightedRowIndex()
 	if cursor >= len(alerts) && len(alerts) > 0 {
 		m.table = m.table.WithHighlightedRow(len(alerts) - 1)
 	}
