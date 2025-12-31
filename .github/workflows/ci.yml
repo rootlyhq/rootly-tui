@@ -75,7 +75,7 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.out
+          files: ./coverage.out
           flags: unittests
           fail_ci_if_error: false
 
