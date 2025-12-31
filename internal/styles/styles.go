@@ -22,6 +22,14 @@ var (
 	ColorHighlight  = lipgloss.Color("#8B5CF6") // Lighter purple
 )
 
+// Pastel colors for status text
+var (
+	ColorPastelRed    = lipgloss.Color("#F87171") // Soft red
+	ColorPastelYellow = lipgloss.Color("#FBBF24") // Soft amber
+	ColorPastelGreen  = lipgloss.Color("#34D399") // Soft green
+	ColorPastelGray   = lipgloss.Color("#9CA3AF") // Soft gray
+)
+
 // Severity colors
 var (
 	ColorCritical = lipgloss.Color("#DC2626") // Dark red
@@ -106,20 +114,18 @@ var (
 	DetailValue = lipgloss.NewStyle().
 			Foreground(ColorText)
 
-	// Status styles (text color only, no background)
+	// Status styles (pastel text colors, no background)
 	StatusActive = lipgloss.NewStyle().
-			Foreground(ColorDanger).
-			Bold(true)
+			Foreground(ColorPastelRed)
 
 	StatusInProgress = lipgloss.NewStyle().
-				Foreground(ColorWarning).
-				Bold(true)
+				Foreground(ColorPastelYellow)
 
 	StatusResolved = lipgloss.NewStyle().
-			Foreground(ColorSuccess)
+			Foreground(ColorPastelGreen)
 
 	StatusMuted = lipgloss.NewStyle().
-			Foreground(ColorMuted)
+			Foreground(ColorPastelGray)
 
 	// Severity badges
 	SeverityCritical = lipgloss.NewStyle().
