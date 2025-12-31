@@ -53,6 +53,12 @@ func (m HelpModel) View() string {
 	b.WriteString(renderHelpLine("o", i18n.T("open_url")))
 	b.WriteString("\n")
 
+	// Sorting section
+	b.WriteString(styles.TextBold.Render(i18n.T("sorting")))
+	b.WriteString("\n")
+	b.WriteString(renderHelpLine("S", i18n.T("open_sort_menu")))
+	b.WriteString("\n")
+
 	// General section
 	b.WriteString(styles.TextBold.Render(i18n.T("general")))
 	b.WriteString("\n")
@@ -76,7 +82,8 @@ func renderHelpLine(key, desc string) string {
 // RenderHelpBar renders the bottom help bar
 // hasSelection indicates whether an incident or alert is currently selected
 // isLoading indicates whether data is currently being loaded
-func RenderHelpBar(width int, hasSelection, isLoading bool) string {
+// isIncidentsTab indicates whether we're on the incidents tab (for sorting hints)
+func RenderHelpBar(width int, hasSelection, isLoading bool, isIncidentsTab bool) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", i18n.T("navigate")),
 		styles.RenderHelpItem("[/]", i18n.T("page_nav")),
@@ -87,6 +94,10 @@ func RenderHelpBar(width int, hasSelection, isLoading bool) string {
 		if hasSelection {
 			items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
 		}
+	}
+	// Show sorting hint only on incidents tab
+	if isIncidentsTab {
+		items = append(items, styles.RenderHelpItem("S", i18n.T("sort")))
 	}
 	items = append(items,
 		styles.RenderHelpItem("l", i18n.T("logs")),

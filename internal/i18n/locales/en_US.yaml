@@ -53,6 +53,8 @@ mitigated:
   other: "Mitigated"
 resolved:
   other: "Resolved"
+updated:
+  other: "Updated"
 services:
   other: "Services"
 environments:
@@ -151,6 +153,30 @@ quit:
   other: "Quit"
 press_to_close:
   other: "Press ? or Esc to close"
+sorting:
+  other: "Sorting"
+sort_by:
+  other: "Sort By"
+open_sort_menu:
+  other: "Open sort menu"
+sort_severity:
+  other: "Sort by severity"
+sort_status:
+  other: "Sort by status"
+sort_created:
+  other: "Sort by created date"
+sort_updated:
+  other: "Sort by updated date"
+sort_severity_desc:
+  other: "Critical → High → Medium → Low"
+sort_status_desc:
+  other: "Alphabetically by status"
+sort_created_desc:
+  other: "Most recently created first"
+sort_updated_desc:
+  other: "Most recently updated first"
+sort_menu_help:
+  other: "j/k navigate | Enter select | Esc close"
 
 # Logs view
 debug_logs:
@@ -189,6 +215,8 @@ refresh:
   other: "refresh"
 open:
   other: "open"
+sort:
+  other: "sort"
 logs:
   other: "logs"
 setup:
