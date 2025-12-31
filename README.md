@@ -11,8 +11,26 @@ A terminal user interface for viewing Rootly incidents and alerts.
 - View and navigate incidents with full details
 - View and navigate alerts with full details
 - Split-pane interface with list and detail views
+- Press Enter to load extended details (roles, causes, responders, etc.)
 - Keyboard-driven navigation
 - Configurable API endpoint (supports self-hosted Rootly)
+- Internationalization with 12 supported languages
+- Persistent caching for faster startup
+- In-app debug log viewer
+
+## Supported Languages
+
+- English (US/UK)
+- Spanish (Espanol)
+- French (Francais)
+- German (Deutsch)
+- Chinese Simplified (简体中文)
+- Hindi (हिन्दी)
+- Arabic (العربية)
+- Bengali (বাংলা)
+- Portuguese Brazilian (Portugues)
+- Russian (Русский)
+- Japanese (日本語)
 
 ## Installation
 
@@ -43,20 +61,22 @@ make build
 
 ## Configuration
 
-On first run, you'll be prompted to enter your Rootly API credentials.
+On first run, you'll be prompted to enter your Rootly API credentials, select your timezone, and choose your preferred language.
 
 Configuration is stored at `~/.rootly-tui/config.yaml`:
 
 ```yaml
 api_key: "your-api-key"
 endpoint: "api.rootly.com"  # Optional: defaults to api.rootly.com
+timezone: "America/Los_Angeles"
+language: "en_US"
 ```
 
 ### Getting an API Key
 
 1. Log in to your Rootly account
 2. Navigate to **Settings** > **API Keys**
-3. Create a new API key with read permissions
+3. Create a new API key with read permissions for incidents and alerts
 
 ## Usage
 
@@ -99,8 +119,9 @@ Press `l` at any time to open the in-app log viewer. Logs are always captured in
 Log viewer controls:
 - `j/k` - Scroll up/down
 - `g/G` - Jump to top/bottom
+- `a` - Select all logs
+- `y` - Copy selected logs to clipboard
 - `c` - Clear logs
-- `r` - Refresh logs
 - `l` or `Esc` - Close viewer
 
 ### Keyboard Shortcuts
@@ -111,30 +132,38 @@ Log viewer controls:
 | `k` / `↑` | Move cursor up |
 | `g` | Go to first item |
 | `G` | Go to last item |
+| `h` / `←` | Previous page |
+| `l` / `→` | Next page (when not in logs view) |
 | `Tab` | Switch between Incidents and Alerts |
+| `Enter` | Load detailed view for selected item |
+| `o` | Open item URL in browser |
 | `r` | Refresh data |
 | `l` | View debug logs |
+| `s` | Open setup screen |
 | `?` | Toggle help |
-| `q` / `Ctrl+C` | Quit |
+| `q` / `Esc` | Quit (or return from overlay/setup) |
 
 ## Screenshots
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Rootly TUI                    [Incidents] Alerts     v0.1.0│
+│  Rootly                          [Incidents] Alerts   v0.1.0│
 ├─────────────────────────────────────────────────────────────┤
 │  ┌──────────────────────┬──────────────────────────────────┐│
 │  │ INCIDENTS            │ Incident Details                 ││
 │  │                      │                                  ││
-│  │ ● CRIT Database down │ Database Connection Failure      ││
-│  │   HIGH API latency   │ Status: In Progress              ││
-│  │   MED  Deploy failed │ Severity: Critical               ││
-│  │                      │                                  ││
-│  │                      │ Started: 10:30 AM                ││
+│  │ ████ CRIT INC-123    │ Database Connection Failure      ││
+│  │   in_progress        │ Status: In Progress              ││
+│  │ ███  HIGH INC-122    │ Severity: Critical               ││
+│  │   resolved           │                                  ││
+│  │ ██   MED  INC-121    │ Timeline:                        ││
+│  │   resolved           │ Started: 10:30 AM                ││
 │  │                      │ Detected: 10:32 AM               ││
 │  │                      │                                  ││
 │  │                      │ Services: api, database          ││
 │  │                      │ Teams: Platform, SRE             ││
+│  │                      │                                  ││
+│  │                      │ Press Enter for more details     ││
 │  └──────────────────────┴──────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────┤
 │  j/k navigate  Tab switch  r refresh  ? help  q quit       │
@@ -161,6 +190,7 @@ make dev        # Run with go run
 ```bash
 make test       # Run tests
 make lint       # Run linter
+make coverage   # Run tests with coverage report
 make check      # Format, lint, and test
 ```
 
@@ -179,6 +209,8 @@ git push origin v0.1.0
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - Style definitions
 - [Log](https://github.com/charmbracelet/log) - Structured logging
+- [go-i18n](https://github.com/nicksnyder/go-i18n) - Internationalization
+- [BoltDB](https://github.com/etcd-io/bbolt) - Persistent cache
 - [rootly-go](https://github.com/rootlyhq/rootly-go) - Rootly API client
 
 ## License
