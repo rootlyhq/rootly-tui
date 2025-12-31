@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -274,13 +275,18 @@ func (m AlertsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("External URL", alert.ExternalURL))
 	}
 
-	// Labels
+	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
 		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Labels"))
 		b.WriteString("\n")
-		for k, v := range alert.Labels {
-			b.WriteString(m.renderDetailRow(k, v))
+		keys := make([]string, 0, len(alert.Labels))
+		for k := range alert.Labels {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			b.WriteString(m.renderDetailRow(k, alert.Labels[k]))
 		}
 	}
 
