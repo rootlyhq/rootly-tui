@@ -74,19 +74,16 @@ changelog:
     - title: Other
       order: 999
 
-brews:
+homebrew_casks:
   - repository:
       owner: rootlyhq
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
+    directory: Casks
     homepage: "https://rootly.com"
     description: "Terminal UI for Rootly incidents and alerts"
-    license: "MIT"
-    install: |
-      bin.install "rootly-tui"
-    test: |
-      system "#{bin}/rootly-tui", "--version"
+    binaries:
+      - rootly-tui
 
 release:
   github:
