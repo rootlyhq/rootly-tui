@@ -329,3 +329,62 @@ func TestLoadDefaultTimezone(t *testing.T) {
 		t.Errorf("expected default timezone '%s', got '%s'", DefaultTimezone, loaded.Timezone)
 	}
 }
+
+func TestListTimezones(t *testing.T) {
+	timezones := ListTimezones()
+
+	// Should return non-empty list
+	if len(timezones) == 0 {
+		t.Error("expected ListTimezones to return non-empty list")
+	}
+
+	t.Logf("ListTimezones returned %d timezones", len(timezones))
+
+	// All returned timezones should be valid
+	for _, tz := range timezones {
+		_, err := time.LoadLocation(tz)
+		if err != nil {
+			t.Errorf("invalid timezone in list: '%s' with error: %v", tz, err)
+		}
+	}
+
+	// If we have a large list (from system), it should be sorted
+	// Small lists (fallback) are hand-crafted and may not be alphabetically sorted
+	if len(timezones) > 20 {
+		for i := 1; i < len(timezones); i++ {
+			if timezones[i] < timezones[i-1] {
+				t.Errorf("system timezones not sorted: '%s' comes after '%s'", timezones[i], timezones[i-1])
+			}
+		}
+	}
+}
+
+func TestDetectTimezoneWithTZEnv(t *testing.T) {
+	// Save original TZ env
+	originalTZ := os.Getenv("TZ")
+	defer os.Setenv("TZ", originalTZ)
+
+	// Set TZ env to a known timezone
+	os.Setenv("TZ", "America/Chicago")
+	tz := DetectTimezone()
+
+	if tz != "America/Chicago" {
+		t.Errorf("expected 'America/Chicago' from TZ env, got '%s'", tz)
+	}
+}
+
+func TestDetectTimezoneWithInvalidTZEnv(t *testing.T) {
+	// Save original TZ env
+	originalTZ := os.Getenv("TZ")
+	defer os.Setenv("TZ", originalTZ)
+
+	// Set TZ env to an invalid timezone
+	os.Setenv("TZ", "Invalid/NotATimezone")
+	tz := DetectTimezone()
+
+	// Should fall back to something valid
+	_, err := time.LoadLocation(tz)
+	if err != nil {
+		t.Errorf("expected valid timezone after invalid TZ env, got '%s' with error: %v", tz, err)
+	}
+}

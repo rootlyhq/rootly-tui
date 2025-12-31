@@ -300,6 +300,110 @@ func TestAlertSourceName(t *testing.T) {
 	}
 }
 
+func TestAlertSourceNameExtended(t *testing.T) {
+	// Test all sources for complete coverage
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{"alertmanager", "Alertmanager"},
+		{"opsgenie", "OpsGenie"},
+		{"sentry", "Sentry"},
+		{"splunk", "Splunk"},
+		{"honeycomb", "Honeycomb"},
+		{"chronosphere", "Chronosphere"},
+		{"azure", "Azure"},
+		{"google_cloud", "Google Cloud"},
+		{"slack", "Slack"},
+		{"email", "Email"},
+		{"api", "API"},
+		{"manual", "Manual"},
+		{"jira", "Jira"},
+		{"zendesk", "Zendesk"},
+		{"rollbar", "Rollbar"},
+		{"bugsnag", "BugSnag"},
+		{"bug_snag", "BugSnag"},
+		{"grafana", "Grafana"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.source, func(t *testing.T) {
+			result := AlertSourceName(tt.source)
+			if result != tt.expected {
+				t.Errorf("AlertSourceName(%s) = %s, expected %s", tt.source, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestAlertSourceIconExtended(t *testing.T) {
+	// Test additional sources for complete coverage
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{"splunk", "📈"},
+		{"honeycomb", "🍯"},
+		{"chronosphere", "⏱️"},
+		{"cloud_watch", "☁️"},
+		{"cloudwatch", "☁️"},
+		{"azure", "☁️"},
+		{"google_cloud", "☁️"},
+		{"api", "🔌"},
+		{"manual", "✋"},
+		{"zendesk", "🎫"},
+		{"rollbar", "🪵"},
+		{"bugsnag", "🐞"},
+		{"bug_snag", "🐞"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.source, func(t *testing.T) {
+			result := AlertSourceIcon(tt.source)
+			if result != tt.expected {
+				t.Errorf("AlertSourceIcon(%s) = %s, expected %s", tt.source, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRenderAlertSourceExtended(t *testing.T) {
+	// Test additional sources for complete coverage
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{"splunk", "SP"},
+		{"honeycomb", "HC"},
+		{"chronosphere", "CS"},
+		{"azure", "AZ"},
+		{"google_cloud", "GC"},
+		{"email", "EM"},
+		{"jira", "JI"},
+		{"zendesk", "ZD"},
+		{"rollbar", "RB"},
+		{"bugsnag", "BS"},
+		{"bug_snag", "BS"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.source, func(t *testing.T) {
+			result := RenderAlertSource(tt.source)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("RenderAlertSource(%s) = %s, expected to contain %s", tt.source, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRenderStatusDotDefault(t *testing.T) {
+	// Test default case returns DotActive
+	result := RenderStatusDot("some_other_status")
+	if !strings.Contains(result, "●") {
+		t.Errorf("expected default status dot to contain ●, got %s", result)
+	}
+}
+
 func TestRenderStatusExtended(t *testing.T) {
 	tests := []struct {
 		status string

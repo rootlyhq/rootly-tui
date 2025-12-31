@@ -3,6 +3,7 @@ package views
 import (
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -167,5 +168,190 @@ func TestAlertsModelCursorBounds(t *testing.T) {
 
 	if m.cursor >= len(alerts) {
 		t.Errorf("cursor exceeded bounds: got %d, max should be %d", m.cursor, len(alerts)-1)
+	}
+}
+
+func TestAlertsModelInit(t *testing.T) {
+	m := NewAlertsModel()
+	cmd := m.Init()
+
+	// Init should return nil for AlertsModel
+	if cmd != nil {
+		t.Error("expected Init to return nil")
+	}
+}
+
+func TestAlertsModelSetSpinner(t *testing.T) {
+	m := NewAlertsModel()
+
+	m.SetSpinner("⠋")
+	if m.spinnerView != "⠋" {
+		t.Errorf("expected spinner '⠋', got '%s'", m.spinnerView)
+	}
+
+	m.SetSpinner("⠙")
+	if m.spinnerView != "⠙" {
+		t.Errorf("expected spinner '⠙', got '%s'", m.spinnerView)
+	}
+}
+
+func TestAlertsModelCurrentPage(t *testing.T) {
+	m := NewAlertsModel()
+
+	// Default page should be 1
+	if m.CurrentPage() != 1 {
+		t.Errorf("expected default page 1, got %d", m.CurrentPage())
+	}
+
+	// After setting alerts with pagination
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 3, HasNext: true, HasPrev: true})
+	if m.CurrentPage() != 3 {
+		t.Errorf("expected page 3, got %d", m.CurrentPage())
+	}
+}
+
+func TestAlertsModelHasNextPage(t *testing.T) {
+	m := NewAlertsModel()
+
+	// Default should be false
+	if m.HasNextPage() {
+		t.Error("expected HasNextPage to be false initially")
+	}
+
+	// Set with hasNext = true
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
+	if !m.HasNextPage() {
+		t.Error("expected HasNextPage to be true")
+	}
+
+	// Set with hasNext = false
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasNext: false})
+	if m.HasNextPage() {
+		t.Error("expected HasNextPage to be false")
+	}
+}
+
+func TestAlertsModelHasPrevPage(t *testing.T) {
+	m := NewAlertsModel()
+
+	// Default should be false
+	if m.HasPrevPage() {
+		t.Error("expected HasPrevPage to be false initially")
+	}
+
+	// Set with hasPrev = true
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 2, HasPrev: true})
+	if !m.HasPrevPage() {
+		t.Error("expected HasPrevPage to be true")
+	}
+
+	// Set with hasPrev = false
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasPrev: false})
+	if m.HasPrevPage() {
+		t.Error("expected HasPrevPage to be false")
+	}
+}
+
+func TestAlertsModelNextPage(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
+	m.cursor = 3 // Set cursor to non-zero
+
+	m.NextPage()
+
+	if m.currentPage != 2 {
+		t.Errorf("expected page 2 after NextPage, got %d", m.currentPage)
+	}
+	if m.cursor != 0 {
+		t.Errorf("expected cursor reset to 0 after NextPage, got %d", m.cursor)
+	}
+}
+
+func TestAlertsModelNextPageAtEnd(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 5, HasNext: false})
+
+	m.NextPage()
+
+	// Should not change when hasNext is false
+	if m.currentPage != 5 {
+		t.Errorf("expected page to stay at 5 when no next, got %d", m.currentPage)
+	}
+}
+
+func TestAlertsModelPrevPage(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})
+	m.cursor = 5 // Set cursor to non-zero
+
+	m.PrevPage()
+
+	if m.currentPage != 2 {
+		t.Errorf("expected page 2 after PrevPage, got %d", m.currentPage)
+	}
+	if m.cursor != 0 {
+		t.Errorf("expected cursor reset to 0 after PrevPage, got %d", m.cursor)
+	}
+}
+
+func TestAlertsModelPrevPageAtStart(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasPrev: false})
+
+	m.PrevPage()
+
+	// Should not change when hasPrev is false or at page 1
+	if m.currentPage != 1 {
+		t.Errorf("expected page to stay at 1 when no prev, got %d", m.currentPage)
+	}
+}
+
+func TestAlertsModelSelectedAlertEmpty(t *testing.T) {
+	m := NewAlertsModel()
+
+	// With no alerts, should return nil
+	selected := m.SelectedAlert()
+	if selected != nil {
+		t.Error("expected nil for selected alert when no alerts")
+	}
+}
+
+func TestAlertsModelSetAlertsCursorAdjustment(t *testing.T) {
+	m := NewAlertsModel()
+	m.cursor = 10 // Set cursor beyond new list size
+
+	// Set only 2 alerts - cursor should be adjusted
+	alerts := api.MockAlerts()[:2]
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	if m.cursor >= len(alerts) {
+		t.Errorf("cursor should be adjusted to valid range, got %d for %d alerts", m.cursor, len(alerts))
+	}
+}
+
+func TestAlertsModelWindowSizeMsg(t *testing.T) {
+	m := NewAlertsModel()
+
+	m, _ = m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
+
+	if m.width != 120 {
+		t.Errorf("expected width 120, got %d", m.width)
+	}
+	if m.height != 40 {
+		t.Errorf("expected height 40, got %d", m.height)
+	}
+	if m.listWidth == 0 {
+		t.Error("expected listWidth to be calculated")
+	}
+}
+
+func TestFormatAlertTime(t *testing.T) {
+	// Test with a known time
+	testTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	result := formatAlertTime(testTime)
+
+	// Should contain the date
+	if !strings.Contains(result, "Jan 15, 2024") {
+		t.Errorf("expected result to contain 'Jan 15, 2024', got '%s'", result)
 	}
 }
