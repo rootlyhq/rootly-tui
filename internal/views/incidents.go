@@ -304,9 +304,9 @@ func (m IncidentsModel) renderDetail(height int) string {
 	sevBadge := styles.RenderSeverity(inc.Severity)
 	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s\n\n", statusBadge, sevSignal, sevBadge))
 
-	// Summary (if different from title)
+	// Description (shows the summary if different from title)
 	if inc.Summary != "" && inc.Summary != inc.Title {
-		b.WriteString(styles.TextBold.Render("Summary"))
+		b.WriteString(styles.TextBold.Render("Description"))
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(inc.Summary))
 		b.WriteString("\n\n")
