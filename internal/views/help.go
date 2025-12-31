@@ -83,9 +83,9 @@ func RenderHelpBar(width int, hasSelection, isLoading bool) string {
 	}
 	if !isLoading {
 		items = append(items, styles.RenderHelpItem("r", i18n.T("refresh")))
-	}
-	if hasSelection {
-		items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
+		if hasSelection {
+			items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
+		}
 	}
 	items = append(items,
 		styles.RenderHelpItem("l", i18n.T("logs")),

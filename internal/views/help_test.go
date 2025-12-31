@@ -124,8 +124,8 @@ func TestRenderHelpBarWhileLoading(t *testing.T) {
 		t.Error("expected help bar to NOT contain 'refresh' when loading")
 	}
 
-	// 'open' should still be shown
-	if !strings.Contains(bar, "open") {
-		t.Error("expected help bar to contain 'open' when hasSelection is true")
+	// 'open' should NOT be shown when loading (even with selection)
+	if strings.Contains(bar, "open") {
+		t.Error("expected help bar to NOT contain 'open' when loading")
 	}
 }
