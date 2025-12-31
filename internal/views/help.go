@@ -83,7 +83,7 @@ func renderHelpLine(key, desc string) string {
 // hasSelection indicates whether an incident or alert is currently selected
 // isLoading indicates whether data is currently being loaded
 // isIncidentsTab indicates whether we're on the incidents tab (for sorting hints)
-func RenderHelpBar(width int, hasSelection, isLoading bool, isIncidentsTab bool) string {
+func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", i18n.T("navigate")),
 		styles.RenderHelpItem("[/]", i18n.T("page_nav")),
