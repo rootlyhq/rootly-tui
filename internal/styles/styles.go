@@ -8,6 +8,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Spacing constants (padding and margin)
+const (
+	SpacingNone   = 0
+	SpacingSmall  = 1
+	SpacingMedium = 2
+	SpacingLarge  = 3
+)
+
 // Color palette (Rootly brand colors)
 var (
 	ColorPrimary    = lipgloss.Color("#7C3AED") // Purple
@@ -57,13 +65,13 @@ var (
 // Layout styles
 var (
 	App = lipgloss.NewStyle().
-		Padding(1, 2)
+		Padding(SpacingSmall, SpacingMedium)
 
 	Header = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(ColorText).
-		Padding(0, 2).
-		MarginBottom(1)
+		Padding(SpacingNone, SpacingMedium).
+		MarginBottom(SpacingSmall)
 
 	Title = lipgloss.NewStyle().
 		Bold(true).
@@ -74,42 +82,42 @@ var (
 			Bold(true).
 			Foreground(ColorPrimary).
 			Underline(true).
-			Padding(0, 2)
+			Padding(SpacingNone, SpacingMedium)
 
 	TabInactive = lipgloss.NewStyle().
 			Foreground(ColorTextDim).
-			Padding(0, 2)
+			Padding(SpacingNone, SpacingMedium)
 
 	// List styles
 	ListContainer = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ColorBorder).
-			Padding(0, 1)
+			Padding(SpacingNone, SpacingSmall)
 
 	ListItem = lipgloss.NewStyle().
 			Foreground(ColorText).
-			Padding(0, 1)
+			Padding(SpacingNone, SpacingSmall)
 
 	ListItemSelected = lipgloss.NewStyle().
 				Foreground(ColorHighlight).
 				Bold(true).
-				Padding(0, 1)
+				Padding(SpacingNone, SpacingSmall)
 
 	// Detail pane styles
 	DetailContainer = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ColorBorder).
-			Padding(1, 2)
+			Padding(SpacingSmall, SpacingMedium)
 
 	DetailContainerFocused = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(ColorPrimary).
-				Padding(1, 2)
+				Padding(SpacingSmall, SpacingMedium)
 
 	DetailTitle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(ColorPrimary).
-			MarginBottom(1)
+			MarginBottom(SpacingSmall)
 
 	DetailLabel = lipgloss.NewStyle().
 			Foreground(ColorTextDim).
@@ -135,74 +143,74 @@ var (
 	SeverityCritical = lipgloss.NewStyle().
 				Foreground(ColorText).
 				Background(ColorCritical).
-				Padding(0, 1).
+				Padding(SpacingNone, SpacingSmall).
 				Bold(true)
 
 	SeverityHigh = lipgloss.NewStyle().
 			Foreground(ColorText).
 			Background(ColorHigh).
-			Padding(0, 1).
+			Padding(SpacingNone, SpacingSmall).
 			Bold(true)
 
 	SeverityMedium = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#000000")).
 			Background(ColorMedium).
-			Padding(0, 1).
+			Padding(SpacingNone, SpacingSmall).
 			Bold(true)
 
 	SeverityLow = lipgloss.NewStyle().
 			Foreground(ColorText).
 			Background(ColorLow).
-			Padding(0, 1).
+			Padding(SpacingNone, SpacingSmall).
 			Bold(true)
 
 	// Input styles
 	InputLabel = lipgloss.NewStyle().
 			Foreground(ColorText).
 			Bold(true).
-			MarginBottom(1)
+			MarginBottom(SpacingSmall)
 
 	InputField = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ColorBorder).
-			Padding(0, 1).
+			Padding(SpacingNone, SpacingSmall).
 			Width(50)
 
 	InputFieldFocused = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(ColorPrimary).
-				Padding(0, 1).
+				Padding(SpacingNone, SpacingSmall).
 				Width(50)
 
 	// Button styles
 	Button = lipgloss.NewStyle().
 		Foreground(ColorText).
 		Background(ColorMuted).
-		Padding(0, 2).
-		MarginRight(1)
+		Padding(SpacingNone, SpacingMedium).
+		MarginRight(SpacingSmall)
 
 	ButtonFocused = lipgloss.NewStyle().
 			Foreground(ColorText).
 			Background(ColorPrimary).
-			Padding(0, 2).
-			MarginRight(1)
+			Padding(SpacingNone, SpacingMedium).
+			MarginRight(SpacingSmall)
 
 	// Dialog styles
 	Dialog = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(ColorPrimary).
-		Padding(2, 4).
+		Padding(SpacingMedium, SpacingLarge+SpacingSmall).
 		Width(60)
 
 	DialogTitle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(ColorPrimary).
-			MarginBottom(1)
+			MarginBottom(SpacingSmall)
 
 	// Help bar
 	HelpBar = lipgloss.NewStyle().
 		Foreground(ColorTextDim).
-		MarginTop(1)
+		MarginTop(SpacingSmall)
 
 	HelpKey = lipgloss.NewStyle().
 		Foreground(ColorPrimary).
@@ -214,7 +222,7 @@ var (
 	// Status bar
 	StatusBar = lipgloss.NewStyle().
 			Foreground(ColorTextDim).
-			MarginTop(1)
+			MarginTop(SpacingSmall)
 
 	// Error/Success messages
 	Error = lipgloss.NewStyle().
