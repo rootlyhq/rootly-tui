@@ -12,6 +12,10 @@ builds:
     binary: rootly-tui
     env:
       - CGO_ENABLED=0
+    flags:
+      - -tags=netgo
+      - -a
+      - -v
     goos:
       - linux
       - darwin
@@ -19,8 +23,13 @@ builds:
     goarch:
       - amd64
       - arm64
+      - arm
+    goarm:
+      - "6"
+      - "7"
     ldflags:
       - -s -w
+      - -extldflags "-static"
       - -X main.version={{.Version}}
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
@@ -71,9 +80,11 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/rootlyhq/rootly-tui"
+    homepage: "https://rootly.com"
     description: "Terminal UI for Rootly incidents and alerts"
     license: "MIT"
+    install: |
+      bin.install "rootly-tui"
     test: |
       system "#{bin}/rootly-tui", "--version"
 
