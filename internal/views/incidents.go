@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
@@ -52,13 +53,19 @@ type IncidentsModel struct {
 	spinnerView string
 	// Detail loading state
 	detailLoading bool
+	// Detail viewport for scrollable content
+	detailViewport       viewport.Model
+	detailViewportReady  bool
+	lastDisplayedCursor  int  // Track which item is displayed to reset scroll on change
+	detailFocused        bool // Whether detail pane has focus for scrolling
 }
 
 func NewIncidentsModel() IncidentsModel {
 	return IncidentsModel{
-		incidents:   []api.Incident{},
-		cursor:      0,
-		currentPage: 1,
+		incidents:           []api.Incident{},
+		cursor:              0,
+		currentPage:         1,
+		lastDisplayedCursor: -1, // Force initial content update
 	}
 }
 
@@ -67,28 +74,60 @@ func (m IncidentsModel) Init() tea.Cmd {
 }
 
 func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
-			if m.cursor < len(m.incidents)-1 {
+			if m.detailFocused {
+				// Scroll detail viewport down
+				m.detailViewport.LineDown(1)
+			} else if m.cursor < len(m.incidents)-1 {
 				m.cursor++
 			}
 			return m, nil
 
 		case "k", "up":
-			if m.cursor > 0 {
+			if m.detailFocused {
+				// Scroll detail viewport up
+				m.detailViewport.LineUp(1)
+			} else if m.cursor > 0 {
 				m.cursor--
 			}
 			return m, nil
 
 		case "g":
-			m.cursor = 0
+			if m.detailFocused {
+				m.detailViewport.GotoTop()
+			} else {
+				m.cursor = 0
+			}
 			return m, nil
 
 		case "G":
-			if len(m.incidents) > 0 {
+			if m.detailFocused {
+				m.detailViewport.GotoBottom()
+			} else if len(m.incidents) > 0 {
 				m.cursor = len(m.incidents) - 1
+			}
+			return m, nil
+
+		case "tab":
+			// Toggle focus between list and detail
+			m.detailFocused = !m.detailFocused
+			return m, nil
+
+		case "ctrl+d":
+			if m.detailFocused {
+				m.detailViewport.HalfPageDown()
+			}
+			return m, nil
+
+		case "ctrl+u":
+			if m.detailFocused {
+				m.detailViewport.HalfPageUp()
 			}
 			return m, nil
 		}
@@ -99,13 +138,43 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 		m.updateDimensions()
 	}
 
-	return m, nil
+	// Forward mouse messages to viewport for mouse wheel scrolling
+	if m.detailViewportReady {
+		m.detailViewport, cmd = m.detailViewport.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *IncidentsModel) updateDimensions() {
 	if m.width > 0 {
 		m.listWidth = int(float64(m.width) * 0.35)
 		m.detailWidth = m.width - m.listWidth - 6 // Account for borders and padding
+
+		// Update viewport dimensions
+		contentHeight := m.height - 8
+		if contentHeight < 5 {
+			contentHeight = 5
+		}
+		// Account for detail container borders/padding
+		viewportHeight := contentHeight - 4
+		viewportWidth := m.detailWidth - 4
+		if viewportHeight < 1 {
+			viewportHeight = 1
+		}
+		if viewportWidth < 20 {
+			viewportWidth = 20
+		}
+
+		if !m.detailViewportReady {
+			m.detailViewport = viewport.New(viewportWidth, viewportHeight)
+			m.detailViewport.MouseWheelEnabled = true
+			m.detailViewportReady = true
+		} else {
+			m.detailViewport.Width = viewportWidth
+			m.detailViewport.Height = viewportHeight
+		}
 	}
 }
 
@@ -322,7 +391,7 @@ func (m IncidentsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
-func (m IncidentsModel) renderDetail(height int) string {
+func (m *IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
@@ -330,6 +399,51 @@ func (m IncidentsModel) renderDetail(height int) string {
 		)
 	}
 
+	// Generate detail content
+	content := m.generateDetailContent(inc)
+
+	// Update viewport content if cursor changed or content needs refresh
+	if m.cursor != m.lastDisplayedCursor || !m.detailViewportReady {
+		m.lastDisplayedCursor = m.cursor
+		if m.detailViewportReady {
+			m.detailViewport.SetContent(content)
+			m.detailViewport.GotoTop()
+		}
+	} else if m.detailViewportReady {
+		// Update content without resetting scroll position (for detail loading)
+		m.detailViewport.SetContent(content)
+	}
+
+	// Render with or without viewport
+	if !m.detailViewportReady {
+		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(content)
+	}
+
+	// Add scroll indicator if content is scrollable
+	var footer string
+	if m.detailViewport.TotalLineCount() > m.detailViewport.VisibleLineCount() {
+		scrollPercent := int(m.detailViewport.ScrollPercent() * 100)
+		if m.detailFocused {
+			footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (j/k scroll) ───", scrollPercent))
+		} else {
+			footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (Tab to scroll) ───", scrollPercent))
+		}
+	}
+
+	// Use viewport for rendering, apply focus style if focused
+	viewportContent := m.detailViewport.View()
+	if footer != "" {
+		viewportContent = viewportContent + "\n" + footer
+	}
+
+	containerStyle := styles.DetailContainer
+	if m.detailFocused {
+		containerStyle = styles.DetailContainerFocused
+	}
+	return containerStyle.Width(m.detailWidth).Height(height).Render(viewportContent)
+}
+
+func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	var b strings.Builder
 
 	// Title line: [INC-XXX] Title (strip newlines for single-line display)
@@ -462,8 +576,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
 	}
 
-	content := b.String()
-	return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(content)
+	return b.String()
 }
 
 func (m IncidentsModel) renderDetailRow(label, value string) string {

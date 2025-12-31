@@ -101,6 +101,11 @@ var (
 			BorderForeground(ColorBorder).
 			Padding(1, 2)
 
+	DetailContainerFocused = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(ColorPrimary).
+				Padding(1, 2)
+
 	DetailTitle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(ColorPrimary).
