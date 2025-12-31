@@ -106,29 +106,20 @@ var (
 	DetailValue = lipgloss.NewStyle().
 			Foreground(ColorText)
 
-	// Status badges
+	// Status styles (text color only, no background)
 	StatusActive = lipgloss.NewStyle().
-			Foreground(ColorText).
-			Background(ColorDanger).
-			Padding(0, 1).
+			Foreground(ColorDanger).
 			Bold(true)
 
 	StatusInProgress = lipgloss.NewStyle().
-				Foreground(ColorText).
-				Background(ColorWarning).
-				Padding(0, 1).
+				Foreground(ColorWarning).
 				Bold(true)
 
 	StatusResolved = lipgloss.NewStyle().
-			Foreground(ColorText).
-			Background(ColorSuccess).
-			Padding(0, 1).
-			Bold(true)
+			Foreground(ColorSuccess)
 
 	StatusMuted = lipgloss.NewStyle().
-			Foreground(ColorText).
-			Background(ColorMuted).
-			Padding(0, 1)
+			Foreground(ColorMuted)
 
 	// Severity badges
 	SeverityCritical = lipgloss.NewStyle().

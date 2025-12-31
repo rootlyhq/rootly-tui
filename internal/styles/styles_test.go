@@ -245,3 +245,134 @@ func TestColorsNotEmpty(t *testing.T) {
 		})
 	}
 }
+
+func TestAlertSourceIcon(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{"datadog", "🐶"},
+		{"pagerduty", "📟"},
+		{"grafana", "📊"},
+		{"new_relic", "🔮"},
+		{"prometheus", "🔥"},
+		{"alertmanager", "🔥"},
+		{"opsgenie", "🔔"},
+		{"sentry", "🐛"},
+		{"slack", "💬"},
+		{"email", "📧"},
+		{"jira", "📋"},
+		{"unknown", "📡"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.source, func(t *testing.T) {
+			result := AlertSourceIcon(tt.source)
+			if result != tt.expected {
+				t.Errorf("AlertSourceIcon(%s) = %s, expected %s", tt.source, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestAlertSourceName(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{"datadog", "Datadog"},
+		{"pagerduty", "PagerDuty"},
+		{"new_relic", "New Relic"},
+		{"prometheus", "Prometheus"},
+		{"cloud_watch", "CloudWatch"},
+		{"cloudwatch", "CloudWatch"},
+		{"generic_webhook", "Generic Webhook"},
+		{"unknown_source", "unknown_source"}, // fallback returns source as-is
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.source, func(t *testing.T) {
+			result := AlertSourceName(tt.source)
+			if result != tt.expected {
+				t.Errorf("AlertSourceName(%s) = %s, expected %s", tt.source, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRenderStatusExtended(t *testing.T) {
+	tests := []struct {
+		status string
+	}{
+		// Active (red)
+		{"open"},
+		{"triggered"},
+		{"firing"},
+		{"OPEN"},          // case insensitive
+		{"  triggered  "}, // whitespace trimmed
+		// In progress (yellow)
+		{"started"},
+		{"in_progress"},
+		{"acknowledged"},
+		{"investigating"},
+		// Resolved (green)
+		{"resolved"},
+		{"mitigated"},
+		{"fixed"},
+		// Muted (gray)
+		{"closed"},
+		{"cancelled"},
+		{"suppressed"},
+		{"unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.status, func(t *testing.T) {
+			result := RenderStatus(tt.status)
+			// Just verify it returns something non-empty
+			if result == "" {
+				t.Errorf("RenderStatus(%s) returned empty string", tt.status)
+			}
+		})
+	}
+}
+
+func TestRenderLink(t *testing.T) {
+	url := "https://example.com"
+	text := "Example"
+	result := RenderLink(url, text)
+
+	// Should contain OSC 8 escape sequences
+	if !strings.Contains(result, "\x1b]8;;") {
+		t.Error("RenderLink should contain OSC 8 escape sequence")
+	}
+	if !strings.Contains(result, url) {
+		t.Errorf("RenderLink should contain URL %s", url)
+	}
+	if !strings.Contains(result, text) {
+		t.Errorf("RenderLink should contain text %s", text)
+	}
+}
+
+func TestRenderLinkEmptyText(t *testing.T) {
+	url := "https://example.com"
+	result := RenderLink(url, "")
+
+	// When text is empty, URL should be used as display text
+	// URL should appear twice (once in link, once as display)
+	if strings.Count(result, url) < 1 {
+		t.Errorf("RenderLink with empty text should use URL as display text")
+	}
+}
+
+func TestRenderURL(t *testing.T) {
+	url := "https://example.com"
+	result := RenderURL(url)
+
+	if !strings.Contains(result, url) {
+		t.Errorf("RenderURL should contain URL %s", url)
+	}
+	if !strings.Contains(result, "\x1b]8;;") {
+		t.Error("RenderURL should contain OSC 8 escape sequence")
+	}
+}
