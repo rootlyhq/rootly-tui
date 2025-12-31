@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rootlyhq/rootly-tui/internal/config"
 )
@@ -789,7 +790,9 @@ func TestGetIncident(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	incident, err := client.GetIncident(context.Background(), "inc_123")
+	// Use a fixed time for cache key - matches updated_at in test fixture
+	updatedAt, _ := time.Parse(time.RFC3339, "2025-01-01T12:00:00Z")
+	incident, err := client.GetIncident(context.Background(), "inc_123", updatedAt)
 	if err != nil {
 		t.Fatalf("GetIncident() error = %v", err)
 	}
@@ -937,7 +940,9 @@ func TestGetAlert(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	alert, err := client.GetAlert(context.Background(), "alert_123")
+	// Use a fixed time for cache key - matches updated_at in test fixture
+	updatedAt, _ := time.Parse(time.RFC3339, "2025-01-01T10:30:00Z")
+	alert, err := client.GetAlert(context.Background(), "alert_123", updatedAt)
 	if err != nil {
 		t.Fatalf("GetAlert() error = %v", err)
 	}
@@ -1001,7 +1006,7 @@ func TestGetIncidentError(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.GetIncident(context.Background(), "nonexistent")
+	_, err = client.GetIncident(context.Background(), "nonexistent", time.Now())
 	if err == nil {
 		t.Error("expected error for 404 response")
 	}
@@ -1025,7 +1030,7 @@ func TestGetAlertError(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.GetAlert(context.Background(), "nonexistent")
+	_, err = client.GetAlert(context.Background(), "nonexistent", time.Now())
 	if err == nil {
 		t.Error("expected error for 404 response")
 	}

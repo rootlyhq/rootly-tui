@@ -532,12 +532,14 @@ func parseTimePtr(s *string) *time.Time {
 }
 
 // GetIncident fetches detailed incident data by ID
+// updatedAt is used for cache invalidation - cache key includes it so changes invalidate the cache
 //
 //nolint:gocyclo // complexity from parsing deeply nested API response with many optional fields
-func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) {
-	// Build cache key
+func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time) (*Incident, error) {
+	// Build cache key with updated_at for smart invalidation
 	cacheKey := NewCacheKey(CacheKeyPrefixIncidentDetail).
 		With("id", id).
+		With("updated_at", updatedAt.UTC().Format(time.RFC3339)).
 		Build()
 
 	// Check cache first
@@ -830,10 +832,12 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 }
 
 // GetAlert fetches detailed alert data by ID
-func (c *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
-	// Build cache key
+// updatedAt is used for cache invalidation - cache key includes it so changes invalidate the cache
+func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (*Alert, error) {
+	// Build cache key with updated_at for smart invalidation
 	cacheKey := NewCacheKey(CacheKeyPrefixAlertDetail).
 		With("id", id).
+		With("updated_at", updatedAt.UTC().Format(time.RFC3339)).
 		Build()
 
 	// Check cache first

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -228,13 +229,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				inc := m.incidents.SelectedIncident()
 				if inc != nil && !inc.DetailLoaded {
 					m.incidents.SetDetailLoading(true)
-					return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, m.incidents.SelectedIndex()))
+					return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, inc.UpdatedAt, m.incidents.SelectedIndex()))
 				}
 			} else {
 				alert := m.alerts.SelectedAlert()
 				if alert != nil && !alert.DetailLoaded {
 					m.alerts.SetDetailLoading(true)
-					return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, m.alerts.SelectedIndex()))
+					return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, alert.UpdatedAt, m.alerts.SelectedIndex()))
 				}
 			}
 			return m, nil
@@ -536,7 +537,7 @@ func (m Model) loadAlerts() tea.Cmd {
 	}
 }
 
-func (m Model) loadIncidentDetail(id string, index int) tea.Cmd {
+func (m Model) loadIncidentDetail(id string, updatedAt time.Time, index int) tea.Cmd {
 	client := m.apiClient
 	return func() tea.Msg {
 		if client == nil {
@@ -544,7 +545,7 @@ func (m Model) loadIncidentDetail(id string, index int) tea.Cmd {
 		}
 
 		ctx := context.Background()
-		incident, err := client.GetIncident(ctx, id)
+		incident, err := client.GetIncident(ctx, id, updatedAt)
 		if err != nil {
 			return IncidentDetailLoadedMsg{Err: err, Index: index}
 		}
@@ -556,7 +557,7 @@ func (m Model) loadIncidentDetail(id string, index int) tea.Cmd {
 	}
 }
 
-func (m Model) loadAlertDetail(id string, index int) tea.Cmd {
+func (m Model) loadAlertDetail(id string, updatedAt time.Time, index int) tea.Cmd {
 	client := m.apiClient
 	return func() tea.Msg {
 		if client == nil {
@@ -564,7 +565,7 @@ func (m Model) loadAlertDetail(id string, index int) tea.Cmd {
 		}
 
 		ctx := context.Background()
-		alert, err := client.GetAlert(ctx, id)
+		alert, err := client.GetAlert(ctx, id, updatedAt)
 		if err != nil {
 			return AlertDetailLoadedMsg{Err: err, Index: index}
 		}
