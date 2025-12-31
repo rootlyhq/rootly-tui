@@ -481,3 +481,112 @@ func TestRenderURL(t *testing.T) {
 		t.Error("RenderURL should contain OSC 8 escape sequence")
 	}
 }
+
+func TestRenderMarkdownPlainText(t *testing.T) {
+	text := "Hello world"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "Hello world") {
+		t.Errorf("RenderMarkdown should contain plain text, got %q", result)
+	}
+}
+
+func TestRenderMarkdownEmpty(t *testing.T) {
+	result := RenderMarkdown("", 80)
+
+	if result != "" {
+		t.Errorf("RenderMarkdown with empty string should return empty, got %q", result)
+	}
+}
+
+func TestRenderMarkdownBold(t *testing.T) {
+	text := "**bold text**"
+	result := RenderMarkdown(text, 80)
+
+	// Glamour renders bold with ANSI codes, so just check text is present
+	if !strings.Contains(result, "bold text") {
+		t.Errorf("RenderMarkdown should contain bold text content, got %q", result)
+	}
+}
+
+func TestRenderMarkdownItalic(t *testing.T) {
+	text := "*italic text*"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "italic text") {
+		t.Errorf("RenderMarkdown should contain italic text content, got %q", result)
+	}
+}
+
+func TestRenderMarkdownCode(t *testing.T) {
+	text := "`inline code`"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "inline code") {
+		t.Errorf("RenderMarkdown should contain inline code content, got %q", result)
+	}
+}
+
+func TestRenderMarkdownLink(t *testing.T) {
+	text := "[Example](https://example.com)"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "Example") {
+		t.Errorf("RenderMarkdown should contain link text, got %q", result)
+	}
+}
+
+func TestRenderMarkdownList(t *testing.T) {
+	text := "- item 1\n- item 2\n- item 3"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "item 1") {
+		t.Errorf("RenderMarkdown should contain list items, got %q", result)
+	}
+	if !strings.Contains(result, "item 2") {
+		t.Errorf("RenderMarkdown should contain list items, got %q", result)
+	}
+}
+
+func TestRenderMarkdownDefaultWidth(t *testing.T) {
+	// Test with zero width (should use default of 80)
+	text := "Hello world"
+	result := RenderMarkdown(text, 0)
+
+	if !strings.Contains(result, "Hello world") {
+		t.Errorf("RenderMarkdown with zero width should still work, got %q", result)
+	}
+}
+
+func TestRenderMarkdownNegativeWidth(t *testing.T) {
+	// Test with negative width (should use default of 80)
+	text := "Hello world"
+	result := RenderMarkdown(text, -10)
+
+	if !strings.Contains(result, "Hello world") {
+		t.Errorf("RenderMarkdown with negative width should still work, got %q", result)
+	}
+}
+
+func TestRenderMarkdownNoLeftMargin(t *testing.T) {
+	// Test that rendered markdown doesn't have leading whitespace
+	text := "Simple text"
+	result := RenderMarkdown(text, 80)
+
+	// The result should not start with spaces (no left margin)
+	if len(result) > 0 && result[0] == ' ' {
+		t.Errorf("RenderMarkdown should not have left margin, got %q", result)
+	}
+}
+
+func TestRenderMarkdownMultiline(t *testing.T) {
+	text := "Line 1\n\nLine 2"
+	result := RenderMarkdown(text, 80)
+
+	if !strings.Contains(result, "Line 1") {
+		t.Errorf("RenderMarkdown should contain first line, got %q", result)
+	}
+	if !strings.Contains(result, "Line 2") {
+		t.Errorf("RenderMarkdown should contain second line, got %q", result)
+	}
+}

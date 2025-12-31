@@ -1,6 +1,7 @@
 package styles
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/glamour"
@@ -524,9 +525,18 @@ var markdownRenderer *glamour.TermRenderer
 // getMarkdownRenderer returns a cached glamour renderer
 func getMarkdownRenderer(width int) *glamour.TermRenderer {
 	if markdownRenderer == nil {
+		// Build style JSON using ColorInfo constant for consistent link styling
+		styleJSON := fmt.Sprintf(`{
+			"document": {"margin": 0},
+			"paragraph": {"margin": 0},
+			"link": {"color": "%s", "underline": true},
+			"link_text": {"color": "%s", "underline": true}
+		}`, ColorInfo, ColorInfo)
+
 		r, err := glamour.NewTermRenderer(
 			glamour.WithAutoStyle(),
 			glamour.WithWordWrap(width),
+			glamour.WithStylesFromJSONBytes([]byte(styleJSON)),
 		)
 		if err != nil {
 			return nil
