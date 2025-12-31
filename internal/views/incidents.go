@@ -164,20 +164,24 @@ func (m IncidentsModel) renderList(height int) string {
 	for i := start; i < end; i++ {
 		inc := m.incidents[i]
 
-		// Status dot
-		dot := styles.RenderStatusDot(inc.Status)
-
 		// Severity signal bars
 		sev := styles.RenderSeveritySignal(inc.Severity)
 
 		// Sequential ID (e.g., INC-123)
-		seqID := styles.TextDim.Render(inc.SequentialID)
-		if inc.SequentialID == "" {
-			seqID = styles.TextDim.Render("INC-?")
+		seqID := inc.SequentialID
+		if seqID == "" {
+			seqID = "INC-?"
 		}
 
+		// Status (padded for alignment)
+		status := inc.Status
+		if len(status) > 12 {
+			status = status[:12]
+		}
+		statusPadded := fmt.Sprintf("%-12s", status)
+
 		// Title (truncated)
-		titleMaxLen := m.listWidth - 25
+		titleMaxLen := m.listWidth - 35
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
@@ -189,7 +193,8 @@ func (m IncidentsModel) renderList(height int) string {
 			title = title[:titleMaxLen-3] + "..."
 		}
 
-		line := fmt.Sprintf("%s %s %s %s", dot, sev, seqID, title)
+		// Format: "▁▃▅▇ INC-123  started      Title here"
+		line := fmt.Sprintf("%s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
 
 		if i == m.cursor {
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))

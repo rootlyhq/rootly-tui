@@ -156,16 +156,24 @@ func (m AlertsModel) renderList(height int) string {
 	for i := start; i < end; i++ {
 		alert := m.alerts[i]
 
-		dot := styles.RenderStatusDot(alert.Status)
+		// Source icon
 		source := styles.RenderAlertSource(alert.Source)
 
-		// Short ID
-		shortID := styles.TextDim.Render(alert.ShortID)
-		if alert.ShortID == "" {
-			shortID = ""
+		// Short ID (e.g., ABC123)
+		shortID := alert.ShortID
+		if shortID == "" {
+			shortID = "---"
 		}
 
-		titleMaxLen := m.listWidth - 22
+		// Status (padded for alignment)
+		status := alert.Status
+		if len(status) > 10 {
+			status = status[:10]
+		}
+		statusPadded := fmt.Sprintf("%-10s", status)
+
+		// Summary (truncated)
+		titleMaxLen := m.listWidth - 30
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
@@ -174,12 +182,8 @@ func (m AlertsModel) renderList(height int) string {
 			summary = summary[:titleMaxLen-3] + "..."
 		}
 
-		var line string
-		if alert.ShortID != "" {
-			line = fmt.Sprintf("%s %s %s %s", dot, source, shortID, summary)
-		} else {
-			line = fmt.Sprintf("%s %s %s", dot, source, summary)
-		}
+		// Format: "[source] ABC123  triggered   Summary here"
+		line := fmt.Sprintf("%s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
 
 		if i == m.cursor {
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
