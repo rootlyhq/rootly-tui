@@ -1,9 +1,13 @@
 package app
 
 import (
+	"os"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/rootlyhq/rootly-tui/internal/api"
+	"github.com/rootlyhq/rootly-tui/internal/config"
 )
 
 func TestNew(t *testing.T) {
@@ -296,4 +300,45 @@ func TestModelClientNotRecreatedOnRefresh(t *testing.T) {
 			t.Error("expected apiClient to remain the same after initialization")
 		}
 	}
+}
+
+func TestModelClose(t *testing.T) {
+	m := New("1.0.0")
+
+	// Close with nil client should not error
+	err := m.Close()
+	if err != nil {
+		t.Errorf("expected no error closing model with nil client, got %v", err)
+	}
+}
+
+func TestModelCloseWithClient(t *testing.T) {
+	// Create a temp directory for cache
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Create a valid config
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "api.rootly.com",
+	}
+
+	// Create client manually
+	client, err := api.NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	m := New("1.0.0")
+	m.apiClient = client
+
+	// Close should close the client
+	err = m.Close()
+	if err != nil {
+		t.Errorf("expected no error closing model, got %v", err)
+	}
+
+	// Client should be closed (calling Close again is safe but we just verify no panic)
 }

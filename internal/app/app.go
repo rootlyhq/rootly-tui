@@ -442,3 +442,11 @@ func (m Model) loadAlerts() tea.Cmd {
 		}
 	}
 }
+
+// Close cleans up resources (cache, connections) when the app exits
+func (m Model) Close() error {
+	if m.apiClient != nil {
+		return m.apiClient.Close()
+	}
+	return nil
+}

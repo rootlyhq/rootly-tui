@@ -51,13 +51,26 @@ func main() {
 		debug.Logger.Info("Debug mode enabled")
 	}
 
+	model := app.New(version)
 	p := tea.NewProgram(
-		app.New(version),
+		model,
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
 
-	if _, err := p.Run(); err != nil {
+	// Run the program
+	finalModel, err := p.Run()
+
+	// Clean up resources (cache, connections) regardless of how we exit
+	if m, ok := finalModel.(app.Model); ok {
+		if closeErr := m.Close(); closeErr != nil {
+			debug.Logger.Error("Error closing resources", "error", closeErr)
+		} else {
+			debug.Logger.Debug("Resources closed successfully")
+		}
+	}
+
+	if err != nil {
 		debug.Logger.Error("Program error", "error", err)
 		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
 		os.Exit(1)
