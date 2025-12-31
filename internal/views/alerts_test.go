@@ -395,3 +395,212 @@ func TestAlertsModelViewStripsNewlines(t *testing.T) {
 		}
 	}
 }
+
+func TestAlertsModelSelectedIndex(t *testing.T) {
+	m := NewAlertsModel()
+	alerts := api.MockAlerts()
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+	m.SetDimensions(100, 30)
+
+	// Initial index should be 0
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected initial index 0, got %d", m.SelectedIndex())
+	}
+
+	// Move cursor down
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.SelectedIndex() != 1 {
+		t.Errorf("expected index 1 after j, got %d", m.SelectedIndex())
+	}
+
+	// Move cursor down again
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.SelectedIndex() != 2 {
+		t.Errorf("expected index 2 after j, got %d", m.SelectedIndex())
+	}
+}
+
+func TestAlertsModelSetDetailLoading(t *testing.T) {
+	m := NewAlertsModel()
+
+	// Default should be false
+	if m.detailLoading {
+		t.Error("expected detailLoading to be false initially")
+	}
+
+	m.SetDetailLoading(true)
+	if !m.detailLoading {
+		t.Error("expected detailLoading to be true after SetDetailLoading(true)")
+	}
+
+	m.SetDetailLoading(false)
+	if m.detailLoading {
+		t.Error("expected detailLoading to be false after SetDetailLoading(false)")
+	}
+}
+
+func TestAlertsModelUpdateAlertDetail(t *testing.T) {
+	m := NewAlertsModel()
+	alerts := api.MockAlerts()
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	// Get original alert
+	originalID := m.alerts[0].ID
+	if originalID != alerts[0].ID {
+		t.Fatalf("expected original ID %s, got %s", alerts[0].ID, originalID)
+	}
+
+	// Create detailed alert
+	detailedAlert := &api.Alert{
+		ID:           alerts[0].ID,
+		ShortID:      alerts[0].ShortID,
+		Summary:      "Detailed Summary",
+		Status:       "resolved",
+		Source:       "datadog",
+		DetailLoaded: true,
+		Urgency:      "High",
+		Responders:   []string{"On-call Engineer", "Team Lead"},
+	}
+
+	// Update at index 0
+	m.UpdateAlertDetail(0, detailedAlert)
+
+	// Verify the alert was updated
+	updated := m.alerts[0]
+	if !updated.DetailLoaded {
+		t.Error("expected DetailLoaded to be true after update")
+	}
+	if updated.Urgency != "High" {
+		t.Errorf("expected Urgency 'High', got '%s'", updated.Urgency)
+	}
+	if len(updated.Responders) != 2 {
+		t.Errorf("expected 2 responders, got %d", len(updated.Responders))
+	}
+	if updated.Responders[0] != "On-call Engineer" {
+		t.Errorf("expected first responder 'On-call Engineer', got '%s'", updated.Responders[0])
+	}
+}
+
+func TestAlertsModelUpdateAlertDetailInvalidIndex(t *testing.T) {
+	m := NewAlertsModel()
+	alerts := api.MockAlerts()
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	detailedAlert := &api.Alert{
+		ID:           "new",
+		DetailLoaded: true,
+	}
+
+	// Update at invalid index should not panic
+	m.UpdateAlertDetail(-1, detailedAlert)
+	m.UpdateAlertDetail(100, detailedAlert)
+
+	// Verify nothing changed
+	if m.alerts[0].DetailLoaded {
+		t.Error("expected DetailLoaded to remain unchanged for invalid index")
+	}
+}
+
+func TestAlertsModelUpdateAlertDetailNil(t *testing.T) {
+	m := NewAlertsModel()
+	alerts := api.MockAlerts()
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	// Update with nil should not panic
+	m.UpdateAlertDetail(0, nil)
+
+	// Verify nothing changed
+	if m.alerts[0].DetailLoaded {
+		t.Error("expected DetailLoaded to remain unchanged for nil alert")
+	}
+}
+
+func TestAlertsModelViewShowsDetailHint(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetDimensions(100, 40)
+
+	// Alert without detail loaded
+	alerts := []api.Alert{
+		{
+			ID:           "1",
+			ShortID:      "ABC123",
+			Summary:      "Test alert",
+			Status:       "triggered",
+			Source:       "datadog",
+			CreatedAt:    time.Now(),
+			DetailLoaded: false,
+		},
+	}
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+	if !strings.Contains(view, "Press Enter for more details") {
+		t.Error("expected hint 'Press Enter for more details' when detail not loaded")
+	}
+}
+
+func TestAlertsModelViewHidesDetailHint(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetDimensions(100, 40)
+
+	// Alert with detail loaded
+	alerts := []api.Alert{
+		{
+			ID:           "1",
+			ShortID:      "ABC123",
+			Summary:      "Test alert",
+			Status:       "triggered",
+			Source:       "datadog",
+			CreatedAt:    time.Now(),
+			DetailLoaded: true,
+		},
+	}
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+	if strings.Contains(view, "Press Enter for more details") {
+		t.Error("expected no hint when detail is loaded")
+	}
+}
+
+func TestAlertsModelViewShowsExtendedDetail(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetDimensions(100, 40)
+
+	// Alert with extended detail
+	alerts := []api.Alert{
+		{
+			ID:           "1",
+			ShortID:      "ABC123",
+			Summary:      "Test alert",
+			Status:       "resolved",
+			Source:       "datadog",
+			CreatedAt:    time.Now(),
+			DetailLoaded: true,
+			Urgency:      "High",
+			Responders:   []string{"On-call Engineer", "Team Lead"},
+		},
+	}
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// Should show urgency
+	if !strings.Contains(view, "Urgency") {
+		t.Error("expected 'Urgency' in detail view")
+	}
+	if !strings.Contains(view, "High") {
+		t.Error("expected 'High' urgency in detail view")
+	}
+
+	// Should show responders
+	if !strings.Contains(view, "Responders") {
+		t.Error("expected 'Responders' section in detail view")
+	}
+	if !strings.Contains(view, "On-call Engineer") {
+		t.Error("expected 'On-call Engineer' in detail view")
+	}
+	if !strings.Contains(view, "Team Lead") {
+		t.Error("expected 'Team Lead' in detail view")
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/rootlyhq/rootly-tui/internal/config"
@@ -627,5 +628,323 @@ func TestListAlertsError(t *testing.T) {
 	_, err = client.ListAlerts(context.Background(), 1)
 	if err == nil {
 		t.Error("expected error for 500 response")
+	}
+}
+
+func TestGetIncident(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify the request path includes the incident ID
+		if !strings.Contains(r.URL.Path, "/v1/incidents/inc_123") {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		// Verify includes are requested
+		if !strings.Contains(r.URL.RawQuery, "include=") {
+			t.Error("expected include parameter in query")
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": map[string]interface{}{
+				"id": "inc_123",
+				"attributes": map[string]interface{}{
+					"sequential_id":     456,
+					"title":             "Database Outage",
+					"summary":           "Production database went down",
+					"status":            "resolved",
+					"kind":              "incident",
+					"url":               "https://rootly.io/incidents/inc_123",
+					"created_at":        "2025-01-01T10:00:00Z",
+					"updated_at":        "2025-01-01T12:00:00Z",
+					"started_at":        "2025-01-01T10:01:00Z",
+					"resolved_at":       "2025-01-01T11:00:00Z",
+					"slack_channel_url": "https://slack.com/channel",
+					"severity": map[string]interface{}{
+						"data": map[string]interface{}{
+							"attributes": map[string]interface{}{
+								"name": "critical",
+							},
+						},
+					},
+					"services": map[string]interface{}{
+						"data": []map[string]interface{}{
+							{"attributes": map[string]interface{}{"name": "api-server"}},
+						},
+					},
+					"roles": map[string]interface{}{
+						"data": []map[string]interface{}{
+							{
+								"attributes": map[string]interface{}{
+									"name": "Commander",
+									"user": map[string]interface{}{
+										"data": map[string]interface{}{
+											"attributes": map[string]interface{}{
+												"name": "John Doe",
+											},
+										},
+									},
+								},
+							},
+							{
+								"attributes": map[string]interface{}{
+									"name": "Communications Lead",
+									"user": map[string]interface{}{
+										"data": map[string]interface{}{
+											"attributes": map[string]interface{}{
+												"name": "Jane Smith",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"causes": map[string]interface{}{
+						"data": []map[string]interface{}{
+							{"attributes": map[string]interface{}{"name": "Configuration Error"}},
+						},
+					},
+					"incident_types": map[string]interface{}{
+						"data": []map[string]interface{}{
+							{"attributes": map[string]interface{}{"name": "Infrastructure"}},
+						},
+					},
+				},
+			},
+		}
+
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	incident, err := client.GetIncident(context.Background(), "inc_123")
+	if err != nil {
+		t.Fatalf("GetIncident() error = %v", err)
+	}
+
+	// Verify basic fields
+	if incident.ID != "inc_123" {
+		t.Errorf("expected ID=inc_123, got %s", incident.ID)
+	}
+	if incident.SequentialID != "INC-456" {
+		t.Errorf("expected SequentialID=INC-456, got %s", incident.SequentialID)
+	}
+	if incident.Title != "Database Outage" {
+		t.Errorf("expected Title='Database Outage', got %s", incident.Title)
+	}
+	if incident.Status != "resolved" {
+		t.Errorf("expected Status=resolved, got %s", incident.Status)
+	}
+	if incident.Severity != "critical" {
+		t.Errorf("expected Severity=critical, got %s", incident.Severity)
+	}
+
+	// Verify detail fields
+	if !incident.DetailLoaded {
+		t.Error("expected DetailLoaded=true")
+	}
+	if incident.URL != "https://rootly.io/incidents/inc_123" {
+		t.Errorf("expected URL, got %s", incident.URL)
+	}
+	if incident.CommanderName != "John Doe" {
+		t.Errorf("expected CommanderName='John Doe', got %s", incident.CommanderName)
+	}
+	if incident.CommunicatorName != "Jane Smith" {
+		t.Errorf("expected CommunicatorName='Jane Smith', got %s", incident.CommunicatorName)
+	}
+	if len(incident.Roles) != 2 {
+		t.Errorf("expected 2 roles, got %d", len(incident.Roles))
+	}
+	if len(incident.Causes) != 1 || incident.Causes[0] != "Configuration Error" {
+		t.Errorf("expected Causes=['Configuration Error'], got %v", incident.Causes)
+	}
+	if len(incident.IncidentTypes) != 1 || incident.IncidentTypes[0] != "Infrastructure" {
+		t.Errorf("expected IncidentTypes=['Infrastructure'], got %v", incident.IncidentTypes)
+	}
+	if len(incident.Services) != 1 || incident.Services[0] != "api-server" {
+		t.Errorf("expected Services=['api-server'], got %v", incident.Services)
+	}
+	if incident.UpdatedAt.IsZero() {
+		t.Error("expected UpdatedAt to be set")
+	}
+}
+
+func TestGetAlert(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify the request path includes the alert ID
+		if !strings.Contains(r.URL.Path, "/v1/alerts/alert_123") {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		// Verify includes are requested
+		if !strings.Contains(r.URL.RawQuery, "include=") {
+			t.Error("expected include parameter in query")
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": map[string]interface{}{
+				"id": "alert_123",
+				"attributes": map[string]interface{}{
+					"short_id":     "ABC123",
+					"summary":      "High CPU Usage",
+					"description":  "CPU usage exceeded 90%",
+					"status":       "triggered",
+					"source":       "datadog",
+					"external_url": "https://datadog.com/alert/123",
+					"created_at":   "2025-01-01T10:00:00Z",
+					"updated_at":   "2025-01-01T10:30:00Z",
+					"started_at":   "2025-01-01T10:00:00Z",
+					"labels": []map[string]interface{}{
+						{"key": "severity", "value": "high"},
+					},
+					"services": []map[string]interface{}{
+						{
+							"id":         "svc_1",
+							"attributes": map[string]interface{}{"name": "web-service"},
+						},
+					},
+					"environments": []map[string]interface{}{
+						{
+							"id":         "env_1",
+							"attributes": map[string]interface{}{"name": "production"},
+						},
+					},
+					"responders": map[string]interface{}{
+						"data": []map[string]interface{}{
+							{
+								"attributes": map[string]interface{}{
+									"user": map[string]interface{}{
+										"data": map[string]interface{}{
+											"attributes": map[string]interface{}{
+												"name": "On-call Engineer",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"alert_urgency": map[string]interface{}{
+						"data": map[string]interface{}{
+							"attributes": map[string]interface{}{
+								"name": "High",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	alert, err := client.GetAlert(context.Background(), "alert_123")
+	if err != nil {
+		t.Fatalf("GetAlert() error = %v", err)
+	}
+
+	// Verify basic fields
+	if alert.ID != "alert_123" {
+		t.Errorf("expected ID=alert_123, got %s", alert.ID)
+	}
+	if alert.ShortID != "ABC123" {
+		t.Errorf("expected ShortID=ABC123, got %s", alert.ShortID)
+	}
+	if alert.Summary != "High CPU Usage" {
+		t.Errorf("expected Summary='High CPU Usage', got %s", alert.Summary)
+	}
+	if alert.Status != "triggered" {
+		t.Errorf("expected Status=triggered, got %s", alert.Status)
+	}
+	if alert.Source != "datadog" {
+		t.Errorf("expected Source=datadog, got %s", alert.Source)
+	}
+
+	// Verify detail fields
+	if !alert.DetailLoaded {
+		t.Error("expected DetailLoaded=true")
+	}
+	if alert.Urgency != "High" {
+		t.Errorf("expected Urgency='High', got %s", alert.Urgency)
+	}
+	if len(alert.Responders) != 1 || alert.Responders[0] != "On-call Engineer" {
+		t.Errorf("expected Responders=['On-call Engineer'], got %v", alert.Responders)
+	}
+	if len(alert.Services) != 1 || alert.Services[0] != "web-service" {
+		t.Errorf("expected Services=['web-service'], got %v", alert.Services)
+	}
+	if len(alert.Environments) != 1 || alert.Environments[0] != "production" {
+		t.Errorf("expected Environments=['production'], got %v", alert.Environments)
+	}
+	if alert.UpdatedAt.IsZero() {
+		t.Error("expected UpdatedAt to be set")
+	}
+}
+
+func TestGetIncidentError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.GetIncident(context.Background(), "nonexistent")
+	if err == nil {
+		t.Error("expected error for 404 response")
+	}
+}
+
+func TestGetAlertError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.GetAlert(context.Background(), "nonexistent")
+	if err == nil {
+		t.Error("expected error for 404 response")
 	}
 }

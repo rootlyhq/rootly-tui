@@ -28,6 +28,8 @@ type AlertsModel struct {
 	hasPrev     bool
 	// Loading spinner (passed from app)
 	spinnerView string
+	// Detail loading state
+	detailLoading bool
 }
 
 func NewAlertsModel() AlertsModel {
@@ -148,6 +150,20 @@ func (m AlertsModel) SelectedAlert() *api.Alert {
 		return &m.alerts[m.cursor]
 	}
 	return nil
+}
+
+func (m AlertsModel) SelectedIndex() int {
+	return m.cursor
+}
+
+func (m *AlertsModel) SetDetailLoading(loading bool) {
+	m.detailLoading = loading
+}
+
+func (m *AlertsModel) UpdateAlertDetail(index int, alert *api.Alert) {
+	if index >= 0 && index < len(m.alerts) && alert != nil {
+		m.alerts[index] = *alert
+	}
 }
 
 func (m AlertsModel) View() string {
@@ -343,6 +359,24 @@ func (m AlertsModel) renderDetail(height int) string {
 		b.WriteString(m.renderLinkRow("External URL", alert.ExternalURL))
 	}
 
+	// Extended info (populated when DetailLoaded is true)
+	if alert.DetailLoaded {
+		// Urgency
+		if alert.Urgency != "" {
+			b.WriteString(m.renderDetailRow("Urgency", alert.Urgency))
+		}
+
+		// Responders
+		if len(alert.Responders) > 0 {
+			b.WriteString("\n")
+			b.WriteString(styles.TextBold.Render("Responders"))
+			b.WriteString("\n")
+			for _, responder := range alert.Responders {
+				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
+			}
+		}
+	}
+
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
 		b.WriteString("\n")
@@ -356,6 +390,12 @@ func (m AlertsModel) renderDetail(height int) string {
 		for _, k := range keys {
 			b.WriteString(m.renderDetailRow(k, alert.Labels[k]))
 		}
+	}
+
+	// Show hint if detail not loaded
+	if !alert.DetailLoaded {
+		b.WriteString("\n")
+		b.WriteString(styles.TextDim.Render("Press Enter for more details"))
 	}
 
 	content := b.String()

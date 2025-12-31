@@ -205,6 +205,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 
+		case key.Matches(msg, m.keys.Enter):
+			// Fetch detailed data for selected item
+			if m.activeTab == TabIncidents {
+				inc := m.incidents.SelectedIncident()
+				if inc != nil && !inc.DetailLoaded {
+					m.incidents.SetDetailLoading(true)
+					return m, m.loadIncidentDetail(inc.ID, m.incidents.SelectedIndex())
+				}
+			} else {
+				alert := m.alerts.SelectedAlert()
+				if alert != nil && !alert.DetailLoaded {
+					m.alerts.SetDetailLoading(true)
+					return m, m.loadAlertDetail(alert.ID, m.alerts.SelectedIndex())
+				}
+			}
+			return m, nil
+
 		default:
 			// Pass key events to active view
 			if m.activeTab == TabIncidents {
@@ -276,6 +293,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.alerts.SetError(msg.Err.Error())
 		} else {
 			m.alerts.SetAlerts(msg.Alerts, msg.Pagination)
+		}
+		return m, nil
+
+	case IncidentDetailLoadedMsg:
+		m.incidents.SetDetailLoading(false)
+		if msg.Err != nil {
+			m.errorMsg = msg.Err.Error()
+		} else if msg.Incident != nil {
+			m.incidents.UpdateIncidentDetail(msg.Index, msg.Incident)
+			m.errorMsg = ""
+		}
+		return m, nil
+
+	case AlertDetailLoadedMsg:
+		m.alerts.SetDetailLoading(false)
+		if msg.Err != nil {
+			m.errorMsg = msg.Err.Error()
+		} else if msg.Alert != nil {
+			m.alerts.UpdateAlertDetail(msg.Index, msg.Alert)
+			m.errorMsg = ""
 		}
 		return m, nil
 
@@ -439,6 +476,46 @@ func (m Model) loadAlerts() tea.Cmd {
 		return AlertsLoadedMsg{
 			Alerts:     result.Alerts,
 			Pagination: result.Pagination,
+		}
+	}
+}
+
+func (m Model) loadIncidentDetail(id string, index int) tea.Cmd {
+	client := m.apiClient
+	return func() tea.Msg {
+		if client == nil {
+			return IncidentDetailLoadedMsg{Err: fmt.Errorf("API client not initialized")}
+		}
+
+		ctx := context.Background()
+		incident, err := client.GetIncident(ctx, id)
+		if err != nil {
+			return IncidentDetailLoadedMsg{Err: err, Index: index}
+		}
+
+		return IncidentDetailLoadedMsg{
+			Incident: incident,
+			Index:    index,
+		}
+	}
+}
+
+func (m Model) loadAlertDetail(id string, index int) tea.Cmd {
+	client := m.apiClient
+	return func() tea.Msg {
+		if client == nil {
+			return AlertDetailLoadedMsg{Err: fmt.Errorf("API client not initialized")}
+		}
+
+		ctx := context.Background()
+		alert, err := client.GetAlert(ctx, id)
+		if err != nil {
+			return AlertDetailLoadedMsg{Err: err, Index: index}
+		}
+
+		return AlertDetailLoadedMsg{
+			Alert: alert,
+			Index: index,
 		}
 	}
 }

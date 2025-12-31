@@ -435,3 +435,239 @@ func TestIncidentsModelViewStripsNewlines(t *testing.T) {
 		}
 	}
 }
+
+func TestIncidentsModelSelectedIndex(t *testing.T) {
+	m := NewIncidentsModel()
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+	m.SetDimensions(100, 30)
+
+	// Initial index should be 0
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected initial index 0, got %d", m.SelectedIndex())
+	}
+
+	// Move cursor down
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.SelectedIndex() != 1 {
+		t.Errorf("expected index 1 after j, got %d", m.SelectedIndex())
+	}
+
+	// Move cursor down again
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.SelectedIndex() != 2 {
+		t.Errorf("expected index 2 after j, got %d", m.SelectedIndex())
+	}
+}
+
+func TestIncidentsModelSetDetailLoading(t *testing.T) {
+	m := NewIncidentsModel()
+
+	// Default should be false
+	if m.detailLoading {
+		t.Error("expected detailLoading to be false initially")
+	}
+
+	m.SetDetailLoading(true)
+	if !m.detailLoading {
+		t.Error("expected detailLoading to be true after SetDetailLoading(true)")
+	}
+
+	m.SetDetailLoading(false)
+	if m.detailLoading {
+		t.Error("expected detailLoading to be false after SetDetailLoading(false)")
+	}
+}
+
+func TestIncidentsModelUpdateIncidentDetail(t *testing.T) {
+	m := NewIncidentsModel()
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	// Get original incident
+	originalID := m.incidents[0].ID
+	if originalID != incidents[0].ID {
+		t.Fatalf("expected original ID %s, got %s", incidents[0].ID, originalID)
+	}
+
+	// Create detailed incident
+	detailedIncident := &api.Incident{
+		ID:               incidents[0].ID,
+		SequentialID:     incidents[0].SequentialID,
+		Title:            "Detailed Title",
+		Summary:          "Detailed Summary",
+		Status:           "resolved",
+		Severity:         "critical",
+		DetailLoaded:     true,
+		CommanderName:    "John Doe",
+		CommunicatorName: "Jane Smith",
+		Causes:           []string{"Configuration Error"},
+		IncidentTypes:    []string{"Infrastructure"},
+		URL:              "https://rootly.io/incidents/123",
+	}
+
+	// Update at index 0
+	m.UpdateIncidentDetail(0, detailedIncident)
+
+	// Verify the incident was updated
+	updated := m.incidents[0]
+	if !updated.DetailLoaded {
+		t.Error("expected DetailLoaded to be true after update")
+	}
+	if updated.CommanderName != "John Doe" {
+		t.Errorf("expected CommanderName 'John Doe', got '%s'", updated.CommanderName)
+	}
+	if updated.CommunicatorName != "Jane Smith" {
+		t.Errorf("expected CommunicatorName 'Jane Smith', got '%s'", updated.CommunicatorName)
+	}
+	if len(updated.Causes) != 1 || updated.Causes[0] != "Configuration Error" {
+		t.Errorf("expected Causes ['Configuration Error'], got %v", updated.Causes)
+	}
+	if updated.URL != "https://rootly.io/incidents/123" {
+		t.Errorf("expected URL, got '%s'", updated.URL)
+	}
+}
+
+func TestIncidentsModelUpdateIncidentDetailInvalidIndex(t *testing.T) {
+	m := NewIncidentsModel()
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	detailedIncident := &api.Incident{
+		ID:           "new",
+		DetailLoaded: true,
+	}
+
+	// Update at invalid index should not panic
+	m.UpdateIncidentDetail(-1, detailedIncident)
+	m.UpdateIncidentDetail(100, detailedIncident)
+
+	// Verify nothing changed
+	if m.incidents[0].DetailLoaded {
+		t.Error("expected DetailLoaded to remain unchanged for invalid index")
+	}
+}
+
+func TestIncidentsModelUpdateIncidentDetailNil(t *testing.T) {
+	m := NewIncidentsModel()
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	// Update with nil should not panic
+	m.UpdateIncidentDetail(0, nil)
+
+	// Verify nothing changed
+	if m.incidents[0].DetailLoaded {
+		t.Error("expected DetailLoaded to remain unchanged for nil incident")
+	}
+}
+
+func TestIncidentsModelViewShowsDetailHint(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 40)
+
+	// Incident without detail loaded
+	incidents := []api.Incident{
+		{
+			ID:           "1",
+			SequentialID: "INC-123",
+			Summary:      "Test incident",
+			Status:       "started",
+			Severity:     "critical",
+			CreatedAt:    time.Now(),
+			DetailLoaded: false,
+		},
+	}
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+	if !strings.Contains(view, "Press Enter for more details") {
+		t.Error("expected hint 'Press Enter for more details' when detail not loaded")
+	}
+}
+
+func TestIncidentsModelViewHidesDetailHint(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 40)
+
+	// Incident with detail loaded
+	incidents := []api.Incident{
+		{
+			ID:           "1",
+			SequentialID: "INC-123",
+			Summary:      "Test incident",
+			Status:       "started",
+			Severity:     "critical",
+			CreatedAt:    time.Now(),
+			DetailLoaded: true,
+		},
+	}
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+	if strings.Contains(view, "Press Enter for more details") {
+		t.Error("expected no hint when detail is loaded")
+	}
+}
+
+func TestIncidentsModelViewShowsExtendedDetail(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 40)
+
+	// Incident with extended detail
+	incidents := []api.Incident{
+		{
+			ID:               "1",
+			SequentialID:     "INC-123",
+			Summary:          "Test incident",
+			Status:           "resolved",
+			Severity:         "critical",
+			CreatedAt:        time.Now(),
+			DetailLoaded:     true,
+			CommanderName:    "John Doe",
+			CommunicatorName: "Jane Smith",
+			Causes:           []string{"Config Error"},
+			IncidentTypes:    []string{"Infrastructure"},
+			Functionalities:  []string{"API Gateway"},
+			URL:              "https://rootly.io/test",
+			Roles: []api.IncidentRole{
+				{Name: "Commander", UserName: "John Doe"},
+			},
+		},
+	}
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// Should show roles section
+	if !strings.Contains(view, "Roles") {
+		t.Error("expected 'Roles' section in detail view")
+	}
+	if !strings.Contains(view, "Commander") {
+		t.Error("expected 'Commander' in detail view")
+	}
+	if !strings.Contains(view, "John Doe") {
+		t.Error("expected 'John Doe' in detail view")
+	}
+
+	// Should show causes
+	if !strings.Contains(view, "Causes") {
+		t.Error("expected 'Causes' in detail view")
+	}
+	if !strings.Contains(view, "Config Error") {
+		t.Error("expected 'Config Error' in detail view")
+	}
+
+	// Should show types
+	if !strings.Contains(view, "Types") {
+		t.Error("expected 'Types' in detail view")
+	}
+	if !strings.Contains(view, "Infrastructure") {
+		t.Error("expected 'Infrastructure' in detail view")
+	}
+
+	// Should show Rootly link
+	if !strings.Contains(view, "Rootly") {
+		t.Error("expected 'Rootly' link in detail view")
+	}
+}

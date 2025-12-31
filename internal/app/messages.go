@@ -16,6 +16,20 @@ type AlertsLoadedMsg struct {
 	Err        error
 }
 
+// IncidentDetailLoadedMsg is sent when incident detail is fetched
+type IncidentDetailLoadedMsg struct {
+	Incident *api.Incident
+	Index    int // Index in the incidents list to update
+	Err      error
+}
+
+// AlertDetailLoadedMsg is sent when alert detail is fetched
+type AlertDetailLoadedMsg struct {
+	Alert *api.Alert
+	Index int // Index in the alerts list to update
+	Err   error
+}
+
 // ErrorMsg represents a generic error
 type ErrorMsg struct {
 	Err error

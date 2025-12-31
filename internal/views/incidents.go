@@ -27,6 +27,8 @@ type IncidentsModel struct {
 	hasPrev     bool
 	// Loading spinner (passed from app)
 	spinnerView string
+	// Detail loading state
+	detailLoading bool
 }
 
 func NewIncidentsModel() IncidentsModel {
@@ -147,6 +149,20 @@ func (m IncidentsModel) SelectedIncident() *api.Incident {
 		return &m.incidents[m.cursor]
 	}
 	return nil
+}
+
+func (m IncidentsModel) SelectedIndex() int {
+	return m.cursor
+}
+
+func (m *IncidentsModel) SetDetailLoading(loading bool) {
+	m.detailLoading = loading
+}
+
+func (m *IncidentsModel) UpdateIncidentDetail(index int, incident *api.Incident) {
+	if index >= 0 && index < len(m.incidents) && incident != nil {
+		m.incidents[index] = *incident
+	}
 }
 
 func (m IncidentsModel) View() string {
@@ -358,17 +374,64 @@ func (m IncidentsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("Teams", strings.Join(inc.Teams, ", ")))
 	}
 
+	// Extended info (populated when DetailLoaded is true)
+	if inc.DetailLoaded {
+		// Roles (Commander, Communicator, etc.)
+		if inc.CommanderName != "" || inc.CommunicatorName != "" || len(inc.Roles) > 0 {
+			b.WriteString("\n")
+			b.WriteString(styles.TextBold.Render("Roles"))
+			b.WriteString("\n")
+			if inc.CommanderName != "" {
+				b.WriteString(m.renderDetailRow("Commander", inc.CommanderName))
+			}
+			if inc.CommunicatorName != "" {
+				b.WriteString(m.renderDetailRow("Comms Lead", inc.CommunicatorName))
+			}
+			// Other roles
+			for _, role := range inc.Roles {
+				roleName := strings.ToLower(role.Name)
+				if roleName != "commander" && roleName != "communications lead" && role.UserName != "" {
+					b.WriteString(m.renderDetailRow(role.Name, role.UserName))
+				}
+			}
+		}
+
+		// Causes
+		if len(inc.Causes) > 0 {
+			b.WriteString(m.renderDetailRow("Causes", strings.Join(inc.Causes, ", ")))
+		}
+
+		// Incident Types
+		if len(inc.IncidentTypes) > 0 {
+			b.WriteString(m.renderDetailRow("Types", strings.Join(inc.IncidentTypes, ", ")))
+		}
+
+		// Functionalities
+		if len(inc.Functionalities) > 0 {
+			b.WriteString(m.renderDetailRow("Functions", strings.Join(inc.Functionalities, ", ")))
+		}
+	}
+
 	// External links (clickable)
-	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" {
+	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || inc.URL != "" {
 		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Links"))
 		b.WriteString("\n")
+		if inc.URL != "" {
+			b.WriteString(m.renderLinkRow("Rootly", inc.URL))
+		}
 		if inc.SlackChannelURL != "" {
 			b.WriteString(m.renderLinkRow("Slack", inc.SlackChannelURL))
 		}
 		if inc.JiraIssueURL != "" {
 			b.WriteString(m.renderLinkRow("Jira", inc.JiraIssueURL))
 		}
+	}
+
+	// Show hint if detail not loaded
+	if !inc.DetailLoaded {
+		b.WriteString("\n")
+		b.WriteString(styles.TextDim.Render("Press Enter for more details"))
 	}
 
 	content := b.String()

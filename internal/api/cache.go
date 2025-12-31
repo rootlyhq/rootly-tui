@@ -117,6 +117,8 @@ func (b *CacheKeyBuilder) Build() string {
 
 // Cache key prefixes
 const (
-	CacheKeyPrefixIncidents = "incidents"
-	CacheKeyPrefixAlerts    = "alerts"
+	CacheKeyPrefixIncidents      = "incidents"
+	CacheKeyPrefixAlerts         = "alerts"
+	CacheKeyPrefixIncidentDetail = "incident_detail"
+	CacheKeyPrefixAlertDetail    = "alert_detail"
 )
