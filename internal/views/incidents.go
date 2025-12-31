@@ -7,10 +7,32 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/list"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
+
+// renderBulletList renders a section with a bold title and bullet list using lipgloss/list
+func renderBulletList(title string, items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(styles.TextBold.Render(title))
+	b.WriteString("\n")
+	// Convert []string to []any for list.New
+	anyItems := make([]any, len(items))
+	for i, item := range items {
+		anyItems[i] = item
+	}
+	l := list.New(anyItems...).
+		Enumerator(list.Bullet).
+		ItemStyle(styles.DetailValue)
+	b.WriteString(l.String())
+	b.WriteString("\n\n") // Blank line after section
+	return b.String()
+}
 
 type IncidentsModel struct {
 	incidents   []api.Incident
@@ -295,7 +317,6 @@ func (m IncidentsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
-//nolint:gocyclo // complexity from rendering many optional detail fields with lists
 func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
@@ -370,35 +391,10 @@ func (m IncidentsModel) renderDetail(height int) string {
 	}
 	b.WriteString("\n")
 
-	// Services
-	if len(inc.Services) > 0 {
-		b.WriteString(styles.TextBold.Render("Services"))
-		b.WriteString("\n")
-		for _, s := range inc.Services {
-			b.WriteString("  • " + styles.DetailValue.Render(s) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Environments
-	if len(inc.Environments) > 0 {
-		b.WriteString(styles.TextBold.Render("Environments"))
-		b.WriteString("\n")
-		for _, e := range inc.Environments {
-			b.WriteString("  • " + styles.DetailValue.Render(e) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Teams
-	if len(inc.Teams) > 0 {
-		b.WriteString(styles.TextBold.Render("Teams"))
-		b.WriteString("\n")
-		for _, t := range inc.Teams {
-			b.WriteString("  • " + styles.DetailValue.Render(t) + "\n")
-		}
-		b.WriteString("\n")
-	}
+	// Services, Environments, Teams
+	b.WriteString(renderBulletList("Services", inc.Services))
+	b.WriteString(renderBulletList("Environments", inc.Environments))
+	b.WriteString(renderBulletList("Teams", inc.Teams))
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
@@ -407,51 +403,28 @@ func (m IncidentsModel) renderDetail(height int) string {
 			b.WriteString(styles.TextBold.Render("Roles"))
 			b.WriteString("\n")
 			for _, role := range inc.Roles {
-				if role.UserName == "" {
+				userName := strings.TrimSpace(role.UserName)
+				if userName == "" {
 					continue
 				}
-				b.WriteString("  • ")
-				b.WriteString(styles.DetailLabel.Render(role.Name + ":"))
+				roleName := strings.TrimSpace(role.Name)
+				b.WriteString(styles.DetailLabel.Render(roleName + ":"))
 				b.WriteString(" ")
-				b.WriteString(styles.DetailValue.Render(role.UserName))
-				if role.UserEmail != "" {
+				b.WriteString(styles.DetailValue.Render(userName))
+				userEmail := strings.TrimSpace(role.UserEmail)
+				if userEmail != "" {
 					b.WriteString(" ")
-					b.WriteString(styles.TextDim.Render(role.UserEmail))
+					b.WriteString(styles.TextDim.Render(userEmail))
 				}
 				b.WriteString("\n")
 			}
 			b.WriteString("\n")
 		}
 
-		// Causes
-		if len(inc.Causes) > 0 {
-			b.WriteString(styles.TextBold.Render("Causes"))
-			b.WriteString("\n")
-			for _, c := range inc.Causes {
-				b.WriteString("  • " + styles.DetailValue.Render(c) + "\n")
-			}
-			b.WriteString("\n")
-		}
-
-		// Incident Types
-		if len(inc.IncidentTypes) > 0 {
-			b.WriteString(styles.TextBold.Render("Types"))
-			b.WriteString("\n")
-			for _, t := range inc.IncidentTypes {
-				b.WriteString("  • " + styles.DetailValue.Render(t) + "\n")
-			}
-			b.WriteString("\n")
-		}
-
-		// Functionalities
-		if len(inc.Functionalities) > 0 {
-			b.WriteString(styles.TextBold.Render("Functionalities"))
-			b.WriteString("\n")
-			for _, f := range inc.Functionalities {
-				b.WriteString("  • " + styles.DetailValue.Render(f) + "\n")
-			}
-			b.WriteString("\n")
-		}
+		// Causes, Types, Functionalities
+		b.WriteString(renderBulletList("Causes", inc.Causes))
+		b.WriteString(renderBulletList("Types", inc.IncidentTypes))
+		b.WriteString(renderBulletList("Functionalities", inc.Functionalities))
 	}
 
 	// External links (clickable)
@@ -463,7 +436,6 @@ func (m IncidentsModel) renderDetail(height int) string {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
 	}
 	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
-		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Links"))
 		b.WriteString("\n")
 		if rootlyURL != "" {

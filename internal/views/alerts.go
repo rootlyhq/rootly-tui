@@ -8,10 +8,32 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/list"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
+
+// renderAlertBulletList renders a section with a bold title and bullet list using lipgloss/list
+func renderAlertBulletList(title string, items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(styles.TextBold.Render(title))
+	b.WriteString("\n")
+	// Convert []string to []any for list.New
+	anyItems := make([]any, len(items))
+	for i, item := range items {
+		anyItems[i] = item
+	}
+	l := list.New(anyItems...).
+		Enumerator(list.Bullet).
+		ItemStyle(styles.DetailValue)
+	b.WriteString(l.String())
+	b.WriteString("\n\n") // Blank line after section
+	return b.String()
+}
 
 type AlertsModel struct {
 	alerts      []api.Alert
@@ -338,52 +360,10 @@ func (m AlertsModel) renderDetail(height int) string {
 	}
 	b.WriteString("\n")
 
-	// Services
-	if len(alert.Services) > 0 {
-		b.WriteString(styles.TextBold.Render("Services"))
-		b.WriteString("\n")
-		for _, s := range alert.Services {
-			b.WriteString("  • " + styles.DetailValue.Render(s) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Environments
-	if len(alert.Environments) > 0 {
-		b.WriteString(styles.TextBold.Render("Environments"))
-		b.WriteString("\n")
-		for _, e := range alert.Environments {
-			b.WriteString("  • " + styles.DetailValue.Render(e) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Teams (Groups)
-	if len(alert.Groups) > 0 {
-		b.WriteString(styles.TextBold.Render("Teams"))
-		b.WriteString("\n")
-		for _, g := range alert.Groups {
-			b.WriteString("  • " + styles.DetailValue.Render(g) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Links section
-	rootlyURL := ""
-	if alert.ShortID != "" {
-		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
-	}
-	if rootlyURL != "" || alert.ExternalURL != "" {
-		b.WriteString("\n")
-		b.WriteString(styles.TextBold.Render("Links"))
-		b.WriteString("\n")
-		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
-		}
-		if alert.ExternalURL != "" {
-			b.WriteString(m.renderLinkRow("Source", alert.ExternalURL))
-		}
-	}
+	// Services, Environments, Teams
+	b.WriteString(renderAlertBulletList("Services", alert.Services))
+	b.WriteString(renderAlertBulletList("Environments", alert.Environments))
+	b.WriteString(renderAlertBulletList("Teams", alert.Groups))
 
 	// Extended info (populated when DetailLoaded is true)
 	if alert.DetailLoaded {
@@ -415,6 +395,23 @@ func (m AlertsModel) renderDetail(height int) string {
 		sort.Strings(keys)
 		for _, k := range keys {
 			b.WriteString(m.renderDetailRow(k, alert.Labels[k]))
+		}
+	}
+
+	// Links section (after Labels)
+	rootlyURL := ""
+	if alert.ShortID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
+	}
+	if rootlyURL != "" || alert.ExternalURL != "" {
+		b.WriteString("\n")
+		b.WriteString(styles.TextBold.Render("Links"))
+		b.WriteString("\n")
+		if rootlyURL != "" {
+			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
+		}
+		if alert.ExternalURL != "" {
+			b.WriteString(m.renderLinkRow("Source", alert.ExternalURL))
 		}
 	}
 
