@@ -62,6 +62,25 @@ type Alert struct {
 	Labels       map[string]string
 }
 
+// PaginationInfo contains pagination state
+type PaginationInfo struct {
+	CurrentPage int
+	HasNext     bool
+	HasPrev     bool
+}
+
+// IncidentsResult contains incidents and pagination info
+type IncidentsResult struct {
+	Incidents  []Incident
+	Pagination PaginationInfo
+}
+
+// AlertsResult contains alerts and pagination info
+type AlertsResult struct {
+	Alerts     []Alert
+	Pagination PaginationInfo
+}
+
 func NewClient(cfg *config.Config) (*Client, error) {
 	endpoint := cfg.Endpoint
 	if endpoint != "" && !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
@@ -138,28 +157,30 @@ func (c *Client) ValidateAPIKey(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
+func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult, error) {
 	pageSize := 25
 
 	// Build cache key with parameters
 	cacheKey := NewCacheKey(CacheKeyPrefixIncidents).
+		With("page", page).
 		With("pageSize", pageSize).
 		Build()
 
 	// Check cache first
 	if c.cache != nil {
-		var cached []Incident
+		var cached IncidentsResult
 		if c.cache.GetTyped(cacheKey, &cached) {
 			debug.Logger.Debug("Cache hit for incidents", "key", cacheKey)
-			return cached, nil
+			return &cached, nil
 		}
 	}
 
 	params := &rootly.ListIncidentsParams{
-		PageSize: &pageSize,
+		PageNumber: &page,
+		PageSize:   &pageSize,
 	}
 
-	debug.Logger.Debug("Fetching incidents", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
+	debug.Logger.Debug("Fetching incidents", "page", page, "pageSize", pageSize, "cache", "miss", "key", cacheKey)
 
 	resp, err := c.client.ListIncidentsWithResponse(ctx, params)
 	if err != nil {
@@ -225,6 +246,10 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 				} `json:"groups"`
 			} `json:"attributes"`
 		} `json:"data"`
+		Links struct {
+			Next *string `json:"next"`
+			Prev *string `json:"prev"`
+		} `json:"links"`
 	}
 
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
@@ -290,34 +315,46 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 		incidents = append(incidents, incident)
 	}
 
+	// Build result with pagination info
+	incidentsResult := &IncidentsResult{
+		Incidents: incidents,
+		Pagination: PaginationInfo{
+			CurrentPage: page,
+			HasNext:     result.Links.Next != nil && *result.Links.Next != "",
+			HasPrev:     result.Links.Prev != nil && *result.Links.Prev != "",
+		},
+	}
+
 	// Store in cache
 	if c.cache != nil {
-		c.cache.Set(cacheKey, incidents)
+		c.cache.Set(cacheKey, incidentsResult)
 		debug.Logger.Debug("Cached incidents", "count", len(incidents), "key", cacheKey)
 	}
 
-	return incidents, nil
+	return incidentsResult, nil
 }
 
-func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
+func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error) {
 	pageSize := 25
 
 	// Build cache key with parameters
 	cacheKey := NewCacheKey(CacheKeyPrefixAlerts).
+		With("page", page).
 		With("pageSize", pageSize).
 		Build()
 
 	// Check cache first
 	if c.cache != nil {
-		var cached []Alert
+		var cached AlertsResult
 		if c.cache.GetTyped(cacheKey, &cached) {
 			debug.Logger.Debug("Cache hit for alerts", "key", cacheKey)
-			return cached, nil
+			return &cached, nil
 		}
 	}
 
 	params := &rootly.ListAlertsParams{
-		PageSize: &pageSize,
+		PageNumber: &page,
+		PageSize:   &pageSize,
 	}
 
 	debug.Logger.Debug("Fetching alerts", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
@@ -376,6 +413,10 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 				} `json:"labels"`
 			} `json:"attributes"`
 		} `json:"data"`
+		Links struct {
+			Next *string `json:"next"`
+			Prev *string `json:"prev"`
+		} `json:"links"`
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
@@ -433,13 +474,23 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		alerts = append(alerts, alert)
 	}
 
+	// Build result with pagination info
+	alertsResult := &AlertsResult{
+		Alerts: alerts,
+		Pagination: PaginationInfo{
+			CurrentPage: page,
+			HasNext:     result.Links.Next != nil && *result.Links.Next != "",
+			HasPrev:     result.Links.Prev != nil && *result.Links.Prev != "",
+		},
+	}
+
 	// Store in cache
 	if c.cache != nil {
-		c.cache.Set(cacheKey, alerts)
+		c.cache.Set(cacheKey, alertsResult)
 		debug.Logger.Debug("Cached alerts", "count", len(alerts), "key", cacheKey)
 	}
 
-	return alerts, nil
+	return alertsResult, nil
 }
 
 func parseTimePtr(s *string) *time.Time {

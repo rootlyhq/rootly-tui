@@ -24,8 +24,9 @@ func TestNewAlertsModel(t *testing.T) {
 func TestAlertsModelSetAlerts(t *testing.T) {
 	m := NewAlertsModel()
 	alerts := api.MockAlerts()
+	pagination := api.PaginationInfo{CurrentPage: 1, HasNext: true, HasPrev: false}
 
-	m.SetAlerts(alerts)
+	m.SetAlerts(alerts, pagination)
 
 	if len(m.alerts) != len(alerts) {
 		t.Errorf("expected %d alerts, got %d", len(alerts), len(m.alerts))
@@ -33,6 +34,10 @@ func TestAlertsModelSetAlerts(t *testing.T) {
 
 	if m.loading {
 		t.Error("expected loading to be false after SetAlerts")
+	}
+
+	if m.currentPage != 1 {
+		t.Errorf("expected currentPage 1, got %d", m.currentPage)
 	}
 }
 
@@ -67,7 +72,7 @@ func TestAlertsModelSetError(t *testing.T) {
 func TestAlertsModelSelectedAlert(t *testing.T) {
 	m := NewAlertsModel()
 	alerts := api.MockAlerts()
-	m.SetAlerts(alerts)
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
 
 	selected := m.SelectedAlert()
 	if selected == nil {
@@ -82,7 +87,7 @@ func TestAlertsModelSelectedAlert(t *testing.T) {
 func TestAlertsModelNavigation(t *testing.T) {
 	m := NewAlertsModel()
 	alerts := api.MockAlerts()
-	m.SetAlerts(alerts)
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
 	m.SetDimensions(100, 30)
 
 	// Test move down
@@ -142,7 +147,7 @@ func TestAlertsModelView(t *testing.T) {
 	}
 
 	// Test with alerts
-	m.SetAlerts(api.MockAlerts())
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1})
 	view = m.View()
 	if !strings.Contains(view, "ALERTS") {
 		t.Error("expected 'ALERTS' in view with data")
@@ -152,7 +157,7 @@ func TestAlertsModelView(t *testing.T) {
 func TestAlertsModelCursorBounds(t *testing.T) {
 	m := NewAlertsModel()
 	alerts := api.MockAlerts()
-	m.SetAlerts(alerts)
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
 	m.SetDimensions(100, 30)
 
 	// Move cursor beyond bounds

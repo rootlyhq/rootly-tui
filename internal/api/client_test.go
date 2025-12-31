@@ -153,21 +153,25 @@ func TestListIncidents(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	incidents, err := client.ListIncidents(context.Background())
+	result, err := client.ListIncidents(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
 
-	if len(incidents) != 2 {
-		t.Errorf("expected 2 incidents, got %d", len(incidents))
+	if len(result.Incidents) != 2 {
+		t.Errorf("expected 2 incidents, got %d", len(result.Incidents))
 	}
 
-	if incidents[0].ID != "inc_001" {
-		t.Errorf("expected first incident ID 'inc_001', got '%s'", incidents[0].ID)
+	if result.Incidents[0].ID != "inc_001" {
+		t.Errorf("expected first incident ID 'inc_001', got '%s'", result.Incidents[0].ID)
 	}
 
-	if incidents[0].Status != "in_progress" {
-		t.Errorf("expected status 'in_progress', got '%s'", incidents[0].Status)
+	if result.Incidents[0].Status != "in_progress" {
+		t.Errorf("expected status 'in_progress', got '%s'", result.Incidents[0].Status)
+	}
+
+	if result.Pagination.CurrentPage != 1 {
+		t.Errorf("expected current page 1, got %d", result.Pagination.CurrentPage)
 	}
 }
 
@@ -220,25 +224,29 @@ func TestListAlerts(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	alerts, err := client.ListAlerts(context.Background())
+	result, err := client.ListAlerts(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("ListAlerts() error = %v", err)
 	}
 
-	if len(alerts) != 2 {
-		t.Errorf("expected 2 alerts, got %d", len(alerts))
+	if len(result.Alerts) != 2 {
+		t.Errorf("expected 2 alerts, got %d", len(result.Alerts))
 	}
 
-	if alerts[0].ID != "alert_001" {
-		t.Errorf("expected first alert ID 'alert_001', got '%s'", alerts[0].ID)
+	if result.Alerts[0].ID != "alert_001" {
+		t.Errorf("expected first alert ID 'alert_001', got '%s'", result.Alerts[0].ID)
 	}
 
-	if alerts[0].Source != "datadog" {
-		t.Errorf("expected source 'datadog', got '%s'", alerts[0].Source)
+	if result.Alerts[0].Source != "datadog" {
+		t.Errorf("expected source 'datadog', got '%s'", result.Alerts[0].Source)
 	}
 
-	if alerts[1].Description != "Memory usage is high" {
-		t.Errorf("expected description 'Memory usage is high', got '%s'", alerts[1].Description)
+	if result.Alerts[1].Description != "Memory usage is high" {
+		t.Errorf("expected description 'Memory usage is high', got '%s'", result.Alerts[1].Description)
+	}
+
+	if result.Pagination.CurrentPage != 1 {
+		t.Errorf("expected current page 1, got %d", result.Pagination.CurrentPage)
 	}
 }
 
@@ -259,7 +267,7 @@ func TestListIncidentsError(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.ListIncidents(context.Background())
+	_, err = client.ListIncidents(context.Background(), 1)
 	if err == nil {
 		t.Error("expected error for 500 response")
 	}
@@ -414,13 +422,13 @@ func TestListIncidentsWithCache(t *testing.T) {
 	}
 
 	// First call
-	_, err = client.ListIncidents(context.Background())
+	_, err = client.ListIncidents(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("first ListIncidents() error = %v", err)
 	}
 
 	// Second call should hit cache
-	_, err = client.ListIncidents(context.Background())
+	_, err = client.ListIncidents(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("second ListIncidents() error = %v", err)
 	}
@@ -477,16 +485,16 @@ func TestListAlertsWithLabels(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	alerts, err := client.ListAlerts(context.Background())
+	result, err := client.ListAlerts(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("ListAlerts() error = %v", err)
 	}
 
-	if len(alerts) != 1 {
-		t.Fatalf("expected 1 alert, got %d", len(alerts))
+	if len(result.Alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(result.Alerts))
 	}
 
-	alert := alerts[0]
+	alert := result.Alerts[0]
 
 	// Check labels were parsed correctly
 	if alert.Labels["priority"] != "high" {
@@ -560,16 +568,16 @@ func TestListIncidentsWithTimestamps(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	incidents, err := client.ListIncidents(context.Background())
+	result, err := client.ListIncidents(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
 
-	if len(incidents) != 1 {
-		t.Fatalf("expected 1 incident, got %d", len(incidents))
+	if len(result.Incidents) != 1 {
+		t.Fatalf("expected 1 incident, got %d", len(result.Incidents))
 	}
 
-	inc := incidents[0]
+	inc := result.Incidents[0]
 
 	if inc.SequentialID != "INC-123" {
 		t.Errorf("expected SequentialID=INC-123, got %s", inc.SequentialID)
@@ -616,7 +624,7 @@ func TestListAlertsError(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.ListAlerts(context.Background())
+	_, err = client.ListAlerts(context.Background(), 1)
 	if err == nil {
 		t.Error("expected error for 500 response")
 	}

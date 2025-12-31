@@ -3,16 +3,18 @@ package app
 import "github.com/charmbracelet/bubbles/key"
 
 type KeyMap struct {
-	Up      key.Binding
-	Down    key.Binding
-	Tab     key.Binding
-	Refresh key.Binding
-	Help    key.Binding
-	Logs    key.Binding
-	Quit    key.Binding
-	Enter   key.Binding
-	Top     key.Binding
-	Bottom  key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Tab      key.Binding
+	Refresh  key.Binding
+	Help     key.Binding
+	Logs     key.Binding
+	Quit     key.Binding
+	Enter    key.Binding
+	Top      key.Binding
+	Bottom   key.Binding
+	PrevPage key.Binding
+	NextPage key.Binding
 }
 
 func DefaultKeyMap() KeyMap {
@@ -56,6 +58,14 @@ func DefaultKeyMap() KeyMap {
 		Bottom: key.NewBinding(
 			key.WithKeys("G"),
 			key.WithHelp("G", "go to bottom"),
+		),
+		PrevPage: key.NewBinding(
+			key.WithKeys("["),
+			key.WithHelp("[", "prev page"),
+		),
+		NextPage: key.NewBinding(
+			key.WithKeys("]"),
+			key.WithHelp("]", "next page"),
 		),
 	}
 }

@@ -21,12 +21,19 @@ type IncidentsModel struct {
 	detailWidth int
 	loading     bool
 	error       string
+	// Pagination state
+	currentPage int
+	hasNext     bool
+	hasPrev     bool
+	// Loading spinner (passed from app)
+	spinnerView string
 }
 
 func NewIncidentsModel() IncidentsModel {
 	return IncidentsModel{
-		incidents: []api.Incident{},
-		cursor:    0,
+		incidents:   []api.Incident{},
+		cursor:      0,
+		currentPage: 1,
 	}
 }
 
@@ -77,10 +84,13 @@ func (m *IncidentsModel) updateDimensions() {
 	}
 }
 
-func (m *IncidentsModel) SetIncidents(incidents []api.Incident) {
+func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.PaginationInfo) {
 	m.incidents = incidents
 	m.loading = false
 	m.error = ""
+	m.currentPage = pagination.CurrentPage
+	m.hasNext = pagination.HasNext
+	m.hasPrev = pagination.HasPrev
 	if m.cursor >= len(incidents) && len(incidents) > 0 {
 		m.cursor = len(incidents) - 1
 	}
@@ -88,6 +98,10 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident) {
 
 func (m *IncidentsModel) SetLoading(loading bool) {
 	m.loading = loading
+}
+
+func (m *IncidentsModel) SetSpinner(spinner string) {
+	m.spinnerView = spinner
 }
 
 func (m *IncidentsModel) SetError(err string) {
@@ -101,6 +115,33 @@ func (m *IncidentsModel) SetDimensions(width, height int) {
 	m.updateDimensions()
 }
 
+// Pagination methods
+func (m IncidentsModel) CurrentPage() int {
+	return m.currentPage
+}
+
+func (m IncidentsModel) HasNextPage() bool {
+	return m.hasNext
+}
+
+func (m IncidentsModel) HasPrevPage() bool {
+	return m.hasPrev
+}
+
+func (m *IncidentsModel) NextPage() {
+	if m.hasNext {
+		m.currentPage++
+		m.cursor = 0
+	}
+}
+
+func (m *IncidentsModel) PrevPage() {
+	if m.hasPrev && m.currentPage > 1 {
+		m.currentPage--
+		m.cursor = 0
+	}
+}
+
 func (m IncidentsModel) SelectedIncident() *api.Incident {
 	if m.cursor >= 0 && m.cursor < len(m.incidents) {
 		return &m.incidents[m.cursor]
@@ -109,8 +150,19 @@ func (m IncidentsModel) SelectedIncident() *api.Incident {
 }
 
 func (m IncidentsModel) View() string {
+	// Calculate available height for content
+	contentHeight := m.height - 8 // Account for header, help bar, etc.
+	if contentHeight < 5 {
+		contentHeight = 5
+	}
+
 	if m.loading {
-		return styles.TextDim.Render("Loading incidents...")
+		// Show loading within the layout structure to prevent jarring shift
+		loadingMsg := fmt.Sprintf("%s Loading page %d...", m.spinnerView, m.currentPage)
+		listContent := styles.TextBold.Render("INCIDENTS") + "\n\n" + styles.TextDim.Render(loadingMsg)
+		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
+		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
+		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 	}
 
 	if m.error != "" {
@@ -119,12 +171,6 @@ func (m IncidentsModel) View() string {
 
 	if len(m.incidents) == 0 {
 		return styles.TextDim.Render("No incidents found")
-	}
-
-	// Calculate available height for content
-	contentHeight := m.height - 8 // Account for header, help bar, etc.
-	if contentHeight < 5 {
-		contentHeight = 5
 	}
 
 	// Build list view
@@ -204,11 +250,27 @@ func (m IncidentsModel) renderList(height int) string {
 		b.WriteString("\n")
 	}
 
-	// Scroll indicator
-	if len(m.incidents) > maxVisible {
-		scrollInfo := fmt.Sprintf("\n%d/%d", m.cursor+1, len(m.incidents))
-		b.WriteString(styles.TextDim.Render(scrollInfo))
+	// Scroll and pagination indicator
+	var footer strings.Builder
+	footer.WriteString("\n")
+
+	// Page navigation indicators
+	if m.hasPrev {
+		footer.WriteString(styles.TextDim.Render("← ["))
+	} else {
+		footer.WriteString(styles.TextDim.Render("  "))
 	}
+	footer.WriteString(fmt.Sprintf(" Page %d ", m.currentPage))
+	if m.hasNext {
+		footer.WriteString(styles.TextDim.Render("] →"))
+	}
+
+	// Item count
+	if len(m.incidents) > 0 {
+		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.cursor+1, len(m.incidents))))
+	}
+
+	b.WriteString(footer.String())
 
 	content := b.String()
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)

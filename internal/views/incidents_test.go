@@ -24,8 +24,9 @@ func TestNewIncidentsModel(t *testing.T) {
 func TestIncidentsModelSetIncidents(t *testing.T) {
 	m := NewIncidentsModel()
 	incidents := api.MockIncidents()
+	pagination := api.PaginationInfo{CurrentPage: 1, HasNext: true, HasPrev: false}
 
-	m.SetIncidents(incidents)
+	m.SetIncidents(incidents, pagination)
 
 	if len(m.incidents) != len(incidents) {
 		t.Errorf("expected %d incidents, got %d", len(incidents), len(m.incidents))
@@ -33,6 +34,10 @@ func TestIncidentsModelSetIncidents(t *testing.T) {
 
 	if m.loading {
 		t.Error("expected loading to be false after SetIncidents")
+	}
+
+	if m.currentPage != 1 {
+		t.Errorf("expected currentPage 1, got %d", m.currentPage)
 	}
 }
 
@@ -67,7 +72,7 @@ func TestIncidentsModelSetError(t *testing.T) {
 func TestIncidentsModelSelectedIncident(t *testing.T) {
 	m := NewIncidentsModel()
 	incidents := api.MockIncidents()
-	m.SetIncidents(incidents)
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
 
 	// Test initial selection
 	selected := m.SelectedIncident()
@@ -83,7 +88,7 @@ func TestIncidentsModelSelectedIncident(t *testing.T) {
 func TestIncidentsModelNavigation(t *testing.T) {
 	m := NewIncidentsModel()
 	incidents := api.MockIncidents()
-	m.SetIncidents(incidents)
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
 	m.SetDimensions(100, 30)
 
 	// Test move down
@@ -143,7 +148,7 @@ func TestIncidentsModelView(t *testing.T) {
 	}
 
 	// Test with incidents
-	m.SetIncidents(api.MockIncidents())
+	m.SetIncidents(api.MockIncidents(), api.PaginationInfo{CurrentPage: 1})
 	view = m.View()
 	if !strings.Contains(view, "INCIDENTS") {
 		t.Error("expected 'INCIDENTS' in view with data")
@@ -153,7 +158,7 @@ func TestIncidentsModelView(t *testing.T) {
 func TestIncidentsModelCursorBounds(t *testing.T) {
 	m := NewIncidentsModel()
 	incidents := api.MockIncidents()
-	m.SetIncidents(incidents)
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
 	m.SetDimensions(100, 30)
 
 	// Move cursor to last item

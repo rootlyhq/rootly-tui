@@ -95,3 +95,7 @@ linters:
       - path: 'internal/config/'
         linters:
           - errcheck
+      # Bubble Tea Update functions naturally have high cyclomatic complexity
+      - path: 'internal/app/app\.go'
+        linters:
+          - gocyclo

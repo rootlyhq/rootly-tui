@@ -39,6 +39,8 @@ func (m HelpModel) View() string {
 	b.WriteString(renderHelpLine("k / Up", "Move cursor up"))
 	b.WriteString(renderHelpLine("g", "Go to first item"))
 	b.WriteString(renderHelpLine("G", "Go to last item"))
+	b.WriteString(renderHelpLine("[", "Previous page"))
+	b.WriteString(renderHelpLine("]", "Next page"))
 	b.WriteString(renderHelpLine("Tab", "Switch between tabs"))
 	b.WriteString("\n")
 
@@ -71,6 +73,7 @@ func renderHelpLine(key, desc string) string {
 func RenderHelpBar(width int) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", "navigate"),
+		styles.RenderHelpItem("[/]", "page"),
 		styles.RenderHelpItem("Tab", "switch"),
 		styles.RenderHelpItem("r", "refresh"),
 		styles.RenderHelpItem("l", "logs"),

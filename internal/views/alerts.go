@@ -22,12 +22,19 @@ type AlertsModel struct {
 	detailWidth int
 	loading     bool
 	error       string
+	// Pagination state
+	currentPage int
+	hasNext     bool
+	hasPrev     bool
+	// Loading spinner (passed from app)
+	spinnerView string
 }
 
 func NewAlertsModel() AlertsModel {
 	return AlertsModel{
-		alerts: []api.Alert{},
-		cursor: 0,
+		alerts:      []api.Alert{},
+		cursor:      0,
+		currentPage: 1,
 	}
 }
 
@@ -78,10 +85,13 @@ func (m *AlertsModel) updateDimensions() {
 	}
 }
 
-func (m *AlertsModel) SetAlerts(alerts []api.Alert) {
+func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInfo) {
 	m.alerts = alerts
 	m.loading = false
 	m.error = ""
+	m.currentPage = pagination.CurrentPage
+	m.hasNext = pagination.HasNext
+	m.hasPrev = pagination.HasPrev
 	if m.cursor >= len(alerts) && len(alerts) > 0 {
 		m.cursor = len(alerts) - 1
 	}
@@ -89,6 +99,10 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert) {
 
 func (m *AlertsModel) SetLoading(loading bool) {
 	m.loading = loading
+}
+
+func (m *AlertsModel) SetSpinner(spinner string) {
+	m.spinnerView = spinner
 }
 
 func (m *AlertsModel) SetError(err string) {
@@ -102,6 +116,33 @@ func (m *AlertsModel) SetDimensions(width, height int) {
 	m.updateDimensions()
 }
 
+// Pagination methods
+func (m AlertsModel) CurrentPage() int {
+	return m.currentPage
+}
+
+func (m AlertsModel) HasNextPage() bool {
+	return m.hasNext
+}
+
+func (m AlertsModel) HasPrevPage() bool {
+	return m.hasPrev
+}
+
+func (m *AlertsModel) NextPage() {
+	if m.hasNext {
+		m.currentPage++
+		m.cursor = 0
+	}
+}
+
+func (m *AlertsModel) PrevPage() {
+	if m.hasPrev && m.currentPage > 1 {
+		m.currentPage--
+		m.cursor = 0
+	}
+}
+
 func (m AlertsModel) SelectedAlert() *api.Alert {
 	if m.cursor >= 0 && m.cursor < len(m.alerts) {
 		return &m.alerts[m.cursor]
@@ -110,8 +151,18 @@ func (m AlertsModel) SelectedAlert() *api.Alert {
 }
 
 func (m AlertsModel) View() string {
+	contentHeight := m.height - 8
+	if contentHeight < 5 {
+		contentHeight = 5
+	}
+
 	if m.loading {
-		return styles.TextDim.Render("Loading alerts...")
+		// Show loading within the layout structure to prevent jarring shift
+		loadingMsg := fmt.Sprintf("%s Loading page %d...", m.spinnerView, m.currentPage)
+		listContent := styles.TextBold.Render("ALERTS") + "\n\n" + styles.TextDim.Render(loadingMsg)
+		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
+		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
+		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 	}
 
 	if m.error != "" {
@@ -120,11 +171,6 @@ func (m AlertsModel) View() string {
 
 	if len(m.alerts) == 0 {
 		return styles.TextDim.Render("No alerts found")
-	}
-
-	contentHeight := m.height - 8
-	if contentHeight < 5 {
-		contentHeight = 5
 	}
 
 	listView := m.renderList(contentHeight)
@@ -194,10 +240,27 @@ func (m AlertsModel) renderList(height int) string {
 		b.WriteString("\n")
 	}
 
-	if len(m.alerts) > maxVisible {
-		scrollInfo := fmt.Sprintf("\n%d/%d", m.cursor+1, len(m.alerts))
-		b.WriteString(styles.TextDim.Render(scrollInfo))
+	// Scroll and pagination indicator
+	var footer strings.Builder
+	footer.WriteString("\n")
+
+	// Page navigation indicators
+	if m.hasPrev {
+		footer.WriteString(styles.TextDim.Render("← ["))
+	} else {
+		footer.WriteString(styles.TextDim.Render("  "))
 	}
+	footer.WriteString(fmt.Sprintf(" Page %d ", m.currentPage))
+	if m.hasNext {
+		footer.WriteString(styles.TextDim.Render("] →"))
+	}
+
+	// Item count
+	if len(m.alerts) > 0 {
+		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.cursor+1, len(m.alerts))))
+	}
+
+	b.WriteString(footer.String())
 
 	content := b.String()
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)

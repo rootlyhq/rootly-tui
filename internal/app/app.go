@@ -170,6 +170,34 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, m.loadData()
 
+		case key.Matches(msg, m.keys.PrevPage):
+			if m.activeTab == TabIncidents && m.incidents.HasPrevPage() {
+				m.incidents.PrevPage()
+				m.incidents.SetLoading(true)
+				m.loading = true // Keeps spinner ticking
+				return m, tea.Batch(m.spinner.Tick, m.loadIncidents())
+			} else if m.activeTab == TabAlerts && m.alerts.HasPrevPage() {
+				m.alerts.PrevPage()
+				m.alerts.SetLoading(true)
+				m.loading = true
+				return m, tea.Batch(m.spinner.Tick, m.loadAlerts())
+			}
+			return m, nil
+
+		case key.Matches(msg, m.keys.NextPage):
+			if m.activeTab == TabIncidents && m.incidents.HasNextPage() {
+				m.incidents.NextPage()
+				m.incidents.SetLoading(true)
+				m.loading = true
+				return m, tea.Batch(m.spinner.Tick, m.loadIncidents())
+			} else if m.activeTab == TabAlerts && m.alerts.HasNextPage() {
+				m.alerts.NextPage()
+				m.alerts.SetLoading(true)
+				m.loading = true
+				return m, tea.Batch(m.spinner.Tick, m.loadAlerts())
+			}
+			return m, nil
+
 		default:
 			// Pass key events to active view
 			if m.activeTab == TabIncidents {
@@ -230,7 +258,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.errorMsg = msg.Err.Error()
 			m.incidents.SetError(msg.Err.Error())
 		} else {
-			m.incidents.SetIncidents(msg.Incidents)
+			m.incidents.SetIncidents(msg.Incidents, msg.Pagination)
 			m.errorMsg = ""
 			m.statusMsg = ""
 		}
@@ -240,7 +268,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Err != nil {
 			m.alerts.SetError(msg.Err.Error())
 		} else {
-			m.alerts.SetAlerts(msg.Alerts)
+			m.alerts.SetAlerts(msg.Alerts, msg.Pagination)
 		}
 		return m, nil
 
@@ -275,6 +303,10 @@ func (m Model) View() string {
 	if m.initialLoading {
 		b.WriteString(m.spinner.View() + " Loading...")
 	} else {
+		// Pass spinner to views for loading state
+		m.incidents.SetSpinner(m.spinner.View())
+		m.alerts.SetSpinner(m.spinner.View())
+
 		if m.activeTab == TabIncidents {
 			b.WriteString(m.incidents.View())
 		} else {
@@ -345,11 +377,10 @@ func (m Model) renderStatusBar() string {
 	if m.errorMsg != "" {
 		return styles.Error.Render("Error: " + m.errorMsg)
 	}
-	if m.statusMsg != "" {
+	// Don't show loading in status bar when views handle it (page loading)
+	// Views show their own spinner in the content area
+	if m.statusMsg != "" && !m.loading {
 		return styles.StatusBar.Render(m.statusMsg)
-	}
-	if m.loading {
-		return m.spinner.View() + " " + styles.StatusBar.Render("Loading...")
 	}
 	return ""
 }
@@ -362,37 +393,45 @@ func (m Model) loadData() tea.Cmd {
 }
 
 func (m Model) loadIncidents() tea.Cmd {
-	// Capture the client - it should already be initialized in New()
+	// Capture the client and page - it should already be initialized in New()
 	client := m.apiClient
+	page := m.incidents.CurrentPage()
 	return func() tea.Msg {
 		if client == nil {
 			return IncidentsLoadedMsg{Err: fmt.Errorf("API client not initialized")}
 		}
 
 		ctx := context.Background()
-		incidents, err := client.ListIncidents(ctx)
+		result, err := client.ListIncidents(ctx, page)
 		if err != nil {
 			return IncidentsLoadedMsg{Err: err}
 		}
 
-		return IncidentsLoadedMsg{Incidents: incidents}
+		return IncidentsLoadedMsg{
+			Incidents:  result.Incidents,
+			Pagination: result.Pagination,
+		}
 	}
 }
 
 func (m Model) loadAlerts() tea.Cmd {
-	// Capture the client - it should already be initialized in New()
+	// Capture the client and page - it should already be initialized in New()
 	client := m.apiClient
+	page := m.alerts.CurrentPage()
 	return func() tea.Msg {
 		if client == nil {
 			return AlertsLoadedMsg{Err: fmt.Errorf("API client not initialized")}
 		}
 
 		ctx := context.Background()
-		alerts, err := client.ListAlerts(ctx)
+		result, err := client.ListAlerts(ctx, page)
 		if err != nil {
 			return AlertsLoadedMsg{Err: err}
 		}
 
-		return AlertsLoadedMsg{Alerts: alerts}
+		return AlertsLoadedMsg{
+			Alerts:     result.Alerts,
+			Pagination: result.Pagination,
+		}
 	}
 }
