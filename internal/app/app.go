@@ -214,7 +214,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Refresh):
 			m.loading = true
-			m.statusMsg = i18n.T("refreshing")
+			m.statusMsg = i18n.T("common.refreshing")
 			// Clear cache on manual refresh
 			if m.apiClient != nil {
 				m.apiClient.ClearCache()
@@ -447,7 +447,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.width == 0 {
-		return i18n.T("loading")
+		return i18n.T("common.loading")
 	}
 
 	// Setup screen
@@ -465,7 +465,7 @@ func (m Model) View() string {
 
 	// Main content
 	if m.initialLoading {
-		b.WriteString(m.spinner.View() + " " + i18n.T("loading"))
+		b.WriteString(m.spinner.View() + " " + i18n.T("common.loading"))
 	} else {
 		// Pass spinner to views for loading state
 		m.incidents.SetSpinner(m.spinner.View())
@@ -517,7 +517,7 @@ func (m Model) View() string {
 }
 
 func (m Model) renderHeader() string {
-	title := styles.Title.Render(i18n.T("app_title"))
+	title := styles.Title.Render(i18n.T("app.title"))
 
 	// Tab indicators
 	var incidentsTab, alertsTab string

@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"embed"
+	"fmt"
 	"os"
 	"strings"
 
@@ -82,9 +83,58 @@ var bundle *i18n.Bundle
 var localizer *i18n.Localizer
 var currentLang = DefaultLanguage
 
+// flattenNestedYAML flattens nested YAML maps into dot-notation keys
+// e.g., {common: {error: "Error"}} -> {"common.error": {other: "Error"}}
+func flattenNestedYAML(data []byte, v interface{}) error {
+	// First, unmarshal into a generic map
+	var nested map[string]interface{}
+	if err := yaml.Unmarshal(data, &nested); err != nil {
+		return err
+	}
+
+	// Flatten the nested map
+	flat := make(map[string]interface{})
+	flattenMap("", nested, flat)
+
+	// Convert back to YAML and unmarshal into the target
+	flatYAML, err := yaml.Marshal(flat)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(flatYAML, v)
+}
+
+// flattenMap recursively flattens a nested map using dot notation
+func flattenMap(prefix string, nested, flat map[string]interface{}) {
+	for key, value := range nested {
+		fullKey := key
+		if prefix != "" {
+			fullKey = prefix + "." + key
+		}
+
+		switch v := value.(type) {
+		case map[string]interface{}:
+			// Check if this is a go-i18n message format (has "other" key with string value)
+			if other, ok := v["other"]; ok {
+				if _, isString := other.(string); isString {
+					// This is a leaf message node
+					flat[fullKey] = v
+					continue
+				}
+			}
+			// Otherwise, recurse into nested map
+			flattenMap(fullKey, v, flat)
+		default:
+			// For simple values, wrap in go-i18n format
+			flat[fullKey] = map[string]interface{}{"other": fmt.Sprintf("%v", v)}
+		}
+	}
+}
+
 func init() {
 	bundle = i18n.NewBundle(language.English)
-	bundle.RegisterUnmarshalFunc("yaml", yaml.Unmarshal)
+	bundle.RegisterUnmarshalFunc("yaml", flattenNestedYAML)
 
 	// Load embedded locale files
 	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/en_US.yaml")

@@ -1,219 +1,231 @@
 # Japanese (JP) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Rootlyへようこそ"
-enter_credentials:
-  other: "開始するにはRootly APIの認証情報を入力してください。"
-api_endpoint:
-  other: "APIエンドポイント"
-api_key:
-  other: "APIキー"
-timezone:
-  other: "タイムゾーン"
-language:
-  other: "言語"
-use_arrows_to_change:
-  other: "(矢印キーで変更)"
-testing_connection:
-  other: "接続をテスト中..."
-connection_success:
-  other: "接続成功!"
-test_connection:
-  other: "接続テスト"
-save_and_continue:
-  other: "保存して続行"
-setup_help:
-  other: "Tab/矢印で移動、Enterで選択、q/Escで終了"
-error:
-  other: "エラー"
+common:
+    error:
+        other: エラー
+    loading:
+        other: 読み込み中...
+    of:
+        other: 件中
+    page:
+        other: ページ
+    refreshing:
+        other: 更新中...
 
-# Incidents view
-incidents:
-  other: "インシデント"
-loading_page:
-  other: "ページ {{.Page}} を読み込み中..."
-no_incidents:
-  other: "インシデントが見つかりません"
-select_incident:
-  other: "インシデントを選択して詳細を表示"
-description:
-  other: "説明"
-timeline:
-  other: "タイムライン"
-created:
-  other: "作成日時"
-started:
-  other: "開始日時"
-detected:
-  other: "検出日時"
-acknowledged:
-  other: "確認日時"
-mitigated:
-  other: "緩和日時"
-resolved:
-  other: "解決日時"
-services:
-  other: "サービス"
-environments:
-  other: "環境"
-teams:
-  other: "チーム"
-roles:
-  other: "役割"
-causes:
-  other: "原因"
-types:
-  other: "タイプ"
-functionalities:
-  other: "機能"
-links:
-  other: "リンク"
-press_enter_details:
-  other: "Enterキーで詳細を表示"
-loading_details:
-  other: "詳細を読み込み中..."
-page:
-  other: "ページ"
-status:
-  other: "ステータス"
-severity:
-  other: "重大度"
-col_sev:
-  other: "重大"
-col_id:
-  other: "ID"
-col_title:
-  other: "タイトル"
-created_by:
-  other: "作成者"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "アラート"
-no_alerts:
-  other: "アラートが見つかりません"
-select_alert:
-  other: "アラートを選択して詳細を表示"
-source:
-  other: "ソース"
-ended:
-  other: "終了"
-urgency:
-  other: "緊急度"
-responders:
-  other: "対応者"
-labels:
-  other: "ラベル"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "キーボードショートカット"
-navigation:
-  other: "ナビゲーション"
-actions:
-  other: "アクション"
-general:
-  other: "一般"
-move_down:
-  other: "カーソルを下に移動"
-move_up:
-  other: "カーソルを上に移動"
-go_to_first:
-  other: "最初のアイテムへ"
-go_to_last:
-  other: "最後のアイテムへ"
-previous_page:
-  other: "前のページ"
-next_page:
-  other: "次のページ"
-switch_tabs:
-  other: "タブを切り替え"
-refresh_data:
-  other: "データを更新"
-view_details:
-  other: "詳細を表示 / 選択"
-open_url:
-  other: "ブラウザでURLを開く"
-view_logs:
-  other: "デバッグログを表示"
-open_setup:
-  other: "設定を開く"
-toggle_help:
-  other: "ヘルプの表示/非表示"
-quit:
-  other: "終了"
-press_to_close:
-  other: "?またはEscで閉じる"
-
-# Logs view
-debug_logs:
-  other: "デバッグログ"
-no_logs_yet:
-  other: "ログはまだありません。ログは自動的に記録されます。"
-showing_lines:
-  other: "表示行"
-of:
-  other: "件中"
-copied:
-  other: "コピーしました!"
-clipboard_unavailable:
-  other: "クリップボードが利用できません (ログを確認)"
-logs_help:
-  other: "j/k スクロール | g/G 先頭/末尾 | a 全選択 | y コピー | c クリア | l/Esc 閉じる"
-logs_help_no_clipboard:
-  other: "j/k スクロール | g/G 先頭/末尾 | a 全選択 | c クリア | l/Esc 閉じる"
-
-# Help bar items
-navigate:
-  other: "移動"
-page_nav:
-  other: "ページ"
-switch:
-  other: "切替"
-refresh:
-  other: "更新"
-open:
-  other: "開く"
-logs:
-  other: "ログ"
 setup:
-  other: "設定"
+    api_endpoint:
+        other: APIエンドポイント
+    api_key:
+        other: APIキー
+    connection_success:
+        other: 接続成功!
+    enter_credentials:
+        other: 開始するにはRootly APIの認証情報を入力してください。
+    help:
+        other: Tab/矢印で移動、Enterで選択、q/Escで終了
+    language:
+        other: 言語
+    save_and_continue:
+        other: 保存して続行
+    test_connection:
+        other: 接続テスト
+    testing_connection:
+        other: 接続をテスト中...
+    timezone:
+        other: タイムゾーン
+    use_arrows:
+        other: (矢印キーで変更)
+    welcome:
+        other: Rootlyへようこそ
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: 重大
+        title:
+            other: タイトル
+    detail:
+        causes:
+            other: 原因
+        created_by:
+            other: 作成者
+        description:
+            other: 説明
+        environments:
+            other: 環境
+        functionalities:
+            other: 機能
+        links:
+            other: リンク
+        roles:
+            other: 役割
+        services:
+            other: サービス
+        severity:
+            other: 重大度
+        status:
+            other: ステータス
+        teams:
+            other: チーム
+        types:
+            other: タイプ
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: 詳細を読み込み中...
+    loading_page:
+        other: ページ {{.Page}} を読み込み中...
+    none_found:
+        other: インシデントが見つかりません
+    press_enter:
+        other: Enterキーで詳細を表示
+    select_prompt:
+        other: インシデントを選択して詳細を表示
+    timeline:
+        acknowledged:
+            other: 確認日時
+        created:
+            other: 作成日時
+        detected:
+            other: 検出日時
+        mitigated:
+            other: 緩和日時
+        resolved:
+            other: 解決日時
+        started:
+            other: 開始日時
+        title:
+            other: タイムライン
+    title:
+        other: インシデント
+
+alerts:
+    detail:
+        ended:
+            other: 終了
+        labels:
+            other: ラベル
+        responders:
+            other: 対応者
+        source:
+            other: ソース
+        urgency:
+            other: 緊急度
+    none_found:
+        other: アラートが見つかりません
+    select_prompt:
+        other: アラートを選択して詳細を表示
+    title:
+        other: アラート
+
 help:
-  other: "ヘルプ"
+    action:
+        about:
+            other: 情報
+        details:
+            other: 詳細を表示 / 選択
+        help:
+            other: ヘルプの表示/非表示
+        logs:
+            other: デバッグログを表示
+        open_url:
+            other: ブラウザでURLを開く
+        quit:
+            other: 終了
+        refresh:
+            other: データを更新
+        setup:
+            other: 設定を開く
+    nav:
+        first:
+            other: 最初のアイテムへ
+        last:
+            other: 最後のアイテムへ
+        move_down:
+            other: カーソルを下に移動
+        move_up:
+            other: カーソルを上に移動
+        next_page:
+            other: 次のページ
+        prev_page:
+            other: 前のページ
+        switch_tabs:
+            other: タブを切り替え
+    press_to_close:
+        other: ?またはEscで閉じる
+    section:
+        actions:
+            other: アクション
+        general:
+            other: 一般
+        navigation:
+            other: ナビゲーション
+    title:
+        other: キーボードショートカット
+
+helpbar:
+    about:
+        other: 情報
+    help:
+        other: ヘルプ
+    logs:
+        other: ログ
+    navigate:
+        other: 移動
+    open:
+        other: 開く
+    page:
+        other: ページ
+    quit:
+        other: 終了
+    refresh:
+        other: 更新
+    setup:
+        other: 設定
+    switch:
+        other: 切替
+
+logs:
+    clipboard_unavailable:
+        other: クリップボードが利用できません (ログを確認)
+    copied:
+        other: コピーしました!
+    empty:
+        other: ログはまだありません。ログは自動的に記録されます。
+    help:
+        other: j/k スクロール | g/G 先頭/末尾 | a 全選択 | y コピー | c クリア | l/Esc 閉じる
+    help_no_clipboard:
+        other: j/k スクロール | g/G 先頭/末尾 | a 全選択 | c クリア | l/Esc 閉じる
+    showing_lines:
+        other: 表示行
+    title:
+        other: デバッグログ
+
 about:
-  other: "情報"
-quit_action:
-  other: "終了"
+    description:
+        other: Rootlyのインシデントとアラートを表示するターミナルUI。
+    docs:
+        other: ドキュメント
+    go_version:
+        other: Go
+    platform:
+        other: プラットフォーム
+    press_to_close:
+        other: A または Esc で閉じる
+    system:
+        other: システム
+    title:
+        other: 情報
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "読み込み中..."
-refreshing:
-  other: "更新中..."
-
-# About view
-about_title:
-  other: "情報"
-about_description:
-  other: "Rootlyのインシデントとアラートを表示するターミナルUI。"
-system_info:
-  other: "システム"
-go_version:
-  other: "Go"
-platform:
-  other: "プラットフォーム"
-documentation:
-  other: "ドキュメント"
-press_a_to_close:
-  other: "A または Esc で閉じる"
-view_about:
-  other: "情報"
