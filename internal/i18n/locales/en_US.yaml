@@ -71,6 +71,8 @@ links:
   other: "Links"
 press_enter_details:
   other: "Press Enter for more details"
+loading_details:
+  other: "Loading details..."
 page:
   other: "Page"
 status:

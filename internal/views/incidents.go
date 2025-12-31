@@ -182,6 +182,10 @@ func (m *IncidentsModel) SetDetailLoading(loading bool) {
 	m.detailLoading = loading
 }
 
+func (m IncidentsModel) IsDetailLoading() bool {
+	return m.detailLoading
+}
+
 func (m *IncidentsModel) UpdateIncidentDetail(index int, incident *api.Incident) {
 	if index >= 0 && index < len(m.incidents) && incident != nil {
 		m.incidents[index] = *incident
@@ -450,8 +454,11 @@ func (m IncidentsModel) renderDetail(height int) string {
 		}
 	}
 
-	// Show hint if detail not loaded
-	if !inc.DetailLoaded {
+	// Show loading spinner or hint if detail not loaded
+	if m.detailLoading {
+		b.WriteString("\n")
+		b.WriteString(fmt.Sprintf("%s %s", m.spinnerView, i18n.T("loading_details")))
+	} else if !inc.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
 	}

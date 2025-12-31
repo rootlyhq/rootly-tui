@@ -228,13 +228,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				inc := m.incidents.SelectedIncident()
 				if inc != nil && !inc.DetailLoaded {
 					m.incidents.SetDetailLoading(true)
-					return m, m.loadIncidentDetail(inc.ID, m.incidents.SelectedIndex())
+					return m, tea.Batch(m.spinner.Tick, m.loadIncidentDetail(inc.ID, m.incidents.SelectedIndex()))
 				}
 			} else {
 				alert := m.alerts.SelectedAlert()
 				if alert != nil && !alert.DetailLoaded {
 					m.alerts.SetDetailLoading(true)
-					return m, m.loadAlertDetail(alert.ID, m.alerts.SelectedIndex())
+					return m, tea.Batch(m.spinner.Tick, m.loadAlertDetail(alert.ID, m.alerts.SelectedIndex()))
 				}
 			}
 			return m, nil
@@ -291,7 +291,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case spinner.TickMsg:
 		// Only continue spinner when actually loading
-		if m.loading || m.initialLoading {
+		if m.loading || m.initialLoading || m.incidents.IsDetailLoading() || m.alerts.IsDetailLoading() {
 			var cmd tea.Cmd
 			m.spinner, cmd = m.spinner.Update(msg)
 			cmds = append(cmds, cmd)

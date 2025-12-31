@@ -183,6 +183,10 @@ func (m *AlertsModel) SetDetailLoading(loading bool) {
 	m.detailLoading = loading
 }
 
+func (m AlertsModel) IsDetailLoading() bool {
+	return m.detailLoading
+}
+
 func (m *AlertsModel) UpdateAlertDetail(index int, alert *api.Alert) {
 	if index >= 0 && index < len(m.alerts) && alert != nil {
 		m.alerts[index] = *alert
@@ -415,8 +419,11 @@ func (m AlertsModel) renderDetail(height int) string {
 		}
 	}
 
-	// Show hint if detail not loaded
-	if !alert.DetailLoaded {
+	// Show loading spinner or hint if detail not loaded
+	if m.detailLoading {
+		b.WriteString("\n")
+		b.WriteString(fmt.Sprintf("%s %s", m.spinnerView, i18n.T("loading_details")))
+	} else if !alert.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
 	}
