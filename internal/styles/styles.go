@@ -503,3 +503,16 @@ func RenderLink(url, text string) string {
 func RenderURL(url string) string {
 	return RenderLink(url, url)
 }
+
+// RenderEmail renders an email as a clickable mailto link
+func RenderEmail(email string) string {
+	return RenderLink("mailto:"+email, email)
+}
+
+// RenderNameWithEmail renders a name with email in format "Name [email]" where email is clickable
+func RenderNameWithEmail(name, email string) string {
+	if email == "" {
+		return name
+	}
+	return name + " [" + RenderEmail(email) + "]"
+}

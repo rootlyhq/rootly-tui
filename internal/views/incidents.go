@@ -104,7 +104,7 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 
 func (m *IncidentsModel) updateDimensions() {
 	if m.width > 0 {
-		m.listWidth = int(float64(m.width) * 0.4)
+		m.listWidth = int(float64(m.width) * 0.35)
 		m.detailWidth = m.width - m.listWidth - 6 // Account for borders and padding
 	}
 }
@@ -354,10 +354,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
-		creatorInfo := inc.CreatedByName
-		if inc.CreatedByEmail != "" {
-			creatorInfo += " " + styles.TextDim.Render(inc.CreatedByEmail)
-		}
+		creatorInfo := styles.RenderNameWithEmail(inc.CreatedByName, inc.CreatedByEmail)
 		b.WriteString(fmt.Sprintf("  %s: %s", i18n.T("created_by"), creatorInfo))
 	}
 	b.WriteString("\n\n")
@@ -413,14 +410,10 @@ func (m IncidentsModel) renderDetail(height int) string {
 					continue
 				}
 				roleName := strings.TrimSpace(role.Name)
+				userEmail := strings.TrimSpace(role.UserEmail)
 				b.WriteString(styles.DetailLabel.Render(roleName + ":"))
 				b.WriteString(" ")
-				b.WriteString(styles.DetailValue.Render(userName))
-				userEmail := strings.TrimSpace(role.UserEmail)
-				if userEmail != "" {
-					b.WriteString(" ")
-					b.WriteString(styles.TextDim.Render(userEmail))
-				}
+				b.WriteString(styles.RenderNameWithEmail(userName, userEmail))
 				b.WriteString("\n")
 			}
 			b.WriteString("\n")

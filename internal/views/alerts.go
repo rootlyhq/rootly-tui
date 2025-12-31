@@ -105,7 +105,7 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 
 func (m *AlertsModel) updateDimensions() {
 	if m.width > 0 {
-		m.listWidth = int(float64(m.width) * 0.4)
+		m.listWidth = int(float64(m.width) * 0.35)
 		m.detailWidth = m.width - m.listWidth - 6
 	}
 }
