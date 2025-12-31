@@ -1061,3 +1061,411 @@ func TestGetAlertError(t *testing.T) {
 		t.Error("expected error for 404 response")
 	}
 }
+
+func TestListIncidentsInvalidJSON(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.ListIncidents(context.Background(), 1)
+	if err == nil {
+		t.Error("expected error for invalid JSON response")
+	}
+}
+
+func TestListAlertsInvalidJSON(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.ListAlerts(context.Background(), 1)
+	if err == nil {
+		t.Error("expected error for invalid JSON response")
+	}
+}
+
+func TestGetIncidentInvalidJSON(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.GetIncident(context.Background(), "inc_123", time.Now())
+	if err == nil {
+		t.Error("expected error for invalid JSON response")
+	}
+}
+
+func TestGetAlertInvalidJSON(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.GetAlert(context.Background(), "alert_123", time.Now())
+	if err == nil {
+		t.Error("expected error for invalid JSON response")
+	}
+}
+
+func TestValidateAPIKeyHTTPError(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "http://invalid.nonexistent.host:99999",
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	err = client.ValidateAPIKey(context.Background())
+	if err == nil {
+		t.Error("expected error for unreachable host")
+	}
+}
+
+func TestListIncidentsHTTPError(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "http://invalid.nonexistent.host:99999",
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.ListIncidents(context.Background(), 1)
+	if err == nil {
+		t.Error("expected error for unreachable host")
+	}
+}
+
+func TestListAlertsHTTPError(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "http://invalid.nonexistent.host:99999",
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.ListAlerts(context.Background(), 1)
+	if err == nil {
+		t.Error("expected error for unreachable host")
+	}
+}
+
+func TestGetIncidentHTTPError(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "http://invalid.nonexistent.host:99999",
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.GetIncident(context.Background(), "inc_123", time.Now())
+	if err == nil {
+		t.Error("expected error for unreachable host")
+	}
+}
+
+func TestGetAlertHTTPError(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: "http://invalid.nonexistent.host:99999",
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	_, err = client.GetAlert(context.Background(), "alert_123", time.Now())
+	if err == nil {
+		t.Error("expected error for unreachable host")
+	}
+}
+
+func TestListIncidentsWithPagination(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check pagination query params
+		pageNum := r.URL.Query().Get("page[number]")
+
+		if pageNum != "2" {
+			t.Errorf("expected page[number]=2, got %s", pageNum)
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": []map[string]interface{}{},
+			"meta": map[string]interface{}{
+				"current_page": 2,
+			},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	result, err := client.ListIncidents(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("ListIncidents() error = %v", err)
+	}
+
+	if result.Pagination.CurrentPage != 2 {
+		t.Errorf("expected CurrentPage=2, got %d", result.Pagination.CurrentPage)
+	}
+}
+
+func TestListAlertsWithPagination(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": []map[string]interface{}{},
+			"meta": map[string]interface{}{
+				"current_page": 3,
+				"total_pages":  10,
+				"total_count":  500,
+			},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	result, err := client.ListAlerts(context.Background(), 3)
+	if err != nil {
+		t.Fatalf("ListAlerts() error = %v", err)
+	}
+
+	if result.Pagination.CurrentPage != 3 {
+		t.Errorf("expected CurrentPage=3, got %d", result.Pagination.CurrentPage)
+	}
+}
+
+func TestIncidentsWithEmptyData(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": []map[string]interface{}{
+				{
+					"id": "inc_empty",
+					"attributes": map[string]interface{}{
+						"title":      "Minimal Incident",
+						"status":     "started",
+						"created_at": "2025-01-01T10:00:00Z",
+						// Missing optional fields: summary, severity, timestamps, etc.
+					},
+				},
+			},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	result, err := client.ListIncidents(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("ListIncidents() error = %v", err)
+	}
+
+	if len(result.Incidents) != 1 {
+		t.Fatalf("expected 1 incident, got %d", len(result.Incidents))
+	}
+
+	inc := result.Incidents[0]
+	if inc.ID != "inc_empty" {
+		t.Errorf("expected ID=inc_empty, got %s", inc.ID)
+	}
+	// Verify nil optional fields don't cause issues
+	if inc.StartedAt != nil {
+		t.Error("expected StartedAt to be nil")
+	}
+	if inc.ResolvedAt != nil {
+		t.Error("expected ResolvedAt to be nil")
+	}
+}
+
+func TestAlertsWithEmptyData(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+
+		response := map[string]interface{}{
+			"data": []map[string]interface{}{
+				{
+					"id": "alert_empty",
+					"attributes": map[string]interface{}{
+						"summary":    "Minimal Alert",
+						"status":     "triggered",
+						"source":     "custom",
+						"created_at": "2025-01-01T10:00:00Z",
+						// Missing optional fields: description, labels, services, etc.
+					},
+				},
+			},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	result, err := client.ListAlerts(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("ListAlerts() error = %v", err)
+	}
+
+	if len(result.Alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(result.Alerts))
+	}
+
+	alert := result.Alerts[0]
+	if alert.ID != "alert_empty" {
+		t.Errorf("expected ID=alert_empty, got %s", alert.ID)
+	}
+	if len(alert.Labels) != 0 {
+		t.Errorf("expected empty labels, got %d", len(alert.Labels))
+	}
+	if len(alert.Services) != 0 {
+		t.Errorf("expected empty services, got %d", len(alert.Services))
+	}
+}
+

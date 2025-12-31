@@ -388,3 +388,172 @@ func TestDetectTimezoneWithInvalidTZEnv(t *testing.T) {
 		t.Errorf("expected valid timezone after invalid TZ env, got '%s' with error: %v", tz, err)
 	}
 }
+
+func TestLoadInvalidYAML(t *testing.T) {
+	// Create temp directory for test
+	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override home directory for test
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Create config directory
+	configDir := filepath.Join(tmpDir, ".rootly-tui")
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		t.Fatalf("failed to create config dir: %v", err)
+	}
+
+	// Write invalid YAML
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.WriteFile(configPath, []byte("invalid: yaml: content:\n  - broken"), 0600); err != nil {
+		t.Fatalf("failed to write invalid config: %v", err)
+	}
+
+	// Try to load invalid YAML config
+	_, err = Load()
+	if err == nil {
+		t.Error("expected error when loading invalid YAML config")
+	}
+}
+
+func TestSaveAndLoadWithLanguage(t *testing.T) {
+	// Create temp directory for test
+	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override home directory for test
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Test saving config with language
+	cfg := &Config{
+		APIKey:   "test-api-key",
+		Endpoint: "api.test.rootly.com",
+		Timezone: "America/New_York",
+		Language: "fr_FR",
+	}
+
+	err = Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify language is preserved
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Language != cfg.Language {
+		t.Errorf("expected Language '%s', got '%s'", cfg.Language, loaded.Language)
+	}
+}
+
+func TestLoadDefaultLanguage(t *testing.T) {
+	// Create temp directory for test
+	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override home directory for test
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Save config without language
+	cfg := &Config{
+		APIKey:   "test-key",
+		Endpoint: "api.rootly.com",
+		Timezone: "UTC",
+		Language: "", // Empty language
+	}
+
+	err = Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify default language is set
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Language != DefaultLanguage {
+		t.Errorf("expected default language '%s', got '%s'", DefaultLanguage, loaded.Language)
+	}
+}
+
+func TestDefaultLanguageConstant(t *testing.T) {
+	if DefaultLanguage != "en_US" {
+		t.Errorf("expected default language to be 'en_US', got '%s'", DefaultLanguage)
+	}
+}
+
+func TestDetectTimezoneWithEmptyTZEnv(t *testing.T) {
+	// Save original TZ env
+	originalTZ := os.Getenv("TZ")
+	defer os.Setenv("TZ", originalTZ)
+
+	// Clear TZ env to test other detection methods
+	os.Unsetenv("TZ")
+	tz := DetectTimezone()
+
+	// Should return a valid timezone
+	_, err := time.LoadLocation(tz)
+	if err != nil {
+		t.Errorf("expected valid timezone, got '%s' with error: %v", tz, err)
+	}
+}
+
+func TestListTimezonesContainsCommonTimezones(t *testing.T) {
+	timezones := ListTimezones()
+
+	// Create a set for fast lookup
+	tzSet := make(map[string]bool)
+	for _, tz := range timezones {
+		tzSet[tz] = true
+	}
+
+	// Check some common timezones are in the list
+	commonTimezones := []string{"UTC", "America/New_York", "America/Los_Angeles", "Europe/London"}
+	for _, tz := range commonTimezones {
+		if !tzSet[tz] {
+			t.Errorf("expected common timezone '%s' to be in list", tz)
+		}
+	}
+}
+
+func TestConfigStruct(t *testing.T) {
+	// Test that all fields can be set and retrieved
+	cfg := Config{
+		APIKey:   "my-api-key",
+		Endpoint: "custom.endpoint.com",
+		Timezone: "Asia/Tokyo",
+		Language: "ja_JP",
+	}
+
+	if cfg.APIKey != "my-api-key" {
+		t.Errorf("APIKey mismatch")
+	}
+	if cfg.Endpoint != "custom.endpoint.com" {
+		t.Errorf("Endpoint mismatch")
+	}
+	if cfg.Timezone != "Asia/Tokyo" {
+		t.Errorf("Timezone mismatch")
+	}
+	if cfg.Language != "ja_JP" {
+		t.Errorf("Language mismatch")
+	}
+}
