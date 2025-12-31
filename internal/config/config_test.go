@@ -3,9 +3,32 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
+
+// setupTestEnv sets up a temporary home directory for test isolation.
+// On Unix, sets HOME; on Windows, sets USERPROFILE (used by os.UserHomeDir).
+// Returns the temp dir path and a cleanup function that should be deferred.
+func setupTestEnv(t *testing.T) (tmpDir string, cleanup func()) {
+	t.Helper()
+	tmpDir = t.TempDir()
+
+	if runtime.GOOS == "windows" {
+		originalUserProfile := os.Getenv("USERPROFILE")
+		os.Setenv("USERPROFILE", tmpDir)
+		return tmpDir, func() {
+			os.Setenv("USERPROFILE", originalUserProfile)
+		}
+	}
+
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	return tmpDir, func() {
+		os.Setenv("HOME", originalHome)
+	}
+}
 
 func TestDefaultEndpoint(t *testing.T) {
 	if DefaultEndpoint != "api.rootly.com" {
@@ -80,17 +103,8 @@ func TestConfigIsValid(t *testing.T) {
 }
 
 func TestSaveAndLoad(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Test saving config
 	cfg := &Config{
@@ -98,7 +112,7 @@ func TestSaveAndLoad(t *testing.T) {
 		Endpoint: "api.test.rootly.com",
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
@@ -124,17 +138,8 @@ func TestSaveAndLoad(t *testing.T) {
 }
 
 func TestLoadDefaultEndpoint(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Save config without endpoint
 	cfg := &Config{
@@ -142,7 +147,7 @@ func TestLoadDefaultEndpoint(t *testing.T) {
 		Endpoint: "", // Empty endpoint
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
@@ -159,37 +164,19 @@ func TestLoadDefaultEndpoint(t *testing.T) {
 }
 
 func TestLoadNonExistent(t *testing.T) {
-	// Create temp directory for test (empty, no config)
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Try to load non-existent config
-	_, err = Load()
+	_, err := Load()
 	if err == nil {
 		t.Error("expected error when loading non-existent config")
 	}
 }
 
 func TestExistsWhenNotExists(t *testing.T) {
-	// Create temp directory for test (empty, no config)
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	if Exists() {
 		t.Error("expected Exists() to return false for non-existent config")
@@ -259,17 +246,8 @@ func TestDefaultTimezone(t *testing.T) {
 }
 
 func TestSaveAndLoadWithTimezone(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Test saving config with timezone
 	cfg := &Config{
@@ -278,7 +256,7 @@ func TestSaveAndLoadWithTimezone(t *testing.T) {
 		Timezone: "America/New_York",
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
@@ -295,17 +273,8 @@ func TestSaveAndLoadWithTimezone(t *testing.T) {
 }
 
 func TestLoadDefaultTimezone(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Save config without timezone
 	cfg := &Config{
@@ -314,7 +283,7 @@ func TestLoadDefaultTimezone(t *testing.T) {
 		Timezone: "", // Empty timezone
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
@@ -390,17 +359,8 @@ func TestDetectTimezoneWithInvalidTZEnv(t *testing.T) {
 }
 
 func TestLoadInvalidYAML(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	tmpDir, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Create config directory
 	configDir := filepath.Join(tmpDir, ".rootly-tui")
@@ -415,24 +375,15 @@ func TestLoadInvalidYAML(t *testing.T) {
 	}
 
 	// Try to load invalid YAML config
-	_, err = Load()
+	_, err := Load()
 	if err == nil {
 		t.Error("expected error when loading invalid YAML config")
 	}
 }
 
 func TestSaveAndLoadWithLanguage(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Test saving config with language
 	cfg := &Config{
@@ -442,7 +393,7 @@ func TestSaveAndLoadWithLanguage(t *testing.T) {
 		Language: "fr_FR",
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
@@ -459,17 +410,8 @@ func TestSaveAndLoadWithLanguage(t *testing.T) {
 }
 
 func TestLoadDefaultLanguage(t *testing.T) {
-	// Create temp directory for test
-	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Override home directory for test
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
 
 	// Save config without language
 	cfg := &Config{
@@ -479,7 +421,7 @@ func TestLoadDefaultLanguage(t *testing.T) {
 		Language: "", // Empty language
 	}
 
-	err = Save(cfg)
+	err := Save(cfg)
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
