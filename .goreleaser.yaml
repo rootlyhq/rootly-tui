@@ -27,6 +27,11 @@ builds:
     goarm:
       - "6"
       - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
     ldflags:
       - -s -w
       - -extldflags "-static"
