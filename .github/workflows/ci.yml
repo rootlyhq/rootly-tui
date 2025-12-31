@@ -32,13 +32,22 @@ jobs:
           version: latest
 
   test:
-    name: Test
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-13
+          - macos-14
+          - macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Install X11 dependencies
+      - name: Install X11 dependencies (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev
 
       - name: Set up Go
@@ -54,6 +63,7 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v5
         with:
           files: coverage.out
