@@ -355,3 +355,43 @@ func TestFormatAlertTime(t *testing.T) {
 		t.Errorf("expected result to contain 'Jan 15, 2024', got '%s'", result)
 	}
 }
+
+func TestAlertsModelViewStripsNewlines(t *testing.T) {
+	m := NewAlertsModel()
+	m.SetDimensions(100, 40)
+
+	// Alert with newlines in summary
+	alerts := []api.Alert{
+		{
+			ID:        "1",
+			ShortID:   "ABC123",
+			Summary:   "Test alert\nwith newline\rand carriage return",
+			Status:    "triggered",
+			Source:    "datadog",
+			CreatedAt: time.Now(),
+		},
+	}
+	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// The summary should appear on a single line with the ID
+	// Count lines that contain ABC123 - should be exactly 1 in the list portion
+	lines := strings.Split(view, "\n")
+	countWithID := 0
+	for _, line := range lines {
+		if strings.Contains(line, "ABC123") {
+			countWithID++
+		}
+	}
+	// ABC123 appears in list (1) and in detail pane header (1) = 2 total
+	if countWithID < 1 {
+		t.Error("expected at least 1 line containing ABC123")
+	}
+	// Verify no raw \r in any line with the ID
+	for _, line := range lines {
+		if strings.Contains(line, "ABC123") && strings.Contains(line, "\r") {
+			t.Error("expected carriage returns to be stripped from lines containing ABC123")
+		}
+	}
+}

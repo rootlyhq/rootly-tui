@@ -224,7 +224,8 @@ func (m IncidentsModel) renderList(height int) string {
 		statusPadded := fmt.Sprintf("%-12s", status)
 
 		// Title (truncated)
-		titleMaxLen := m.listWidth - 35
+		// Account for: selector(2) + severity(4) + space(1) + seqID(8) + space(1) + status(12) + space(1) + padding(8)
+		titleMaxLen := m.listWidth - 37
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
@@ -232,20 +233,22 @@ func (m IncidentsModel) renderList(height int) string {
 		if title == "" {
 			title = inc.Title
 		}
+		title = strings.ReplaceAll(title, "\n", " ")
+		title = strings.ReplaceAll(title, "\r", "")
 		if len(title) > titleMaxLen {
 			title = title[:titleMaxLen-3] + "..."
 		}
 
 		// Format: "▶ ▁▃▅▇ INC-123  started      Title here" (▶ for selected)
-		// Selected items use plain text so selection color applies uniformly
+		// Single line only - no wrapping
 		if i == m.cursor {
 			sevPlain := severitySignalPlain(inc.Severity)
 			line := fmt.Sprintf("▶ %s %-8s %s %s", sevPlain, seqID, statusPadded, title)
-			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
+			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
 		} else {
 			sev := styles.RenderSeveritySignal(inc.Severity)
 			line := fmt.Sprintf("  %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
-			b.WriteString(styles.ListItem.Width(m.listWidth - 4).Render(line))
+			b.WriteString(styles.ListItem.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
 		}
 		b.WriteString("\n")
 	}
@@ -286,11 +289,13 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Title line: [INC-XXX] Title
+	// Title line: [INC-XXX] Title (strip newlines for single-line display)
 	title := inc.Title
 	if title == "" {
 		title = inc.Summary
 	}
+	title = strings.ReplaceAll(title, "\n", " ")
+	title = strings.ReplaceAll(title, "\r", "")
 	if inc.SequentialID != "" {
 		b.WriteString(styles.Primary.Bold(true).Render("[" + inc.SequentialID + "]"))
 		b.WriteString(" ")
@@ -305,10 +310,12 @@ func (m IncidentsModel) renderDetail(height int) string {
 	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s\n\n", statusBadge, sevSignal, sevBadge))
 
 	// Description (shows the summary if different from title)
-	if inc.Summary != "" && inc.Summary != inc.Title {
+	summaryClean := strings.ReplaceAll(inc.Summary, "\n", " ")
+	summaryClean = strings.ReplaceAll(summaryClean, "\r", "")
+	if summaryClean != "" && summaryClean != title {
 		b.WriteString(styles.TextBold.Render("Description"))
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render(inc.Summary))
+		b.WriteString(styles.TextDim.Render(summaryClean))
 		b.WriteString("\n\n")
 	}
 

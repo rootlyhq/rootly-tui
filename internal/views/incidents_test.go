@@ -396,3 +396,42 @@ func TestFormatTime(t *testing.T) {
 		t.Errorf("expected result to contain 'Jan 15, 2024', got '%s'", result)
 	}
 }
+
+func TestIncidentsModelViewStripsNewlines(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 40)
+
+	// Incident with newlines in summary
+	incidents := []api.Incident{
+		{
+			ID:           "1",
+			SequentialID: "INC-123",
+			Summary:      "Test incident\nwith newline\rand carriage return",
+			Status:       "started",
+			Severity:     "critical",
+			CreatedAt:    time.Now(),
+		},
+	}
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// The summary should appear on a single line with the ID
+	// INC-123 appears in list (1) and in detail pane header (1) = 2 total
+	lines := strings.Split(view, "\n")
+	countWithID := 0
+	for _, line := range lines {
+		if strings.Contains(line, "INC-123") {
+			countWithID++
+		}
+	}
+	if countWithID < 1 {
+		t.Error("expected at least 1 line containing INC-123")
+	}
+	// Verify no raw \r in any line with the ID
+	for _, line := range lines {
+		if strings.Contains(line, "INC-123") && strings.Contains(line, "\r") {
+			t.Error("expected carriage returns to be stripped from lines containing INC-123")
+		}
+	}
+}

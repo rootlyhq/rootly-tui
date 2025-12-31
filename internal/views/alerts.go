@@ -220,23 +220,25 @@ func (m AlertsModel) renderList(height int) string {
 		statusPadded := fmt.Sprintf("%-10s", status)
 
 		// Summary (truncated)
-		titleMaxLen := m.listWidth - 30
+		// Account for: selector(2) + emoji(4) + space(1) + shortID(8) + space(1) + status(10) + space(1) + padding(8)
+		titleMaxLen := m.listWidth - 35
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
-		summary := alert.Summary
+		summary := strings.ReplaceAll(alert.Summary, "\n", " ")
+		summary = strings.ReplaceAll(summary, "\r", "")
 		if len(summary) > titleMaxLen {
 			summary = summary[:titleMaxLen-3] + "..."
 		}
 
 		// Format: "▶ [source] ABC123  triggered   Summary here" (▶ for selected)
-		// Selected items use plain text so selection color applies uniformly
+		// Single line only - no wrapping
 		if i == m.cursor {
 			line := fmt.Sprintf("▶ %s %-8s %s %s", source, shortID, statusPadded, summary)
-			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
+			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
 		} else {
 			line := fmt.Sprintf("  %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
-			b.WriteString(styles.ListItem.Width(m.listWidth - 4).Render(line))
+			b.WriteString(styles.ListItem.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
 		}
 		b.WriteString("\n")
 	}
@@ -277,12 +279,14 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Title line: [SHORT_ID] Summary
+	// Title line: [SHORT_ID] Summary (strip newlines for single-line display)
+	summaryClean := strings.ReplaceAll(alert.Summary, "\n", " ")
+	summaryClean = strings.ReplaceAll(summaryClean, "\r", "")
 	if alert.ShortID != "" {
 		b.WriteString(styles.Primary.Bold(true).Render("[" + alert.ShortID + "]"))
 		b.WriteString(" ")
 	}
-	b.WriteString(styles.DetailTitle.Render(alert.Summary))
+	b.WriteString(styles.DetailTitle.Render(summaryClean))
 	b.WriteString("\n\n")
 
 	// Status and Source row

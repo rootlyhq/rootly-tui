@@ -221,8 +221,11 @@ func (m *LogsModel) copyToClipboard() {
 
 	// Copy to clipboard
 	if err := clipboard.Init(); err != nil {
-		debug.Logger.Error("Failed to initialize clipboard", "error", err)
-		m.statusMsg = "Clipboard unavailable"
+		debug.Logger.Error("Failed to initialize clipboard",
+			"error", err,
+			"hint", "Clipboard requires CGO_ENABLED=1. On Linux, also install xclip/xsel. On headless systems, clipboard is unavailable.",
+		)
+		m.statusMsg = "Clipboard unavailable (see logs)"
 		m.statusTimeout = 3
 		return
 	}
