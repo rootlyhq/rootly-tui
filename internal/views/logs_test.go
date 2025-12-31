@@ -363,7 +363,7 @@ func TestLogsModelMouseYToLineIndex(t *testing.T) {
 	// Clicking further down
 	m.scrollPos = 5
 	idx = m.mouseYToLineIndex(contentStartY+3, contentStartY)
-	if idx != 8 { // scrollPos + relativeY = 5 + 3
+	if idx != 8 {
 		t.Errorf("expected line index 8, got %d", idx)
 	}
 }

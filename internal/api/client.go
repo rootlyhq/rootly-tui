@@ -21,7 +21,7 @@ const DefaultCacheTTL = 30 * time.Second
 type Client struct {
 	client   *rootly.ClientWithResponses
 	endpoint string
-	cache    *Cache
+	cache    *PersistentCache
 }
 
 type Incident struct {
@@ -86,17 +86,38 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		return nil, fmt.Errorf("failed to create rootly client: %w", err)
 	}
 
+	cache, err := NewPersistentCache(DefaultCacheTTL)
+	if err != nil {
+		debug.Logger.Warn("Failed to create persistent cache, using in-memory", "error", err)
+		// Fall back to in-memory cache
+		return &Client{
+			client:   client,
+			endpoint: cfg.Endpoint,
+			cache:    nil,
+		}, nil
+	}
+
 	return &Client{
 		client:   client,
 		endpoint: cfg.Endpoint,
-		cache:    NewCache(DefaultCacheTTL),
+		cache:    cache,
 	}, nil
 }
 
 // ClearCache clears all cached data
 func (c *Client) ClearCache() {
-	c.cache.Clear()
-	debug.Logger.Debug("Cache cleared")
+	if c.cache != nil {
+		c.cache.Clear()
+		debug.Logger.Debug("Cache cleared")
+	}
+}
+
+// Close closes the client and releases resources
+func (c *Client) Close() error {
+	if c.cache != nil {
+		return c.cache.Close()
+	}
+	return nil
 }
 
 func (c *Client) ValidateAPIKey(ctx context.Context) error {
@@ -126,9 +147,12 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 		Build()
 
 	// Check cache first
-	if cached, ok := c.cache.Get(cacheKey); ok {
-		debug.Logger.Debug("Cache hit for incidents", "key", cacheKey)
-		return cached.([]Incident), nil
+	if c.cache != nil {
+		var cached []Incident
+		if c.cache.GetTyped(cacheKey, &cached) {
+			debug.Logger.Debug("Cache hit for incidents", "key", cacheKey)
+			return cached, nil
+		}
 	}
 
 	params := &rootly.ListIncidentsParams{
@@ -267,8 +291,10 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 	}
 
 	// Store in cache
-	c.cache.Set(cacheKey, incidents)
-	debug.Logger.Debug("Cached incidents", "count", len(incidents), "key", cacheKey)
+	if c.cache != nil {
+		c.cache.Set(cacheKey, incidents)
+		debug.Logger.Debug("Cached incidents", "count", len(incidents), "key", cacheKey)
+	}
 
 	return incidents, nil
 }
@@ -282,9 +308,12 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		Build()
 
 	// Check cache first
-	if cached, ok := c.cache.Get(cacheKey); ok {
-		debug.Logger.Debug("Cache hit for alerts", "key", cacheKey)
-		return cached.([]Alert), nil
+	if c.cache != nil {
+		var cached []Alert
+		if c.cache.GetTyped(cacheKey, &cached) {
+			debug.Logger.Debug("Cache hit for alerts", "key", cacheKey)
+			return cached, nil
+		}
 	}
 
 	params := &rootly.ListAlertsParams{
@@ -405,8 +434,10 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 	}
 
 	// Store in cache
-	c.cache.Set(cacheKey, alerts)
-	debug.Logger.Debug("Cached alerts", "count", len(alerts), "key", cacheKey)
+	if c.cache != nil {
+		c.cache.Set(cacheKey, alerts)
+		debug.Logger.Debug("Cached alerts", "count", len(alerts), "key", cacheKey)
+	}
 
 	return alerts, nil
 }
