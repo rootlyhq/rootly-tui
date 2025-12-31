@@ -56,6 +56,7 @@ lint:
 # Format code
 fmt:
 	go fmt ./...
+	@which goimports > /dev/null 2>&1 && goimports -w . || echo "goimports not installed, skipping"
 
 # Check for issues
 check: fmt lint test

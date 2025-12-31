@@ -44,6 +44,12 @@ func TestSetupModelUpdateNavigation(t *testing.T) {
 		t.Errorf("expected focus on API key after tab, got %v", m.focusIndex)
 	}
 
+	// Tab to timezone field
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	if m.focusIndex != FieldTimezone {
+		t.Errorf("expected focus on timezone after tab, got %v", m.focusIndex)
+	}
+
 	// Tab to buttons
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
 	if m.focusIndex != FieldButtons {
@@ -103,6 +109,12 @@ func TestSetupModelUpdateEnterMovesToNext(t *testing.T) {
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	if m.focusIndex != FieldAPIKey {
 		t.Errorf("expected focus on API key after enter, got %v", m.focusIndex)
+	}
+
+	// Enter moves to timezone
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if m.focusIndex != FieldTimezone {
+		t.Errorf("expected focus on timezone after enter, got %v", m.focusIndex)
 	}
 
 	// Enter moves to buttons
@@ -225,6 +237,9 @@ func TestSetupModelView(t *testing.T) {
 	if !containsStr(view, "API Key") {
 		t.Error("expected view to contain API Key label")
 	}
+	if !containsStr(view, "Timezone") {
+		t.Error("expected view to contain Timezone label")
+	}
 	if !containsStr(view, "Test Connection") {
 		t.Error("expected view to contain Test Connection button")
 	}
@@ -296,7 +311,17 @@ func TestSetupModelUpdateFocus(t *testing.T) {
 		t.Error("expected API key to be focused")
 	}
 
-	// Focus buttons (both inputs blurred)
+	// Focus timezone (it's a selector, not a text input, so just check text inputs are blurred)
+	m.focusIndex = FieldTimezone
+	m.updateFocus()
+	if m.apiKey.Focused() {
+		t.Error("expected API key to be blurred")
+	}
+	if m.endpoint.Focused() {
+		t.Error("expected endpoint to be blurred when timezone focused")
+	}
+
+	// Focus buttons (all inputs blurred)
 	m.focusIndex = FieldButtons
 	m.updateFocus()
 	if m.endpoint.Focused() {

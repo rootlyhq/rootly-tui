@@ -153,6 +153,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.logs.Toggle()
 			return m, nil
 
+		case key.Matches(msg, m.keys.Setup):
+			// Reset to setup screen
+			m.screen = ScreenSetup
+			m.setup = views.NewSetupModel()
+			m.setup.SetDimensions(m.width, m.height)
+			return m, m.setup.Init()
+
 		case key.Matches(msg, m.keys.Tab):
 			if m.activeTab == TabIncidents {
 				m.activeTab = TabAlerts

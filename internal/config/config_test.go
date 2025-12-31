@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestDefaultEndpoint(t *testing.T) {
@@ -192,5 +193,139 @@ func TestExistsWhenNotExists(t *testing.T) {
 
 	if Exists() {
 		t.Error("expected Exists() to return false for non-existent config")
+	}
+}
+
+func TestDetectTimezone(t *testing.T) {
+	tz := DetectTimezone()
+
+	t.Logf("Detected timezone: %s", tz)
+
+	// Should return a non-empty string
+	if tz == "" {
+		t.Error("expected DetectTimezone to return non-empty string")
+	}
+
+	// Should be a valid timezone that can be loaded
+	_, err := time.LoadLocation(tz)
+	if err != nil {
+		t.Errorf("expected DetectTimezone to return valid timezone, got '%s' with error: %v", tz, err)
+	}
+}
+
+func TestGetLocation(t *testing.T) {
+	tests := []struct {
+		name     string
+		timezone string
+		expected string
+	}{
+		{
+			name:     "valid timezone",
+			timezone: "America/Los_Angeles",
+			expected: "America/Los_Angeles",
+		},
+		{
+			name:     "UTC",
+			timezone: "UTC",
+			expected: "UTC",
+		},
+		{
+			name:     "empty timezone falls back to UTC",
+			timezone: "",
+			expected: "UTC",
+		},
+		{
+			name:     "invalid timezone falls back to UTC",
+			timezone: "Invalid/Timezone",
+			expected: "UTC",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{Timezone: tt.timezone}
+			loc := cfg.GetLocation()
+			if loc.String() != tt.expected {
+				t.Errorf("expected location '%s', got '%s'", tt.expected, loc.String())
+			}
+		})
+	}
+}
+
+func TestDefaultTimezone(t *testing.T) {
+	if DefaultTimezone != "UTC" {
+		t.Errorf("expected default timezone to be 'UTC', got '%s'", DefaultTimezone)
+	}
+}
+
+func TestSaveAndLoadWithTimezone(t *testing.T) {
+	// Create temp directory for test
+	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override home directory for test
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Test saving config with timezone
+	cfg := &Config{
+		APIKey:   "test-api-key",
+		Endpoint: "api.test.rootly.com",
+		Timezone: "America/New_York",
+	}
+
+	err = Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify timezone is preserved
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Timezone != cfg.Timezone {
+		t.Errorf("expected Timezone '%s', got '%s'", cfg.Timezone, loaded.Timezone)
+	}
+}
+
+func TestLoadDefaultTimezone(t *testing.T) {
+	// Create temp directory for test
+	tmpDir, err := os.MkdirTemp("", "rootly-tui-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override home directory for test
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Save config without timezone
+	cfg := &Config{
+		APIKey:   "test-key",
+		Endpoint: "api.rootly.com",
+		Timezone: "", // Empty timezone
+	}
+
+	err = Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify default timezone is set
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Timezone != DefaultTimezone {
+		t.Errorf("expected default timezone '%s', got '%s'", DefaultTimezone, loaded.Timezone)
 	}
 }

@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -19,6 +20,7 @@ type SetupField int
 const (
 	FieldEndpoint SetupField = iota
 	FieldAPIKey
+	FieldTimezone
 	FieldButtons
 )
 
@@ -28,17 +30,19 @@ const (
 )
 
 type SetupModel struct {
-	endpoint    textinput.Model
-	apiKey      textinput.Model
-	spinner     spinner.Model
-	focusIndex  SetupField
-	buttonIndex int // 0 = Test, 1 = Save
-	testing     bool
-	saving      bool
-	testResult  string
-	testError   string
-	width       int
-	height      int
+	endpoint      textinput.Model
+	apiKey        textinput.Model
+	timezones     []string // Available timezones from system
+	timezoneIndex int      // Index into timezones
+	spinner       spinner.Model
+	focusIndex    SetupField
+	buttonIndex   int // 0 = Test, 1 = Save
+	testing       bool
+	saving        bool
+	testResult    string
+	testError     string
+	width         int
+	height        int
 }
 
 type APIKeyValidatedMsg struct {
@@ -64,16 +68,31 @@ func NewSetupModel() SetupModel {
 	apiKeyInput.EchoCharacter = '*'
 	apiKeyInput.Width = 45
 
+	// Load available timezones from system
+	timezones := config.ListTimezones()
+
+	// Detect timezone and find index in list
+	detectedTZ := config.DetectTimezone()
+	tzIndex := 0 // Default to first (usually UTC)
+	for i, tz := range timezones {
+		if tz == detectedTZ {
+			tzIndex = i
+			break
+		}
+	}
+
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = styles.Spinner
 
 	return SetupModel{
-		endpoint:    endpointInput,
-		apiKey:      apiKeyInput,
-		spinner:     s,
-		focusIndex:  FieldEndpoint,
-		buttonIndex: 0,
+		endpoint:      endpointInput,
+		apiKey:        apiKeyInput,
+		timezones:     timezones,
+		timezoneIndex: tzIndex,
+		spinner:       s,
+		focusIndex:    FieldEndpoint,
+		buttonIndex:   0,
 	}
 }
 
@@ -107,15 +126,19 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 			m.updateFocus()
 			return m, nil
 
-		case "left":
+		case "left", "h":
 			if m.focusIndex == FieldButtons && m.buttonIndex > 0 {
 				m.buttonIndex--
+			} else if m.focusIndex == FieldTimezone && m.timezoneIndex > 0 {
+				m.timezoneIndex--
 			}
 			return m, nil
 
-		case "right":
+		case "right", "l":
 			if m.focusIndex == FieldButtons && m.buttonIndex < 1 {
 				m.buttonIndex++
+			} else if m.focusIndex == FieldTimezone && m.timezoneIndex < len(m.timezones)-1 {
+				m.timezoneIndex++
 			}
 			return m, nil
 
@@ -154,7 +177,7 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 		m.height = msg.Height
 	}
 
-	// Update text inputs
+	// Update text inputs (timezone is a selector, not text input)
 	var cmd tea.Cmd
 	switch m.focusIndex {
 	case FieldEndpoint:
@@ -202,10 +225,17 @@ func (m SetupModel) doTestConnection() tea.Cmd {
 }
 
 func (m SetupModel) doSaveConfig() tea.Cmd {
+	// Capture timezone value
+	timezone := ""
+	if m.timezoneIndex >= 0 && m.timezoneIndex < len(m.timezones) {
+		timezone = m.timezones[m.timezoneIndex]
+	}
+
 	return func() tea.Msg {
 		cfg := &config.Config{
 			Endpoint: m.endpoint.Value(),
 			APIKey:   m.apiKey.Value(),
+			Timezone: timezone,
 		}
 
 		if err := config.Save(cfg); err != nil {
@@ -233,6 +263,11 @@ func (m SetupModel) IsTesting() bool {
 
 func (m *SetupModel) SetTesting(testing bool) {
 	m.testing = testing
+}
+
+func (m *SetupModel) SetDimensions(width, height int) {
+	m.width = width
+	m.height = height
 }
 
 func (m SetupModel) View() string {
@@ -267,6 +302,26 @@ func (m SetupModel) View() string {
 		b.WriteString(styles.InputFieldFocused.Render(m.apiKey.View()))
 	} else {
 		b.WriteString(styles.InputField.Render(m.apiKey.View()))
+	}
+	b.WriteString("\n\n")
+
+	// Timezone selector
+	timezoneLabel := styles.InputLabel.Render("Timezone")
+	b.WriteString(timezoneLabel)
+	b.WriteString(" ")
+	b.WriteString(styles.TextDim.Render("(use ←/→ to change)"))
+	b.WriteString("\n")
+
+	// Show the selected timezone with navigation hints
+	selectedTZ := "UTC"
+	if m.timezoneIndex >= 0 && m.timezoneIndex < len(m.timezones) {
+		selectedTZ = m.timezones[m.timezoneIndex]
+	}
+	tzDisplay := fmt.Sprintf("◀ %s ▶", selectedTZ)
+	if m.focusIndex == FieldTimezone {
+		b.WriteString(styles.InputFieldFocused.Render(tzDisplay))
+	} else {
+		b.WriteString(styles.InputField.Render(tzDisplay))
 	}
 	b.WriteString("\n\n")
 

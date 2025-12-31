@@ -60,7 +60,6 @@ var (
 	Header = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(ColorText).
-		Background(ColorPrimary).
 		Padding(0, 2).
 		MarginBottom(1)
 
@@ -71,13 +70,12 @@ var (
 	// Tab styles
 	TabActive = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(ColorText).
-			Background(ColorPrimary).
+			Foreground(ColorPrimary).
+			Underline(true).
 			Padding(0, 2)
 
 	TabInactive = lipgloss.NewStyle().
 			Foreground(ColorTextDim).
-			Background(ColorBorder).
 			Padding(0, 2)
 
 	// List styles
@@ -91,8 +89,7 @@ var (
 			Padding(0, 1)
 
 	ListItemSelected = lipgloss.NewStyle().
-				Foreground(ColorText).
-				Background(ColorPrimary).
+				Foreground(ColorHighlight).
 				Bold(true).
 				Padding(0, 1)
 

@@ -276,10 +276,10 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Short ID and Summary as title
+	// Title line: [SHORT_ID] Summary
 	if alert.ShortID != "" {
-		b.WriteString(styles.Primary.Bold(true).Render(alert.ShortID))
-		b.WriteString("\n")
+		b.WriteString(styles.Primary.Bold(true).Render("[" + alert.ShortID + "]"))
+		b.WriteString(" ")
 	}
 	b.WriteString(styles.DetailTitle.Render(alert.Summary))
 	b.WriteString("\n\n")
@@ -366,26 +366,15 @@ func (m AlertsModel) renderLinkRow(label, url string) string {
 }
 
 func formatAlertTime(t time.Time) string {
-	now := time.Now()
-	diff := now.Sub(t)
+	// Convert to local timezone
+	local := t.Local()
+	localStr := local.Format("Jan 2, 2006 15:04 MST")
 
-	if diff < time.Hour {
-		mins := int(diff.Minutes())
-		if mins < 1 {
-			return "just now"
-		}
-		return fmt.Sprintf("%dm ago", mins)
+	// If not UTC, also show UTC equivalent
+	_, offset := local.Zone()
+	if offset != 0 {
+		utcStr := t.UTC().Format("15:04 UTC")
+		return localStr + " (" + utcStr + ")"
 	}
-
-	if diff < 24*time.Hour {
-		hours := int(diff.Hours())
-		return fmt.Sprintf("%dh ago", hours)
-	}
-
-	if diff < 7*24*time.Hour {
-		days := int(diff.Hours() / 24)
-		return fmt.Sprintf("%dd ago", days)
-	}
-
-	return t.Format("Jan 2, 2006 15:04")
+	return localStr
 }

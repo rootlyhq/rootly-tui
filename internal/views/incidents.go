@@ -286,14 +286,14 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Sequential ID and Title
-	if inc.SequentialID != "" {
-		b.WriteString(styles.Primary.Bold(true).Render(inc.SequentialID))
-		b.WriteString("\n")
-	}
-	title := inc.Summary
+	// Title line: [INC-XXX] Title
+	title := inc.Title
 	if title == "" {
-		title = inc.Title
+		title = inc.Summary
+	}
+	if inc.SequentialID != "" {
+		b.WriteString(styles.Primary.Bold(true).Render("[" + inc.SequentialID + "]"))
+		b.WriteString(" ")
 	}
 	b.WriteString(styles.DetailTitle.Render(title))
 	b.WriteString("\n\n")
@@ -303,6 +303,14 @@ func (m IncidentsModel) renderDetail(height int) string {
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
 	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s\n\n", statusBadge, sevSignal, sevBadge))
+
+	// Summary (if different from title)
+	if inc.Summary != "" && inc.Summary != inc.Title {
+		b.WriteString(styles.TextBold.Render("Summary"))
+		b.WriteString("\n")
+		b.WriteString(styles.TextDim.Render(inc.Summary))
+		b.WriteString("\n\n")
+	}
 
 	// Timeline
 	b.WriteString(styles.TextBold.Render("Timeline"))
@@ -369,26 +377,15 @@ func (m IncidentsModel) renderLinkRow(label, url string) string {
 }
 
 func formatTime(t time.Time) string {
-	now := time.Now()
-	diff := now.Sub(t)
+	// Convert to local timezone
+	local := t.Local()
+	localStr := local.Format("Jan 2, 2006 15:04 MST")
 
-	if diff < time.Hour {
-		mins := int(diff.Minutes())
-		if mins < 1 {
-			return "just now"
-		}
-		return fmt.Sprintf("%dm ago", mins)
+	// If not UTC, also show UTC equivalent
+	_, offset := local.Zone()
+	if offset != 0 {
+		utcStr := t.UTC().Format("15:04 UTC")
+		return localStr + " (" + utcStr + ")"
 	}
-
-	if diff < 24*time.Hour {
-		hours := int(diff.Hours())
-		return fmt.Sprintf("%dh ago", hours)
-	}
-
-	if diff < 7*24*time.Hour {
-		days := int(diff.Hours() / 24)
-		return fmt.Sprintf("%dd ago", days)
-	}
-
-	return t.Format("Jan 2, 2006 15:04")
+	return localStr
 }
