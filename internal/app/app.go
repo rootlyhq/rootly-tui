@@ -395,7 +395,13 @@ func (m Model) View() string {
 
 	// Help bar
 	b.WriteString("\n")
-	b.WriteString(views.RenderHelpBar(m.width))
+	hasSelection := false
+	if m.activeTab == TabIncidents {
+		hasSelection = m.incidents.SelectedIncident() != nil
+	} else {
+		hasSelection = m.alerts.SelectedAlert() != nil
+	}
+	b.WriteString(views.RenderHelpBar(m.width, hasSelection))
 
 	// Wrap content
 	content := styles.App.Render(b.String())

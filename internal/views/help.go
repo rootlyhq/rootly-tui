@@ -72,18 +72,23 @@ func renderHelpLine(key, desc string) string {
 }
 
 // RenderHelpBar renders the bottom help bar
-func RenderHelpBar(width int) string {
+// hasSelection indicates whether an incident or alert is currently selected
+func RenderHelpBar(width int, hasSelection bool) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", "navigate"),
 		styles.RenderHelpItem("[/]", "page"),
 		styles.RenderHelpItem("Tab", "switch"),
 		styles.RenderHelpItem("r", "refresh"),
-		styles.RenderHelpItem("o", "open"),
+	}
+	if hasSelection {
+		items = append(items, styles.RenderHelpItem("o", "open"))
+	}
+	items = append(items,
 		styles.RenderHelpItem("l", "logs"),
 		styles.RenderHelpItem("s", "setup"),
 		styles.RenderHelpItem("?", "help"),
 		styles.RenderHelpItem("q", "quit"),
-	}
+	)
 
 	return styles.HelpBar.Width(width).Render(strings.Join(items, "  "))
 }

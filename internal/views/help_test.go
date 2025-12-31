@@ -71,7 +71,7 @@ func TestHelpModelView(t *testing.T) {
 }
 
 func TestRenderHelpBar(t *testing.T) {
-	bar := RenderHelpBar(80)
+	bar := RenderHelpBar(80, false)
 
 	expectedItems := []string{
 		"navigate",
@@ -85,5 +85,19 @@ func TestRenderHelpBar(t *testing.T) {
 		if !strings.Contains(bar, item) {
 			t.Errorf("expected help bar to contain '%s'", item)
 		}
+	}
+
+	// 'open' should not be shown when hasSelection is false
+	if strings.Contains(bar, "open") {
+		t.Error("expected help bar to NOT contain 'open' when hasSelection is false")
+	}
+}
+
+func TestRenderHelpBarWithSelection(t *testing.T) {
+	bar := RenderHelpBar(80, true)
+
+	// 'open' should be shown when hasSelection is true
+	if !strings.Contains(bar, "open") {
+		t.Error("expected help bar to contain 'open' when hasSelection is true")
 	}
 }
