@@ -16,7 +16,7 @@ import (
 )
 
 // DefaultCacheTTL is the default cache duration
-const DefaultCacheTTL = 30 * time.Second
+const DefaultCacheTTL = 5 * time.Minute
 
 type Client struct {
 	client   *rootly.ClientWithResponses
