@@ -8,7 +8,24 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 )
+
+func TestMain(m *testing.M) {
+	// Use a temp directory as HOME to isolate from real config
+	tempDir, err := os.MkdirTemp("", "rootly-tui-test-*")
+	if err != nil {
+		os.Exit(1)
+	}
+	os.Setenv("HOME", tempDir)
+
+	// Set language to English for consistent test output
+	i18n.SetLanguage(i18n.LangEnglish)
+
+	code := m.Run()
+	os.RemoveAll(tempDir)
+	os.Exit(code)
+}
 
 func TestNew(t *testing.T) {
 	m := New("1.0.0")

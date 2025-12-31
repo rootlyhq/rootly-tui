@@ -1,9 +1,18 @@
 package views
 
 import (
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 )
+
+func TestMain(m *testing.M) {
+	// Set language to English for consistent test output
+	i18n.SetLanguage(i18n.LangEnglish)
+	os.Exit(m.Run())
+}
 
 func TestNewHelpModel(t *testing.T) {
 	m := NewHelpModel()

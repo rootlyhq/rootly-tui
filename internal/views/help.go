@@ -3,6 +3,7 @@ package views
 import (
 	"strings"
 
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -29,39 +30,39 @@ func (m *HelpModel) Hide() {
 func (m HelpModel) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.DialogTitle.Render("Keyboard Shortcuts"))
+	b.WriteString(styles.DialogTitle.Render(i18n.T("keyboard_shortcuts")))
 	b.WriteString("\n\n")
 
 	// Navigation section
-	b.WriteString(styles.TextBold.Render("Navigation"))
+	b.WriteString(styles.TextBold.Render(i18n.T("navigation")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("j / Down", "Move cursor down"))
-	b.WriteString(renderHelpLine("k / Up", "Move cursor up"))
-	b.WriteString(renderHelpLine("g", "Go to first item"))
-	b.WriteString(renderHelpLine("G", "Go to last item"))
-	b.WriteString(renderHelpLine("[", "Previous page"))
-	b.WriteString(renderHelpLine("]", "Next page"))
-	b.WriteString(renderHelpLine("Tab", "Switch between tabs"))
+	b.WriteString(renderHelpLine("j / Down", i18n.T("move_down")))
+	b.WriteString(renderHelpLine("k / Up", i18n.T("move_up")))
+	b.WriteString(renderHelpLine("g", i18n.T("go_to_first")))
+	b.WriteString(renderHelpLine("G", i18n.T("go_to_last")))
+	b.WriteString(renderHelpLine("[", i18n.T("previous_page")))
+	b.WriteString(renderHelpLine("]", i18n.T("next_page")))
+	b.WriteString(renderHelpLine("Tab", i18n.T("switch_tabs")))
 	b.WriteString("\n")
 
 	// Actions section
-	b.WriteString(styles.TextBold.Render("Actions"))
+	b.WriteString(styles.TextBold.Render(i18n.T("actions")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("r", "Refresh data"))
-	b.WriteString(renderHelpLine("Enter", "View details / Select"))
-	b.WriteString(renderHelpLine("o", "Open URL in browser"))
+	b.WriteString(renderHelpLine("r", i18n.T("refresh_data")))
+	b.WriteString(renderHelpLine("Enter", i18n.T("view_details")))
+	b.WriteString(renderHelpLine("o", i18n.T("open_url")))
 	b.WriteString("\n")
 
 	// General section
-	b.WriteString(styles.TextBold.Render("General"))
+	b.WriteString(styles.TextBold.Render(i18n.T("general")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("l", "View debug logs"))
-	b.WriteString(renderHelpLine("s", "Open setup / settings"))
-	b.WriteString(renderHelpLine("?", "Toggle this help"))
-	b.WriteString(renderHelpLine("q / Ctrl+C", "Quit"))
+	b.WriteString(renderHelpLine("l", i18n.T("view_logs")))
+	b.WriteString(renderHelpLine("s", i18n.T("open_setup")))
+	b.WriteString(renderHelpLine("?", i18n.T("toggle_help")))
+	b.WriteString(renderHelpLine("q / Ctrl+C", i18n.T("quit")))
 	b.WriteString("\n\n")
 
-	b.WriteString(styles.TextDim.Render("Press ? or Esc to close"))
+	b.WriteString(styles.TextDim.Render(i18n.T("press_to_close")))
 
 	return styles.Dialog.Render(b.String())
 }
@@ -76,21 +77,21 @@ func renderHelpLine(key, desc string) string {
 // isLoading indicates whether data is currently being loaded
 func RenderHelpBar(width int, hasSelection, isLoading bool) string {
 	items := []string{
-		styles.RenderHelpItem("j/k", "navigate"),
-		styles.RenderHelpItem("[/]", "page"),
-		styles.RenderHelpItem("Tab", "switch"),
+		styles.RenderHelpItem("j/k", i18n.T("navigate")),
+		styles.RenderHelpItem("[/]", i18n.T("page_nav")),
+		styles.RenderHelpItem("Tab", i18n.T("switch")),
 	}
 	if !isLoading {
-		items = append(items, styles.RenderHelpItem("r", "refresh"))
+		items = append(items, styles.RenderHelpItem("r", i18n.T("refresh")))
 	}
 	if hasSelection {
-		items = append(items, styles.RenderHelpItem("o", "open"))
+		items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
 	}
 	items = append(items,
-		styles.RenderHelpItem("l", "logs"),
-		styles.RenderHelpItem("s", "setup"),
-		styles.RenderHelpItem("?", "help"),
-		styles.RenderHelpItem("q", "quit"),
+		styles.RenderHelpItem("l", i18n.T("logs")),
+		styles.RenderHelpItem("s", i18n.T("setup")),
+		styles.RenderHelpItem("?", i18n.T("help")),
+		styles.RenderHelpItem("q", i18n.T("quit_action")),
 	)
 
 	return styles.HelpBar.Width(width).Render(strings.Join(items, "  "))

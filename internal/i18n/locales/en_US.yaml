@@ -177,6 +177,8 @@ setup:
   other: "setup"
 help:
   other: "help"
+quit_action:
+  other: "quit"
 
 # App
 loading:

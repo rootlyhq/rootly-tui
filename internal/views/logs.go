@@ -9,6 +9,7 @@ import (
 	"golang.design/x/clipboard"
 
 	"github.com/rootlyhq/rootly-tui/internal/debug"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -225,14 +226,14 @@ func (m *LogsModel) copyToClipboard() {
 			"error", err,
 			"hint", "Clipboard requires CGO_ENABLED=1. On Linux, also install xclip/xsel. On headless systems, clipboard is unavailable.",
 		)
-		m.statusMsg = "Clipboard unavailable (see logs)"
+		m.statusMsg = i18n.T("clipboard_unavailable")
 		m.statusTimeout = 3
 		return
 	}
 
 	clipboard.Write(clipboard.FmtText, []byte(text))
 	debug.Logger.Debug("Copied to clipboard", "lines", len(lines), "bytes", len(text))
-	m.statusMsg = "Copied!"
+	m.statusMsg = i18n.T("copied")
 	m.statusTimeout = 2
 }
 
@@ -297,7 +298,7 @@ func (m LogsModel) View() string {
 	var b strings.Builder
 
 	// Title
-	title := styles.DialogTitle.Render("Debug Logs")
+	title := styles.DialogTitle.Render(i18n.T("debug_logs"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
@@ -308,7 +309,7 @@ func (m LogsModel) View() string {
 	}
 
 	if len(m.logs) == 0 {
-		b.WriteString(styles.TextDim.Render("No logs yet. Logs are captured automatically."))
+		b.WriteString(styles.TextDim.Render(i18n.T("no_logs_yet")))
 		b.WriteString("\n")
 	} else {
 		start := m.scrollPos
@@ -342,9 +343,9 @@ func (m LogsModel) View() string {
 		b.WriteString("\n")
 		// Scroll info is rendered below using itoa
 		b.WriteString(styles.TextDim.Render(
-			"  Showing lines " + itoa(m.scrollPos+1) + "-" +
+			"  " + i18n.T("showing_lines") + " " + itoa(m.scrollPos+1) + "-" +
 				itoa(minInt(m.scrollPos+visibleLines, m.totalLines)) +
-				" of " + itoa(m.totalLines),
+				" " + i18n.T("of") + " " + itoa(m.totalLines),
 		))
 	}
 
@@ -357,7 +358,7 @@ func (m LogsModel) View() string {
 	}
 
 	// Help
-	help := styles.HelpBar.Render("j/k scroll • g/G top/bottom • a select all • y copy • c clear • l/Esc close")
+	help := styles.HelpBar.Render(i18n.T("logs_help"))
 	b.WriteString(help)
 
 	// Wrap in dialog

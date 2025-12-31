@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss/list"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -196,19 +197,19 @@ func (m IncidentsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s Loading page %d...", m.spinnerView, m.currentPage)
-		listContent := styles.TextBold.Render("INCIDENTS") + "\n\n" + styles.TextDim.Render(loadingMsg)
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]interface{}{"Page": m.currentPage}))
+		listContent := styles.TextBold.Render(i18n.T("incidents")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
 		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 	}
 
 	if m.error != "" {
-		return styles.Error.Render("Error: " + m.error)
+		return styles.Error.Render(i18n.T("error") + ": " + m.error)
 	}
 
 	if len(m.incidents) == 0 {
-		return styles.TextDim.Render("No incidents found")
+		return styles.TextDim.Render(i18n.T("no_incidents"))
 	}
 
 	// Build list view
@@ -225,7 +226,7 @@ func (m IncidentsModel) renderList(height int) string {
 	var b strings.Builder
 
 	// Title
-	title := styles.TextBold.Render("INCIDENTS")
+	title := styles.TextBold.Render(i18n.T("incidents"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
@@ -301,7 +302,7 @@ func (m IncidentsModel) renderList(height int) string {
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	footer.WriteString(fmt.Sprintf(" Page %d ", m.currentPage))
+	footer.WriteString(fmt.Sprintf(" %s %d ", i18n.T("page"), m.currentPage))
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
@@ -321,7 +322,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
-			styles.TextDim.Render("Select an incident to view details"),
+			styles.TextDim.Render(i18n.T("select_incident")),
 		)
 	}
 
@@ -345,7 +346,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 	statusBadge := styles.RenderStatus(inc.Status)
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
-	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s", statusBadge, sevSignal, sevBadge))
+	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s", i18n.T("status"), statusBadge, i18n.T("severity"), sevSignal, sevBadge))
 
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
@@ -353,7 +354,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 		if inc.CreatedByEmail != "" {
 			creatorInfo += " " + styles.TextDim.Render(inc.CreatedByEmail)
 		}
-		b.WriteString(fmt.Sprintf("  Created by: %s", creatorInfo))
+		b.WriteString(fmt.Sprintf("  %s: %s", i18n.T("created_by"), creatorInfo))
 	}
 	b.WriteString("\n\n")
 
@@ -361,46 +362,46 @@ func (m IncidentsModel) renderDetail(height int) string {
 	summaryClean := strings.ReplaceAll(inc.Summary, "\n", " ")
 	summaryClean = strings.ReplaceAll(summaryClean, "\r", "")
 	if summaryClean != "" && summaryClean != title {
-		b.WriteString(styles.TextBold.Render("Description"))
+		b.WriteString(styles.TextBold.Render(i18n.T("description")))
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(summaryClean))
 		b.WriteString("\n\n")
 	}
 
 	// Timeline
-	b.WriteString(styles.TextBold.Render("Timeline"))
+	b.WriteString(styles.TextBold.Render(i18n.T("timeline")))
 	b.WriteString("\n")
 
 	if !inc.CreatedAt.IsZero() {
-		b.WriteString(m.renderDetailRow("Created", formatTime(inc.CreatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("created"), formatTime(inc.CreatedAt)))
 	}
 	if inc.StartedAt != nil {
-		b.WriteString(m.renderDetailRow("Started", formatTime(*inc.StartedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("started"), formatTime(*inc.StartedAt)))
 	}
 	if inc.DetectedAt != nil {
-		b.WriteString(m.renderDetailRow("Detected", formatTime(*inc.DetectedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("detected"), formatTime(*inc.DetectedAt)))
 	}
 	if inc.AcknowledgedAt != nil {
-		b.WriteString(m.renderDetailRow("Acknowledged", formatTime(*inc.AcknowledgedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("acknowledged"), formatTime(*inc.AcknowledgedAt)))
 	}
 	if inc.MitigatedAt != nil {
-		b.WriteString(m.renderDetailRow("Mitigated", formatTime(*inc.MitigatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("mitigated"), formatTime(*inc.MitigatedAt)))
 	}
 	if inc.ResolvedAt != nil {
-		b.WriteString(m.renderDetailRow("Resolved", formatTime(*inc.ResolvedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("resolved"), formatTime(*inc.ResolvedAt)))
 	}
 	b.WriteString("\n")
 
 	// Services, Environments, Teams
-	b.WriteString(renderBulletList("Services", inc.Services))
-	b.WriteString(renderBulletList("Environments", inc.Environments))
-	b.WriteString(renderBulletList("Teams", inc.Teams))
+	b.WriteString(renderBulletList(i18n.T("services"), inc.Services))
+	b.WriteString(renderBulletList(i18n.T("environments"), inc.Environments))
+	b.WriteString(renderBulletList(i18n.T("teams"), inc.Teams))
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
 		// Roles (Commander, Communicator, etc.)
 		if len(inc.Roles) > 0 {
-			b.WriteString(styles.TextBold.Render("Roles"))
+			b.WriteString(styles.TextBold.Render(i18n.T("roles")))
 			b.WriteString("\n")
 			for _, role := range inc.Roles {
 				userName := strings.TrimSpace(role.UserName)
@@ -422,9 +423,9 @@ func (m IncidentsModel) renderDetail(height int) string {
 		}
 
 		// Causes, Types, Functionalities
-		b.WriteString(renderBulletList("Causes", inc.Causes))
-		b.WriteString(renderBulletList("Types", inc.IncidentTypes))
-		b.WriteString(renderBulletList("Functionalities", inc.Functionalities))
+		b.WriteString(renderBulletList(i18n.T("causes"), inc.Causes))
+		b.WriteString(renderBulletList(i18n.T("types"), inc.IncidentTypes))
+		b.WriteString(renderBulletList(i18n.T("functionalities"), inc.Functionalities))
 	}
 
 	// External links (clickable)
@@ -436,23 +437,23 @@ func (m IncidentsModel) renderDetail(height int) string {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
 	}
 	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
-		b.WriteString(styles.TextBold.Render("Links"))
+		b.WriteString(styles.TextBold.Render(i18n.T("links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
+			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
 		}
 		if inc.SlackChannelURL != "" {
-			b.WriteString(m.renderLinkRow("Slack", inc.SlackChannelURL))
+			b.WriteString(m.renderLinkRow(i18n.T("slack"), inc.SlackChannelURL))
 		}
 		if inc.JiraIssueURL != "" {
-			b.WriteString(m.renderLinkRow("Jira", inc.JiraIssueURL))
+			b.WriteString(m.renderLinkRow(i18n.T("jira"), inc.JiraIssueURL))
 		}
 	}
 
 	// Show hint if detail not loaded
 	if !inc.DetailLoaded {
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render("Press Enter for more details"))
+		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
 	}
 
 	content := b.String()

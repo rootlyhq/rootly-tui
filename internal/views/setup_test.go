@@ -6,6 +6,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Note: TestMain in help_test.go sets i18n.LangEnglish for all tests in this package
+
 func TestNewSetupModel(t *testing.T) {
 	m := NewSetupModel()
 

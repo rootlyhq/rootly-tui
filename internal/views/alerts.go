@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss/list"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -196,19 +197,19 @@ func (m AlertsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s Loading page %d...", m.spinnerView, m.currentPage)
-		listContent := styles.TextBold.Render("ALERTS") + "\n\n" + styles.TextDim.Render(loadingMsg)
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]interface{}{"Page": m.currentPage}))
+		listContent := styles.TextBold.Render(i18n.T("alerts")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
 		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 	}
 
 	if m.error != "" {
-		return styles.Error.Render("Error: " + m.error)
+		return styles.Error.Render(i18n.T("error") + ": " + m.error)
 	}
 
 	if len(m.alerts) == 0 {
-		return styles.TextDim.Render("No alerts found")
+		return styles.TextDim.Render(i18n.T("no_alerts"))
 	}
 
 	listView := m.renderList(contentHeight)
@@ -220,7 +221,7 @@ func (m AlertsModel) View() string {
 func (m AlertsModel) renderList(height int) string {
 	var b strings.Builder
 
-	title := styles.TextBold.Render("ALERTS")
+	title := styles.TextBold.Render(i18n.T("alerts"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
@@ -291,7 +292,7 @@ func (m AlertsModel) renderList(height int) string {
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	footer.WriteString(fmt.Sprintf(" Page %d ", m.currentPage))
+	footer.WriteString(fmt.Sprintf(" %s %d ", i18n.T("page"), m.currentPage))
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
@@ -311,7 +312,7 @@ func (m AlertsModel) renderDetail(height int) string {
 	alert := m.SelectedAlert()
 	if alert == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
-			styles.TextDim.Render("Select an alert to view details"),
+			styles.TextDim.Render(i18n.T("select_alert")),
 		)
 	}
 
@@ -331,11 +332,11 @@ func (m AlertsModel) renderDetail(height int) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	b.WriteString(fmt.Sprintf("Status: %s  Source: %s %s\n\n", statusBadge, sourceIcon, sourceName))
+	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName))
 
 	// Description
 	if alert.Description != "" {
-		b.WriteString(styles.TextBold.Render("Description"))
+		b.WriteString(styles.TextBold.Render(i18n.T("description")))
 		b.WriteString("\n")
 		desc := alert.Description
 		if len(desc) > 200 {
@@ -346,36 +347,36 @@ func (m AlertsModel) renderDetail(height int) string {
 	}
 
 	// Timestamps
-	b.WriteString(styles.TextBold.Render("Timeline"))
+	b.WriteString(styles.TextBold.Render(i18n.T("timeline")))
 	b.WriteString("\n")
 
 	if !alert.CreatedAt.IsZero() {
-		b.WriteString(m.renderDetailRow("Created", formatAlertTime(alert.CreatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("created"), formatAlertTime(alert.CreatedAt)))
 	}
 	if alert.StartedAt != nil {
-		b.WriteString(m.renderDetailRow("Started", formatAlertTime(*alert.StartedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("started"), formatAlertTime(*alert.StartedAt)))
 	}
 	if alert.EndedAt != nil {
-		b.WriteString(m.renderDetailRow("Ended", formatAlertTime(*alert.EndedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("ended"), formatAlertTime(*alert.EndedAt)))
 	}
 	b.WriteString("\n")
 
 	// Services, Environments, Teams
-	b.WriteString(renderAlertBulletList("Services", alert.Services))
-	b.WriteString(renderAlertBulletList("Environments", alert.Environments))
-	b.WriteString(renderAlertBulletList("Teams", alert.Groups))
+	b.WriteString(renderAlertBulletList(i18n.T("services"), alert.Services))
+	b.WriteString(renderAlertBulletList(i18n.T("environments"), alert.Environments))
+	b.WriteString(renderAlertBulletList(i18n.T("teams"), alert.Groups))
 
 	// Extended info (populated when DetailLoaded is true)
 	if alert.DetailLoaded {
 		// Urgency
 		if alert.Urgency != "" {
-			b.WriteString(m.renderDetailRow("Urgency", alert.Urgency))
+			b.WriteString(m.renderDetailRow(i18n.T("urgency"), alert.Urgency))
 		}
 
 		// Responders
 		if len(alert.Responders) > 0 {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render("Responders"))
+			b.WriteString(styles.TextBold.Render(i18n.T("responders")))
 			b.WriteString("\n")
 			for _, responder := range alert.Responders {
 				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
@@ -385,7 +386,7 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
-		b.WriteString(styles.TextBold.Render("Labels"))
+		b.WriteString(styles.TextBold.Render(i18n.T("labels")))
 		b.WriteString("\n")
 		keys := make([]string, 0, len(alert.Labels))
 		for k := range alert.Labels {
@@ -404,20 +405,20 @@ func (m AlertsModel) renderDetail(height int) string {
 	}
 	if rootlyURL != "" || alert.ExternalURL != "" {
 		b.WriteString("\n")
-		b.WriteString(styles.TextBold.Render("Links"))
+		b.WriteString(styles.TextBold.Render(i18n.T("links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
+			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
 		}
 		if alert.ExternalURL != "" {
-			b.WriteString(m.renderLinkRow("Source", alert.ExternalURL))
+			b.WriteString(m.renderLinkRow(i18n.T("source"), alert.ExternalURL))
 		}
 	}
 
 	// Show hint if detail not loaded
 	if !alert.DetailLoaded {
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render("Press Enter for more details"))
+		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
 	}
 
 	content := b.String()

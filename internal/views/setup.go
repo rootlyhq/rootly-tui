@@ -92,9 +92,6 @@ func NewSetupModel() SetupModel {
 	detectedLang := i18n.DetectLanguage()
 	langIndex := i18n.LanguageIndex(string(detectedLang))
 
-	// Set the detected language as active
-	i18n.SetLanguage(detectedLang)
-
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = styles.Spinner
