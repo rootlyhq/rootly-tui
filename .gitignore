@@ -11,6 +11,7 @@ bin/
 
 # Output of go coverage
 *.out
+coverage.html
 
 # Go workspace file
 go.work

@@ -1,4 +1,4 @@
-.PHONY: build run clean test lint deps
+.PHONY: build run clean test lint deps coverage coverage-html
 
 # Build variables
 BINARY_NAME := rootly-tui
@@ -30,11 +30,24 @@ dev:
 # Clean build artifacts
 clean:
 	rm -rf bin/
+	rm -f coverage.out coverage.html
 	go clean
 
 # Run tests
 test:
 	go test -v -count=1 ./...
+
+# Run tests with coverage
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+	@echo ""
+	@echo "Total coverage: $$(go tool cover -func=coverage.out | grep total | awk '{print $$3}')"
+
+# Generate HTML coverage report
+coverage-html: coverage
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
 
 # Run linter
 lint:
