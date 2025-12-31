@@ -230,8 +230,9 @@ func (m AlertsModel) renderList(height int) string {
 		}
 
 		// Format: "▶ [source] ABC123  triggered   Summary here" (▶ for selected)
+		// Selected items use plain text so selection color applies uniformly
 		if i == m.cursor {
-			line := fmt.Sprintf("▶ %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
+			line := fmt.Sprintf("▶ %s %-8s %s %s", source, shortID, statusPadded, summary)
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
 		} else {
 			line := fmt.Sprintf("  %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)

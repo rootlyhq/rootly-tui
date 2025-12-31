@@ -210,9 +210,6 @@ func (m IncidentsModel) renderList(height int) string {
 	for i := start; i < end; i++ {
 		inc := m.incidents[i]
 
-		// Severity signal bars
-		sev := styles.RenderSeveritySignal(inc.Severity)
-
 		// Sequential ID (e.g., INC-123)
 		seqID := inc.SequentialID
 		if seqID == "" {
@@ -240,10 +237,13 @@ func (m IncidentsModel) renderList(height int) string {
 		}
 
 		// Format: "▶ ▁▃▅▇ INC-123  started      Title here" (▶ for selected)
+		// Selected items use plain text so selection color applies uniformly
 		if i == m.cursor {
-			line := fmt.Sprintf("▶ %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
+			sevPlain := severitySignalPlain(inc.Severity)
+			line := fmt.Sprintf("▶ %s %-8s %s %s", sevPlain, seqID, statusPadded, title)
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
 		} else {
+			sev := styles.RenderSeveritySignal(inc.Severity)
 			line := fmt.Sprintf("  %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
 			b.WriteString(styles.ListItem.Width(m.listWidth - 4).Render(line))
 		}
@@ -374,6 +374,22 @@ func (m IncidentsModel) renderDetailRow(label, value string) string {
 
 func (m IncidentsModel) renderLinkRow(label, url string) string {
 	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, url) + "\n"
+}
+
+// severitySignalPlain returns plain signal bars without color styling
+func severitySignalPlain(severity string) string {
+	switch severity {
+	case "critical", "Critical", "CRITICAL", "sev0", "SEV0":
+		return "▁▃▅▇"
+	case "high", "High", "HIGH", "sev1", "SEV1":
+		return "▁▃▅░"
+	case "medium", "Medium", "MEDIUM", "sev2", "SEV2":
+		return "▁▃░░"
+	case "low", "Low", "LOW", "sev3", "SEV3":
+		return "▁░░░"
+	default:
+		return "░░░░"
+	}
 }
 
 func formatTime(t time.Time) string {
