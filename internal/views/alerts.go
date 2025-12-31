@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
+	"github.com/evertras/bubble-table/table"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
@@ -37,9 +38,16 @@ func renderAlertBulletList(title string, items []string) string {
 	return b.String()
 }
 
+// Column keys for alerts table
+const (
+	alertColKeySource = "source"
+	alertColKeyID     = "id"
+	alertColKeyStatus = "status"
+	alertColKeyTitle  = "title"
+)
+
 type AlertsModel struct {
 	alerts      []api.Alert
-	cursor      int
 	width       int
 	height      int
 	listWidth   int
@@ -58,13 +66,30 @@ type AlertsModel struct {
 	detailViewport      viewport.Model
 	detailViewportReady bool
 	detailFocused       bool // Whether detail pane has focus (for scrolling)
+	// Table for list view
+	table table.Model
 }
 
 func NewAlertsModel() AlertsModel {
+	// Define table columns with i18n headers using evertras/bubble-table
+	columns := []table.Column{
+		table.NewColumn(alertColKeySource, i18n.T("source"), 4),
+		table.NewColumn(alertColKeyID, i18n.T("col_id"), 8),
+		table.NewColumn(alertColKeyStatus, i18n.T("status"), 10),
+		table.NewFlexColumn(alertColKeyTitle, i18n.T("col_title"), 1), // Flex to fill remaining space
+	}
+
+	t := table.New(columns).
+		Focused(true).
+		BorderRounded().
+		WithBaseStyle(lipgloss.NewStyle().Foreground(styles.ColorText)).
+		HighlightStyle(lipgloss.NewStyle().Background(styles.ColorHighlight).Bold(true)).
+		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
+
 	return AlertsModel{
 		alerts:      []api.Alert{},
-		cursor:      0,
 		currentPage: 1,
+		table:       t,
 	}
 }
 
@@ -75,6 +100,9 @@ func (m AlertsModel) Init() tea.Cmd {
 func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
+	// Track previous cursor position to detect changes
+	prevCursor := m.table.GetHighlightedRowIndex()
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -124,30 +152,31 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		}
 
-		// Normal list navigation when detail is not focused
+		// Handle navigation keys ourselves to prevent table's wrap-around behavior
 		switch msg.String() {
 		case "j", "down":
-			if m.cursor < len(m.alerts)-1 {
-				m.cursor++
-				m.updateViewportContent() // Update content when cursor changes
+			cursor := m.table.GetHighlightedRowIndex()
+			if cursor < len(m.alerts)-1 {
+				m.table = m.table.WithHighlightedRow(cursor + 1)
+				m.updateViewportContent()
 			}
 			return m, nil
-
 		case "k", "up":
-			if m.cursor > 0 {
-				m.cursor--
-				m.updateViewportContent() // Update content when cursor changes
+			cursor := m.table.GetHighlightedRowIndex()
+			if cursor > 0 {
+				m.table = m.table.WithHighlightedRow(cursor - 1)
+				m.updateViewportContent()
 			}
 			return m, nil
-
 		case "g":
-			m.cursor = 0
+			// Go to first row
+			m.table = m.table.WithHighlightedRow(0)
 			m.updateViewportContent()
 			return m, nil
-
 		case "G":
+			// Go to last row
 			if len(m.alerts) > 0 {
-				m.cursor = len(m.alerts) - 1
+				m.table = m.table.WithHighlightedRow(len(m.alerts) - 1)
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -157,6 +186,15 @@ func (m AlertsModel) Update(msg tea.Msg) (AlertsModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateDimensions()
+		m.updateViewportContent()
+	}
+
+	// Forward other messages to table
+	m.table, cmd = m.table.Update(msg)
+	cmds = append(cmds, cmd)
+
+	// Update detail viewport if cursor changed
+	if m.table.GetHighlightedRowIndex() != prevCursor {
 		m.updateViewportContent()
 	}
 
@@ -203,6 +241,15 @@ func (m *AlertsModel) updateDimensions() {
 		if contentHeight < 5 {
 			contentHeight = 5
 		}
+
+		// Update table dimensions using fluent API
+		// Account for: title (2 lines), footer (2 lines), container borders (2)
+		tableHeight := contentHeight - 6
+		if tableHeight < 3 {
+			tableHeight = 3
+		}
+		m.table = m.table.WithTargetWidth(m.listWidth - 4).WithMinimumHeight(tableHeight)
+
 		// Account for detail container borders/padding
 		viewportHeight := contentHeight - 4
 		viewportWidth := m.detailWidth - 4
@@ -231,8 +278,37 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 	m.currentPage = pagination.CurrentPage
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
-	if m.cursor >= len(alerts) && len(alerts) > 0 {
-		m.cursor = len(alerts) - 1
+
+	// Build table rows from alerts with styled cells
+	rows := make([]table.Row, len(alerts))
+	for i, alert := range alerts {
+		shortID := alert.ShortID
+		if shortID == "" {
+			shortID = "---"
+		}
+		status := alert.Status
+		if len(status) > 10 {
+			status = status[:10]
+		}
+		summary := strings.ReplaceAll(alert.Summary, "\n", " ")
+		summary = strings.ReplaceAll(summary, "\r", "")
+
+		// Create styled cells using evertras/bubble-table
+		statusCell := table.NewStyledCell(status, statusStyle(status))
+
+		rows[i] = table.NewRow(table.RowData{
+			alertColKeySource: styles.AlertSourceIcon(alert.Source),
+			alertColKeyID:     shortID,
+			alertColKeyStatus: statusCell,
+			alertColKeyTitle:  summary,
+		})
+	}
+	m.table = m.table.WithRows(rows)
+
+	// Adjust cursor if needed
+	cursor := m.table.GetHighlightedRowIndex()
+	if cursor >= len(alerts) && len(alerts) > 0 {
+		m.table = m.table.WithHighlightedRow(len(alerts) - 1)
 	}
 	m.updateViewportContent()
 }
@@ -272,26 +348,27 @@ func (m AlertsModel) HasPrevPage() bool {
 func (m *AlertsModel) NextPage() {
 	if m.hasNext {
 		m.currentPage++
-		m.cursor = 0
+		m.table = m.table.WithHighlightedRow(0)
 	}
 }
 
 func (m *AlertsModel) PrevPage() {
 	if m.hasPrev && m.currentPage > 1 {
 		m.currentPage--
-		m.cursor = 0
+		m.table = m.table.WithHighlightedRow(0)
 	}
 }
 
 func (m AlertsModel) SelectedAlert() *api.Alert {
-	if m.cursor >= 0 && m.cursor < len(m.alerts) {
-		return &m.alerts[m.cursor]
+	cursor := m.table.GetHighlightedRowIndex()
+	if cursor >= 0 && cursor < len(m.alerts) {
+		return &m.alerts[cursor]
 	}
 	return nil
 }
 
 func (m AlertsModel) SelectedIndex() int {
-	return m.cursor
+	return m.table.GetHighlightedRowIndex()
 }
 
 func (m *AlertsModel) SetDetailLoading(id string) {
@@ -315,7 +392,7 @@ func (m *AlertsModel) UpdateAlertDetail(index int, alert *api.Alert) {
 	if index >= 0 && index < len(m.alerts) && alert != nil {
 		m.alerts[index] = *alert
 		// Update viewport content without resetting scroll (detail just loaded)
-		if m.detailViewportReady && index == m.cursor {
+		if m.detailViewportReady && index == m.table.GetHighlightedRowIndex() {
 			content := m.generateDetailContent(alert)
 			m.detailViewport.SetContent(content)
 		}
@@ -330,7 +407,7 @@ func (m AlertsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]interface{}{"Page": m.currentPage}))
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]any{"Page": m.currentPage}))
 		listContent := styles.TextBold.Render(i18n.T("alerts")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
@@ -354,85 +431,30 @@ func (m AlertsModel) View() string {
 func (m AlertsModel) renderList(height int) string {
 	var b strings.Builder
 
+	// Title
 	title := styles.TextBold.Render(i18n.T("alerts"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
-	maxVisible := height - 4
-	if maxVisible < 1 {
-		maxVisible = 1
-	}
+	// Render table
+	b.WriteString(m.table.View())
+	b.WriteString("\n")
 
-	start := 0
-	if m.cursor >= maxVisible {
-		start = m.cursor - maxVisible + 1
-	}
-	end := start + maxVisible
-	if end > len(m.alerts) {
-		end = len(m.alerts)
-	}
-
-	for i := start; i < end; i++ {
-		alert := m.alerts[i]
-
-		// Source icon (emoji only in list)
-		source := styles.AlertSourceIcon(alert.Source)
-
-		// Short ID (e.g., ABC123)
-		shortID := alert.ShortID
-		if shortID == "" {
-			shortID = "---"
-		}
-
-		// Status (padded for alignment)
-		status := alert.Status
-		if len(status) > 10 {
-			status = status[:10]
-		}
-		statusPadded := fmt.Sprintf("%-10s", status)
-
-		// Summary (truncated)
-		// Account for: selector(2) + emoji(4) + space(1) + shortID(8) + space(1) + status(10) + space(1) + padding(8)
-		titleMaxLen := m.listWidth - 35
-		if titleMaxLen < 10 {
-			titleMaxLen = 10
-		}
-		summary := strings.ReplaceAll(alert.Summary, "\n", " ")
-		summary = strings.ReplaceAll(summary, "\r", "")
-		if len(summary) > titleMaxLen {
-			summary = summary[:titleMaxLen-3] + "..."
-		}
-
-		// Format: "▶ [source] ABC123  triggered   Summary here" (▶ for selected)
-		// Single line only - no wrapping
-		if i == m.cursor {
-			line := fmt.Sprintf("▶ %s %-8s %s %s", source, shortID, statusPadded, summary)
-			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
-		} else {
-			line := fmt.Sprintf("  %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
-			b.WriteString(styles.ListItem.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
-		}
-		b.WriteString("\n")
-	}
-
-	// Scroll and pagination indicator
+	// Page navigation footer
 	var footer strings.Builder
-	footer.WriteString("\n")
-
-	// Page navigation indicators
 	if m.hasPrev {
 		footer.WriteString(styles.TextDim.Render("← ["))
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	footer.WriteString(fmt.Sprintf(" %s %d ", i18n.T("page"), m.currentPage))
+	fmt.Fprintf(&footer, " %s %d ", i18n.T("page"), m.currentPage)
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
 
 	// Item count
 	if len(m.alerts) > 0 {
-		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.cursor+1, len(m.alerts))))
+		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.table.GetHighlightedRowIndex()+1, len(m.alerts))))
 	}
 
 	b.WriteString(footer.String())
@@ -497,7 +519,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	_, _ = fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName)
+	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName)
 
 	// Links section (high up for quick access)
 	rootlyURL := ""
@@ -584,7 +606,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	// Show loading spinner or hint if detail not loaded
 	if m.IsLoadingAlert(alert.ID) {
 		b.WriteString("\n")
-		_, _ = fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
+		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
 	} else if !alert.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))

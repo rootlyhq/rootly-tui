@@ -79,6 +79,12 @@ status:
   other: "ステータス"
 severity:
   other: "重大度"
+col_sev:
+  other: "重大"
+col_id:
+  other: "ID"
+col_title:
+  other: "タイトル"
 created_by:
   other: "作成者"
 

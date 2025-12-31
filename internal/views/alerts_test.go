@@ -13,8 +13,8 @@ import (
 func TestNewAlertsModel(t *testing.T) {
 	m := NewAlertsModel()
 
-	if m.cursor != 0 {
-		t.Errorf("expected cursor to be 0, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor to be 0, got %d", m.SelectedIndex())
 	}
 
 	if len(m.alerts) != 0 {
@@ -93,32 +93,32 @@ func TestAlertsModelNavigation(t *testing.T) {
 
 	// Test move down
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	if m.cursor != 1 {
-		t.Errorf("expected cursor 1 after 'j', got %d", m.cursor)
+	if m.SelectedIndex() != 1 {
+		t.Errorf("expected cursor 1 after 'j', got %d", m.SelectedIndex())
 	}
 
 	// Test move up
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 after 'k', got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 after 'k', got %d", m.SelectedIndex())
 	}
 
 	// Test move up at top
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 at top, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 
 	// Test go to bottom
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}})
-	if m.cursor != len(alerts)-1 {
-		t.Errorf("expected cursor %d at bottom, got %d", len(alerts)-1, m.cursor)
+	if m.SelectedIndex() != len(alerts)-1 {
+		t.Errorf("expected cursor %d at bottom, got %d", len(alerts)-1, m.SelectedIndex())
 	}
 
 	// Test go to top
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'g'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 at top, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 }
 
@@ -166,8 +166,8 @@ func TestAlertsModelCursorBounds(t *testing.T) {
 		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
 	}
 
-	if m.cursor >= len(alerts) {
-		t.Errorf("cursor exceeded bounds: got %d, max should be %d", m.cursor, len(alerts)-1)
+	if m.SelectedIndex() >= len(alerts) {
+		t.Errorf("cursor exceeded bounds: got %d, max should be %d", m.SelectedIndex(), len(alerts)-1)
 	}
 }
 
@@ -255,15 +255,19 @@ func TestAlertsModelHasPrevPage(t *testing.T) {
 func TestAlertsModelNextPage(t *testing.T) {
 	m := NewAlertsModel()
 	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
-	m.cursor = 3 // Set cursor to non-zero
+	m.SetDimensions(100, 30)
+	// Move cursor to non-zero
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
 
 	m.NextPage()
 
 	if m.currentPage != 2 {
 		t.Errorf("expected page 2 after NextPage, got %d", m.currentPage)
 	}
-	if m.cursor != 0 {
-		t.Errorf("expected cursor reset to 0 after NextPage, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor reset to 0 after NextPage, got %d", m.SelectedIndex())
 	}
 }
 
@@ -282,15 +286,17 @@ func TestAlertsModelNextPageAtEnd(t *testing.T) {
 func TestAlertsModelPrevPage(t *testing.T) {
 	m := NewAlertsModel()
 	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})
-	m.cursor = 5 // Set cursor to non-zero
+	m.SetDimensions(100, 30)
+	// Move cursor to non-zero
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}}) // Go to bottom
 
 	m.PrevPage()
 
 	if m.currentPage != 2 {
 		t.Errorf("expected page 2 after PrevPage, got %d", m.currentPage)
 	}
-	if m.cursor != 0 {
-		t.Errorf("expected cursor reset to 0 after PrevPage, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor reset to 0 after PrevPage, got %d", m.SelectedIndex())
 	}
 }
 
@@ -318,14 +324,21 @@ func TestAlertsModelSelectedAlertEmpty(t *testing.T) {
 
 func TestAlertsModelSetAlertsCursorAdjustment(t *testing.T) {
 	m := NewAlertsModel()
-	m.cursor = 10 // Set cursor beyond new list size
+	// First set a larger list to allow cursor to move beyond 2
+	largeAlerts := api.MockAlerts()
+	m.SetAlerts(largeAlerts, api.PaginationInfo{CurrentPage: 1})
+	m.SetDimensions(100, 30)
+	// Move cursor beyond 2
+	for i := 0; i < 5; i++ {
+		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	}
 
 	// Set only 2 alerts - cursor should be adjusted
-	alerts := api.MockAlerts()[:2]
+	alerts := largeAlerts[:2]
 	m.SetAlerts(alerts, api.PaginationInfo{CurrentPage: 1})
 
-	if m.cursor >= len(alerts) {
-		t.Errorf("cursor should be adjusted to valid range, got %d for %d alerts", m.cursor, len(alerts))
+	if m.SelectedIndex() >= len(alerts) {
+		t.Errorf("cursor should be adjusted to valid range, got %d for %d alerts", m.SelectedIndex(), len(alerts))
 	}
 }
 

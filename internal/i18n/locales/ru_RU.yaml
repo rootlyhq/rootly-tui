@@ -79,6 +79,12 @@ status:
   other: "Статус"
 severity:
   other: "Серьезность"
+col_sev:
+  other: "Сер"
+col_id:
+  other: "ID"
+col_title:
+  other: "Заголовок"
 created_by:
   other: "Создал"
 

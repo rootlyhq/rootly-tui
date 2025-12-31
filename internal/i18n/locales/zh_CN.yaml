@@ -79,6 +79,12 @@ status:
   other: "状态"
 severity:
   other: "严重程度"
+col_sev:
+  other: "级别"
+col_id:
+  other: "ID"
+col_title:
+  other: "标题"
 created_by:
   other: "创建者"
 

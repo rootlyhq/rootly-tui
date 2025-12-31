@@ -79,6 +79,12 @@ status:
   other: "स्थिति"
 severity:
   other: "गंभीरता"
+col_sev:
+  other: "गंभी"
+col_id:
+  other: "ID"
+col_title:
+  other: "शीर्षक"
 created_by:
   other: "द्वारा बनाया गया"
 

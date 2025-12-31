@@ -79,6 +79,12 @@ status:
   other: "Status"
 severity:
   other: "Schweregrad"
+col_sev:
+  other: "Schw"
+col_id:
+  other: "ID"
+col_title:
+  other: "Titel"
 created_by:
   other: "Erstellt von"
 

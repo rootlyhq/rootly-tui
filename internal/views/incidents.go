@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
+	"github.com/evertras/bubble-table/table"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
@@ -36,9 +37,16 @@ func renderBulletList(title string, items []string) string {
 	return b.String()
 }
 
+// Column keys for incidents table
+const (
+	colKeySev    = "sev"
+	colKeyID     = "id"
+	colKeyStatus = "status"
+	colKeyTitle  = "title"
+)
+
 type IncidentsModel struct {
 	incidents   []api.Incident
-	cursor      int
 	width       int
 	height      int
 	listWidth   int
@@ -57,13 +65,30 @@ type IncidentsModel struct {
 	detailViewport      viewport.Model
 	detailViewportReady bool
 	detailFocused       bool // Whether detail pane has focus (for scrolling)
+	// Table for list view
+	table table.Model
 }
 
 func NewIncidentsModel() IncidentsModel {
+	// Define table columns with i18n headers using evertras/bubble-table
+	columns := []table.Column{
+		table.NewColumn(colKeySev, i18n.T("col_sev"), 4),
+		table.NewColumn(colKeyID, i18n.T("col_id"), 10),
+		table.NewColumn(colKeyStatus, i18n.T("status"), 12),
+		table.NewFlexColumn(colKeyTitle, i18n.T("col_title"), 1), // Flex to fill remaining space
+	}
+
+	t := table.New(columns).
+		Focused(true).
+		BorderRounded().
+		WithBaseStyle(lipgloss.NewStyle().Foreground(styles.ColorText)).
+		HighlightStyle(lipgloss.NewStyle().Background(styles.ColorHighlight).Bold(true)).
+		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
+
 	return IncidentsModel{
 		incidents:   []api.Incident{},
-		cursor:      0,
 		currentPage: 1,
+		table:       t,
 	}
 }
 
@@ -74,6 +99,9 @@ func (m IncidentsModel) Init() tea.Cmd {
 func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
+	// Track previous cursor position to detect changes
+	prevCursor := m.table.GetHighlightedRowIndex()
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -123,30 +151,31 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		}
 
-		// Normal list navigation when detail is not focused
+		// Handle navigation keys ourselves to prevent table's wrap-around behavior
 		switch msg.String() {
 		case "j", "down":
-			if m.cursor < len(m.incidents)-1 {
-				m.cursor++
+			cursor := m.table.GetHighlightedRowIndex()
+			if cursor < len(m.incidents)-1 {
+				m.table = m.table.WithHighlightedRow(cursor + 1)
 				m.updateViewportContent()
 			}
 			return m, nil
-
 		case "k", "up":
-			if m.cursor > 0 {
-				m.cursor--
+			cursor := m.table.GetHighlightedRowIndex()
+			if cursor > 0 {
+				m.table = m.table.WithHighlightedRow(cursor - 1)
 				m.updateViewportContent()
 			}
 			return m, nil
-
 		case "g":
-			m.cursor = 0
+			// Go to first row
+			m.table = m.table.WithHighlightedRow(0)
 			m.updateViewportContent()
 			return m, nil
-
 		case "G":
+			// Go to last row
 			if len(m.incidents) > 0 {
-				m.cursor = len(m.incidents) - 1
+				m.table = m.table.WithHighlightedRow(len(m.incidents) - 1)
 				m.updateViewportContent()
 			}
 			return m, nil
@@ -156,6 +185,15 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateDimensions()
+		m.updateViewportContent()
+	}
+
+	// Forward other messages to table
+	m.table, cmd = m.table.Update(msg)
+	cmds = append(cmds, cmd)
+
+	// Update detail viewport if cursor changed
+	if m.table.GetHighlightedRowIndex() != prevCursor {
 		m.updateViewportContent()
 	}
 
@@ -192,6 +230,15 @@ func (m *IncidentsModel) updateDimensions() {
 		if contentHeight < 5 {
 			contentHeight = 5
 		}
+
+		// Update table dimensions using fluent API
+		// Account for: title (2 lines), footer (2 lines), container borders (2)
+		tableHeight := contentHeight - 6
+		if tableHeight < 3 {
+			tableHeight = 3
+		}
+		m.table = m.table.WithTargetWidth(m.listWidth - 4).WithMinimumHeight(tableHeight)
+
 		// Account for detail container borders/padding
 		viewportHeight := contentHeight - 4
 		viewportWidth := m.detailWidth - 4
@@ -220,8 +267,42 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 	m.currentPage = pagination.CurrentPage
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
-	if m.cursor >= len(incidents) && len(incidents) > 0 {
-		m.cursor = len(incidents) - 1
+
+	// Build table rows from incidents with styled cells
+	rows := make([]table.Row, len(incidents))
+	for i, inc := range incidents {
+		seqID := inc.SequentialID
+		if seqID == "" {
+			seqID = "INC-?"
+		}
+		status := inc.Status
+		if len(status) > 12 {
+			status = status[:12]
+		}
+		title := inc.Summary
+		if title == "" {
+			title = inc.Title
+		}
+		title = strings.ReplaceAll(title, "\n", " ")
+		title = strings.ReplaceAll(title, "\r", "")
+
+		// Create styled cells using evertras/bubble-table
+		sevCell := table.NewStyledCell(severitySignalPlain(inc.Severity), severityStyle(inc.Severity))
+		statusCell := table.NewStyledCell(status, statusStyle(status))
+
+		rows[i] = table.NewRow(table.RowData{
+			colKeySev:    sevCell,
+			colKeyID:     seqID,
+			colKeyStatus: statusCell,
+			colKeyTitle:  title,
+		})
+	}
+	m.table = m.table.WithRows(rows)
+
+	// Adjust cursor if needed
+	cursor := m.table.GetHighlightedRowIndex()
+	if cursor >= len(incidents) && len(incidents) > 0 {
+		m.table = m.table.WithHighlightedRow(len(incidents) - 1)
 	}
 	m.updateViewportContent()
 }
@@ -261,26 +342,27 @@ func (m IncidentsModel) HasPrevPage() bool {
 func (m *IncidentsModel) NextPage() {
 	if m.hasNext {
 		m.currentPage++
-		m.cursor = 0
+		m.table = m.table.WithHighlightedRow(0)
 	}
 }
 
 func (m *IncidentsModel) PrevPage() {
 	if m.hasPrev && m.currentPage > 1 {
 		m.currentPage--
-		m.cursor = 0
+		m.table = m.table.WithHighlightedRow(0)
 	}
 }
 
 func (m IncidentsModel) SelectedIncident() *api.Incident {
-	if m.cursor >= 0 && m.cursor < len(m.incidents) {
-		return &m.incidents[m.cursor]
+	cursor := m.table.GetHighlightedRowIndex()
+	if cursor >= 0 && cursor < len(m.incidents) {
+		return &m.incidents[cursor]
 	}
 	return nil
 }
 
 func (m IncidentsModel) SelectedIndex() int {
-	return m.cursor
+	return m.table.GetHighlightedRowIndex()
 }
 
 func (m *IncidentsModel) SetDetailLoading(id string) {
@@ -314,7 +396,7 @@ func (m *IncidentsModel) UpdateIncidentDetail(index int, incident *api.Incident)
 	if index >= 0 && index < len(m.incidents) && incident != nil {
 		m.incidents[index] = *incident
 		// Update viewport content without resetting scroll (detail just loaded)
-		if m.detailViewportReady && index == m.cursor {
+		if m.detailViewportReady && index == m.table.GetHighlightedRowIndex() {
 			content := m.generateDetailContent(incident)
 			m.detailViewport.SetContent(content)
 		}
@@ -330,7 +412,7 @@ func (m IncidentsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]interface{}{"Page": m.currentPage}))
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]any{"Page": m.currentPage}))
 		listContent := styles.TextBold.Render(i18n.T("incidents")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
@@ -363,86 +445,25 @@ func (m IncidentsModel) renderList(height int) string {
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
-	// Calculate visible range
-	maxVisible := height - 4
-	if maxVisible < 1 {
-		maxVisible = 1
-	}
+	// Render table
+	b.WriteString(m.table.View())
+	b.WriteString("\n")
 
-	start := 0
-	if m.cursor >= maxVisible {
-		start = m.cursor - maxVisible + 1
-	}
-	end := start + maxVisible
-	if end > len(m.incidents) {
-		end = len(m.incidents)
-	}
-
-	// Render items
-	for i := start; i < end; i++ {
-		inc := m.incidents[i]
-
-		// Sequential ID (e.g., INC-123)
-		seqID := inc.SequentialID
-		if seqID == "" {
-			seqID = "INC-?"
-		}
-
-		// Status (padded for alignment)
-		status := inc.Status
-		if len(status) > 12 {
-			status = status[:12]
-		}
-		statusPadded := fmt.Sprintf("%-12s", status)
-
-		// Title (truncated)
-		// Account for: selector(2) + severity(4) + space(1) + seqID(8) + space(1) + status(12) + space(1) + padding(8)
-		titleMaxLen := m.listWidth - 37
-		if titleMaxLen < 10 {
-			titleMaxLen = 10
-		}
-		title := inc.Summary
-		if title == "" {
-			title = inc.Title
-		}
-		title = strings.ReplaceAll(title, "\n", " ")
-		title = strings.ReplaceAll(title, "\r", "")
-		if len(title) > titleMaxLen {
-			title = title[:titleMaxLen-3] + "..."
-		}
-
-		// Format: "▶ ▁▃▅▇ INC-123  started      Title here" (▶ for selected)
-		// Single line only - no wrapping
-		if i == m.cursor {
-			sevPlain := severitySignalPlain(inc.Severity)
-			line := fmt.Sprintf("▶ %s %-8s %s %s", sevPlain, seqID, statusPadded, title)
-			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
-		} else {
-			sev := styles.RenderSeveritySignal(inc.Severity)
-			line := fmt.Sprintf("  %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
-			b.WriteString(styles.ListItem.Width(m.listWidth - 4).MaxWidth(m.listWidth - 4).Render(line))
-		}
-		b.WriteString("\n")
-	}
-
-	// Scroll and pagination indicator
+	// Page navigation footer
 	var footer strings.Builder
-	footer.WriteString("\n")
-
-	// Page navigation indicators
 	if m.hasPrev {
 		footer.WriteString(styles.TextDim.Render("← ["))
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	footer.WriteString(fmt.Sprintf(" %s %d ", i18n.T("page"), m.currentPage))
+	fmt.Fprintf(&footer, " %s %d ", i18n.T("page"), m.currentPage)
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
 
 	// Item count
 	if len(m.incidents) > 0 {
-		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.cursor+1, len(m.incidents))))
+		footer.WriteString(styles.TextDim.Render(fmt.Sprintf("  (%d-%d)", m.table.GetHighlightedRowIndex()+1, len(m.incidents))))
 	}
 
 	b.WriteString(footer.String())
@@ -516,7 +537,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
 		creatorInfo := styles.RenderNameWithEmail(inc.CreatedByName, inc.CreatedByEmail)
-		_, _ = fmt.Fprintf(&b, "  %s: %s", i18n.T("created_by"), creatorInfo)
+		fmt.Fprintf(&b, "  %s: %s", i18n.T("created_by"), creatorInfo)
 	}
 	b.WriteString("\n\n")
 
@@ -618,7 +639,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	// Show loading spinner or hint if detail not loaded
 	if m.IsLoadingIncident(inc.ID) {
 		b.WriteString("\n")
-		_, _ = fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
+		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
 	} else if !inc.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
@@ -660,6 +681,37 @@ func severitySignalPlain(severity string) string {
 		return "▁░░░"
 	default:
 		return "░░░░"
+	}
+}
+
+// severityStyle returns the lipgloss style for a severity level
+func severityStyle(severity string) lipgloss.Style {
+	switch severity {
+	case "critical", "Critical", "CRITICAL", "sev0", "SEV0":
+		return lipgloss.NewStyle().Foreground(styles.ColorCritical).Bold(true)
+	case "high", "High", "HIGH", "sev1", "SEV1":
+		return lipgloss.NewStyle().Foreground(styles.ColorHigh).Bold(true)
+	case "medium", "Medium", "MEDIUM", "sev2", "SEV2":
+		return lipgloss.NewStyle().Foreground(styles.ColorMedium).Bold(true)
+	case "low", "Low", "LOW", "sev3", "SEV3":
+		return lipgloss.NewStyle().Foreground(styles.ColorLow).Bold(true)
+	default:
+		return lipgloss.NewStyle().Foreground(styles.ColorMuted)
+	}
+}
+
+// statusStyle returns the lipgloss style for a status
+func statusStyle(status string) lipgloss.Style {
+	s := strings.ToLower(strings.TrimSpace(status))
+	switch s {
+	case "open", "triggered", "firing", "critical":
+		return lipgloss.NewStyle().Foreground(styles.ColorPastelRed)
+	case "started", "in_progress", "acknowledged", "investigating", "identified", "monitoring", "mitigated":
+		return lipgloss.NewStyle().Foreground(styles.ColorPastelYellow)
+	case "resolved", "fixed":
+		return lipgloss.NewStyle().Foreground(styles.ColorPastelGreen)
+	default:
+		return lipgloss.NewStyle().Foreground(styles.ColorPastelGray)
 	}
 }
 

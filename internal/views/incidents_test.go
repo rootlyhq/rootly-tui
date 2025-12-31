@@ -13,8 +13,8 @@ import (
 func TestNewIncidentsModel(t *testing.T) {
 	m := NewIncidentsModel()
 
-	if m.cursor != 0 {
-		t.Errorf("expected cursor to be 0, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor to be 0, got %d", m.SelectedIndex())
 	}
 
 	if len(m.incidents) != 0 {
@@ -94,32 +94,32 @@ func TestIncidentsModelNavigation(t *testing.T) {
 
 	// Test move down
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	if m.cursor != 1 {
-		t.Errorf("expected cursor 1 after 'j', got %d", m.cursor)
+	if m.SelectedIndex() != 1 {
+		t.Errorf("expected cursor 1 after 'j', got %d", m.SelectedIndex())
 	}
 
 	// Test move up
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 after 'k', got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 after 'k', got %d", m.SelectedIndex())
 	}
 
 	// Test move up at top (should stay at 0)
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 at top, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 
 	// Test go to bottom
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}})
-	if m.cursor != len(incidents)-1 {
-		t.Errorf("expected cursor %d at bottom, got %d", len(incidents)-1, m.cursor)
+	if m.SelectedIndex() != len(incidents)-1 {
+		t.Errorf("expected cursor %d at bottom, got %d", len(incidents)-1, m.SelectedIndex())
 	}
 
 	// Test go to top
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'g'}})
-	if m.cursor != 0 {
-		t.Errorf("expected cursor 0 at top, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 }
 
@@ -168,8 +168,8 @@ func TestIncidentsModelCursorBounds(t *testing.T) {
 	}
 
 	// Cursor should not exceed last index
-	if m.cursor >= len(incidents) {
-		t.Errorf("cursor exceeded bounds: got %d, max should be %d", m.cursor, len(incidents)-1)
+	if m.SelectedIndex() >= len(incidents) {
+		t.Errorf("cursor exceeded bounds: got %d, max should be %d", m.SelectedIndex(), len(incidents)-1)
 	}
 }
 
@@ -257,15 +257,19 @@ func TestIncidentsModelHasPrevPage(t *testing.T) {
 func TestIncidentsModelNextPage(t *testing.T) {
 	m := NewIncidentsModel()
 	m.SetIncidents(api.MockIncidents(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
-	m.cursor = 3 // Set cursor to non-zero
+	m.SetDimensions(100, 30)
+	// Move cursor to non-zero
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
 
 	m.NextPage()
 
 	if m.currentPage != 2 {
 		t.Errorf("expected page 2 after NextPage, got %d", m.currentPage)
 	}
-	if m.cursor != 0 {
-		t.Errorf("expected cursor reset to 0 after NextPage, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor reset to 0 after NextPage, got %d", m.SelectedIndex())
 	}
 }
 
@@ -284,15 +288,17 @@ func TestIncidentsModelNextPageAtEnd(t *testing.T) {
 func TestIncidentsModelPrevPage(t *testing.T) {
 	m := NewIncidentsModel()
 	m.SetIncidents(api.MockIncidents(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})
-	m.cursor = 5 // Set cursor to non-zero
+	m.SetDimensions(100, 30)
+	// Move cursor to non-zero
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}}) // Go to bottom
 
 	m.PrevPage()
 
 	if m.currentPage != 2 {
 		t.Errorf("expected page 2 after PrevPage, got %d", m.currentPage)
 	}
-	if m.cursor != 0 {
-		t.Errorf("expected cursor reset to 0 after PrevPage, got %d", m.cursor)
+	if m.SelectedIndex() != 0 {
+		t.Errorf("expected cursor reset to 0 after PrevPage, got %d", m.SelectedIndex())
 	}
 }
 
@@ -320,14 +326,21 @@ func TestIncidentsModelSelectedIncidentEmpty(t *testing.T) {
 
 func TestIncidentsModelSetIncidentsCursorAdjustment(t *testing.T) {
 	m := NewIncidentsModel()
-	m.cursor = 10 // Set cursor beyond new list size
+	// First set a larger list to allow cursor to move beyond 2
+	largeIncidents := api.MockIncidents()
+	m.SetIncidents(largeIncidents, api.PaginationInfo{CurrentPage: 1})
+	m.SetDimensions(100, 30)
+	// Move cursor beyond 2
+	for i := 0; i < 5; i++ {
+		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	}
 
-	// Set only 3 incidents - cursor should be adjusted
-	incidents := api.MockIncidents()[:2]
+	// Set only 2 incidents - cursor should be adjusted
+	incidents := largeIncidents[:2]
 	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
 
-	if m.cursor >= len(incidents) {
-		t.Errorf("cursor should be adjusted to valid range, got %d for %d incidents", m.cursor, len(incidents))
+	if m.SelectedIndex() >= len(incidents) {
+		t.Errorf("cursor should be adjusted to valid range, got %d for %d incidents", m.SelectedIndex(), len(incidents))
 	}
 }
 

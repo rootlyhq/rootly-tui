@@ -79,6 +79,12 @@ status:
   other: "অবস্থা"
 severity:
   other: "তীব্রতা"
+col_sev:
+  other: "তীব্র"
+col_id:
+  other: "ID"
+col_title:
+  other: "শিরোনাম"
 created_by:
   other: "তৈরি করেছেন"
 

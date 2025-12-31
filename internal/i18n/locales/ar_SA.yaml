@@ -79,6 +79,12 @@ status:
   other: "الحالة"
 severity:
   other: "الخطورة"
+col_sev:
+  other: "خطر"
+col_id:
+  other: "ID"
+col_title:
+  other: "العنوان"
 created_by:
   other: "انشا بواسطة"
 
