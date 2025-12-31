@@ -66,7 +66,42 @@ rootly-tui
 
 # Check version
 rootly-tui --version
+
+# Enable debug logging (outputs to stderr)
+rootly-tui --debug
+
+# Write debug logs to a file
+rootly-tui --log debug.log
 ```
+
+### Debug Mode
+
+Debug mode logs API requests, responses, and parsing details. This is useful for troubleshooting connection issues or unexpected behavior.
+
+```bash
+# Debug to stderr (visible after exiting TUI)
+rootly-tui --debug 2> debug.log
+
+# Or write directly to a file
+rootly-tui --log debug.log
+```
+
+Debug logs include:
+- API endpoint configuration
+- HTTP request method and URL
+- Response status codes and body length
+- JSON parsing results and errors (with prettified JSON)
+
+### In-App Log Viewer
+
+Press `l` at any time to open the in-app log viewer. Logs are always captured in memory (up to 1000 entries) even without `--debug` mode.
+
+Log viewer controls:
+- `j/k` - Scroll up/down
+- `g/G` - Jump to top/bottom
+- `c` - Clear logs
+- `r` - Refresh logs
+- `l` or `Esc` - Close viewer
 
 ### Keyboard Shortcuts
 
@@ -78,6 +113,7 @@ rootly-tui --version
 | `G` | Go to last item |
 | `Tab` | Switch between Incidents and Alerts |
 | `r` | Refresh data |
+| `l` | View debug logs |
 | `?` | Toggle help |
 | `q` / `Ctrl+C` | Quit |
 
@@ -142,6 +178,7 @@ git push origin v0.1.0
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - Style definitions
+- [Log](https://github.com/charmbracelet/log) - Structured logging
 - [rootly-go](https://github.com/rootlyhq/rootly-go) - Rootly API client
 
 ## License

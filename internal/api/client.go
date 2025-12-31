@@ -9,48 +9,56 @@ import (
 	"time"
 
 	rootly "github.com/rootlyhq/rootly-go"
+
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/debug"
 )
+
+// DefaultCacheTTL is the default cache duration
+const DefaultCacheTTL = 30 * time.Second
 
 type Client struct {
 	client   *rootly.ClientWithResponses
 	endpoint string
+	cache    *Cache
 }
 
 type Incident struct {
-	ID           string
-	Title        string
-	Summary      string
-	Status       string
-	Severity     string
-	Kind         string
-	CreatedAt    time.Time
-	StartedAt    *time.Time
-	DetectedAt   *time.Time
-	AcknowledgedAt *time.Time
-	MitigatedAt  *time.Time
-	ResolvedAt   *time.Time
-	Services     []string
-	Environments []string
-	Teams        []string
+	ID              string
+	SequentialID    string
+	Title           string
+	Summary         string
+	Status          string
+	Severity        string
+	Kind            string
+	CreatedAt       time.Time
+	StartedAt       *time.Time
+	DetectedAt      *time.Time
+	AcknowledgedAt  *time.Time
+	MitigatedAt     *time.Time
+	ResolvedAt      *time.Time
+	Services        []string
+	Environments    []string
+	Teams           []string
 	SlackChannelURL string
 	JiraIssueURL    string
 }
 
 type Alert struct {
-	ID          string
-	Summary     string
-	Description string
-	Status      string
-	Source      string
-	CreatedAt   time.Time
-	StartedAt   *time.Time
-	EndedAt     *time.Time
-	ExternalURL string
-	Services    []string
+	ID           string
+	ShortID      string
+	Summary      string
+	Description  string
+	Status       string
+	Source       string
+	CreatedAt    time.Time
+	StartedAt    *time.Time
+	EndedAt      *time.Time
+	ExternalURL  string
+	Services     []string
 	Environments []string
-	Groups      []string
-	Labels      map[string]string
+	Groups       []string
+	Labels       map[string]string
 }
 
 func NewClient(cfg *config.Config) (*Client, error) {
@@ -59,21 +67,35 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		endpoint = "https://" + endpoint
 	}
 
+	debug.Logger.Debug("Creating API client", "endpoint", endpoint)
+
 	client, err := rootly.NewClientWithResponses(endpoint,
 		rootly.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
 			req.Header.Set("Content-Type", "application/vnd.api+json")
+			debug.Logger.Debug("API request",
+				"method", req.Method,
+				"url", req.URL.String(),
+			)
 			return nil
 		}),
 	)
 	if err != nil {
+		debug.Logger.Error("Failed to create client", "error", err)
 		return nil, fmt.Errorf("failed to create rootly client: %w", err)
 	}
 
 	return &Client{
 		client:   client,
 		endpoint: cfg.Endpoint,
+		cache:    NewCache(DefaultCacheTTL),
 	}, nil
+}
+
+// ClearCache clears all cached data
+func (c *Client) ClearCache() {
+	c.cache.Clear()
+	debug.Logger.Debug("Cache cleared")
 }
 
 func (c *Client) ValidateAPIKey(ctx context.Context) error {
@@ -96,16 +118,38 @@ func (c *Client) ValidateAPIKey(ctx context.Context) error {
 
 func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 	pageSize := 50
+
+	// Build cache key with parameters
+	cacheKey := NewCacheKey(CacheKeyPrefixIncidents).
+		With("pageSize", pageSize).
+		Build()
+
+	// Check cache first
+	if cached, ok := c.cache.Get(cacheKey); ok {
+		debug.Logger.Debug("Cache hit for incidents", "key", cacheKey)
+		return cached.([]Incident), nil
+	}
+
 	params := &rootly.ListIncidentsParams{
 		PageSize: &pageSize,
 	}
 
+	debug.Logger.Debug("Fetching incidents", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
+
 	resp, err := c.client.ListIncidentsWithResponse(ctx, params)
 	if err != nil {
+		debug.Logger.Error("Failed to list incidents", "error", err)
 		return nil, fmt.Errorf("failed to list incidents: %w", err)
 	}
 
+	debug.Logger.Debug("Incidents response",
+		"status", resp.StatusCode(),
+		"bodyLength", len(resp.Body),
+	)
+	debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(resp.Body))
+
 	if resp.StatusCode() != 200 {
+		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
 		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
 
@@ -113,26 +157,27 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 		Data []struct {
 			ID         string `json:"id"`
 			Attributes struct {
-				Title          string `json:"title"`
-				Summary        string `json:"summary"`
-				Status         string `json:"status"`
-				Severity       *struct {
+				SequentialID *int   `json:"sequential_id"`
+				Title        string `json:"title"`
+				Summary      string `json:"summary"`
+				Status       string `json:"status"`
+				Severity     *struct {
 					Data *struct {
 						Attributes *struct {
 							Name string `json:"name"`
 						} `json:"attributes"`
 					} `json:"data"`
 				} `json:"severity"`
-				Kind           string  `json:"kind"`
-				CreatedAt      string  `json:"created_at"`
-				StartedAt      *string `json:"started_at"`
-				DetectedAt     *string `json:"detected_at"`
-				AcknowledgedAt *string `json:"acknowledged_at"`
-				MitigatedAt    *string `json:"mitigated_at"`
-				ResolvedAt     *string `json:"resolved_at"`
+				Kind            string  `json:"kind"`
+				CreatedAt       string  `json:"created_at"`
+				StartedAt       *string `json:"started_at"`
+				DetectedAt      *string `json:"detected_at"`
+				AcknowledgedAt  *string `json:"acknowledged_at"`
+				MitigatedAt     *string `json:"mitigated_at"`
+				ResolvedAt      *string `json:"resolved_at"`
 				SlackChannelURL *string `json:"slack_channel_url"`
 				JiraIssueURL    *string `json:"jira_issue_url"`
-				Services       *struct {
+				Services        *struct {
 					Data []struct {
 						Attributes struct {
 							Name string `json:"name"`
@@ -158,8 +203,14 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 	}
 
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
+		debug.Logger.Error("Failed to parse incidents response",
+			"error", err,
+			"body", debug.PrettyJSON(resp.Body),
+		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
+
+	debug.Logger.Debug("Parsed incidents", "count", len(result.Data))
 
 	incidents := make([]Incident, 0, len(result.Data))
 	for _, d := range result.Data {
@@ -169,6 +220,10 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 			Summary: d.Attributes.Summary,
 			Status:  d.Attributes.Status,
 			Kind:    d.Attributes.Kind,
+		}
+
+		if d.Attributes.SequentialID != nil {
+			incident.SequentialID = fmt.Sprintf("INC-%d", *d.Attributes.SequentialID)
 		}
 
 		if d.Attributes.Severity != nil && d.Attributes.Severity.Data != nil && d.Attributes.Severity.Data.Attributes != nil {
@@ -210,21 +265,47 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 		incidents = append(incidents, incident)
 	}
 
+	// Store in cache
+	c.cache.Set(cacheKey, incidents)
+	debug.Logger.Debug("Cached incidents", "count", len(incidents), "key", cacheKey)
+
 	return incidents, nil
 }
 
 func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 	pageSize := 50
+
+	// Build cache key with parameters
+	cacheKey := NewCacheKey(CacheKeyPrefixAlerts).
+		With("pageSize", pageSize).
+		Build()
+
+	// Check cache first
+	if cached, ok := c.cache.Get(cacheKey); ok {
+		debug.Logger.Debug("Cache hit for alerts", "key", cacheKey)
+		return cached.([]Alert), nil
+	}
+
 	params := &rootly.ListAlertsParams{
 		PageSize: &pageSize,
 	}
 
+	debug.Logger.Debug("Fetching alerts", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
+
 	resp, err := c.client.ListAlertsWithResponse(ctx, params)
 	if err != nil {
+		debug.Logger.Error("Failed to list alerts", "error", err)
 		return nil, fmt.Errorf("failed to list alerts: %w", err)
 	}
 
+	debug.Logger.Debug("Alerts response",
+		"status", resp.StatusCode(),
+		"bodyLength", len(resp.Body),
+	)
+	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(resp.Body))
+
 	if resp.StatusCode() != 200 {
+		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
 		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
 
@@ -232,36 +313,26 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		Data []struct {
 			ID         string `json:"id"`
 			Attributes struct {
+				ShortID     *string `json:"short_id"`
 				Summary     string  `json:"summary"`
 				Description *string `json:"description"`
 				Status      string  `json:"status"`
-				Source      string  `json:"source"`
+				Source      *string `json:"source"`
 				CreatedAt   string  `json:"created_at"`
 				StartedAt   *string `json:"started_at"`
 				EndedAt     *string `json:"ended_at"`
 				ExternalURL *string `json:"external_url"`
-				Services    *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
+				// Direct arrays (not nested data structures like incidents)
+				Services []struct {
+					Name string `json:"name"`
 				} `json:"services"`
-				Environments *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
+				Environments []struct {
+					Name string `json:"name"`
 				} `json:"environments"`
-				Groups *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
+				Groups []struct {
+					Name string `json:"name"`
 				} `json:"groups"`
-				Labels *[]struct {
+				Labels []struct {
 					Key   string      `json:"key"`
 					Value interface{} `json:"value"`
 				} `json:"labels"`
@@ -270,8 +341,14 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 	}
 
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
+		debug.Logger.Error("Failed to parse alerts response",
+			"error", err,
+			"body", debug.PrettyJSON(resp.Body),
+		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
+
+	debug.Logger.Debug("Parsed alerts", "count", len(result.Data))
 
 	alerts := make([]Alert, 0, len(result.Data))
 	for _, d := range result.Data {
@@ -279,10 +356,16 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 			ID:      d.ID,
 			Summary: d.Attributes.Summary,
 			Status:  d.Attributes.Status,
-			Source:  d.Attributes.Source,
 			Labels:  make(map[string]string),
 		}
 
+		if d.Attributes.Source != nil {
+			alert.Source = *d.Attributes.Source
+		}
+
+		if d.Attributes.ShortID != nil {
+			alert.ShortID = *d.Attributes.ShortID
+		}
 		if d.Attributes.Description != nil {
 			alert.Description = *d.Attributes.Description
 		}
@@ -296,29 +379,25 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		alert.StartedAt = parseTimePtr(d.Attributes.StartedAt)
 		alert.EndedAt = parseTimePtr(d.Attributes.EndedAt)
 
-		if d.Attributes.Services != nil {
-			for _, s := range d.Attributes.Services.Data {
-				alert.Services = append(alert.Services, s.Attributes.Name)
-			}
+		for _, s := range d.Attributes.Services {
+			alert.Services = append(alert.Services, s.Name)
 		}
-		if d.Attributes.Environments != nil {
-			for _, e := range d.Attributes.Environments.Data {
-				alert.Environments = append(alert.Environments, e.Attributes.Name)
-			}
+		for _, e := range d.Attributes.Environments {
+			alert.Environments = append(alert.Environments, e.Name)
 		}
-		if d.Attributes.Groups != nil {
-			for _, g := range d.Attributes.Groups.Data {
-				alert.Groups = append(alert.Groups, g.Attributes.Name)
-			}
+		for _, g := range d.Attributes.Groups {
+			alert.Groups = append(alert.Groups, g.Name)
 		}
-		if d.Attributes.Labels != nil {
-			for _, l := range *d.Attributes.Labels {
-				alert.Labels[l.Key] = fmt.Sprintf("%v", l.Value)
-			}
+		for _, l := range d.Attributes.Labels {
+			alert.Labels[l.Key] = fmt.Sprintf("%v", l.Value)
 		}
 
 		alerts = append(alerts, alert)
 	}
+
+	// Store in cache
+	c.cache.Set(cacheKey, alerts)
+	debug.Logger.Debug("Cached alerts", "count", len(alerts), "key", cacheKey)
 
 	return alerts, nil
 }

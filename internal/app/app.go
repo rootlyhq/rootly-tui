@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
@@ -46,6 +47,7 @@ type Model struct {
 	incidents views.IncidentsModel
 	alerts    views.AlertsModel
 	help      views.HelpModel
+	logs      views.LogsModel
 	spinner   spinner.Model
 
 	// Loading state
@@ -69,6 +71,7 @@ func New(version string) Model {
 		incidents: views.NewIncidentsModel(),
 		alerts:    views.NewAlertsModel(),
 		help:      views.NewHelpModel(),
+		logs:      views.NewLogsModel(),
 		spinner:   s,
 	}
 
@@ -105,7 +108,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		// Handle help overlay first
+		// Handle logs overlay first
+		if m.logs.Visible {
+			if key.Matches(msg, m.keys.Logs) || msg.String() == "esc" {
+				m.logs.Toggle()
+				return m, nil
+			}
+			var cmd tea.Cmd
+			m.logs, cmd = m.logs.Update(msg)
+			return m, cmd
+		}
+
+		// Handle help overlay
 		if m.help.Visible {
 			if key.Matches(msg, m.keys.Help) || msg.String() == "esc" {
 				m.help.Toggle()
@@ -128,6 +142,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.help.Toggle()
 			return m, nil
 
+		case key.Matches(msg, m.keys.Logs):
+			m.logs.Toggle()
+			return m, nil
+
 		case key.Matches(msg, m.keys.Tab):
 			if m.activeTab == TabIncidents {
 				m.activeTab = TabAlerts
@@ -139,6 +157,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Refresh):
 			m.loading = true
 			m.statusMsg = "Refreshing..."
+			// Clear cache on manual refresh
+			if m.apiClient != nil {
+				m.apiClient.ClearCache()
+			}
 			return m, m.loadData()
 
 		default:
@@ -159,6 +181,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.incidents.SetDimensions(msg.Width-4, msg.Height-10)
 		m.alerts.SetDimensions(msg.Width-4, msg.Height-10)
+		m.logs.SetDimensions(msg.Width, msg.Height)
 		return m, nil
 
 	case spinner.TickMsg:
@@ -264,6 +287,12 @@ func (m Model) View() string {
 	if m.help.Visible {
 		helpDialog := m.help.View()
 		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, helpDialog)
+	}
+
+	// Logs overlay
+	if m.logs.Visible {
+		logsDialog := m.logs.View()
+		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, logsDialog)
 	}
 
 	return content

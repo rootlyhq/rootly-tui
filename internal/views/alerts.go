@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
@@ -158,7 +159,13 @@ func (m AlertsModel) renderList(height int) string {
 		dot := styles.RenderStatusDot(alert.Status)
 		source := styles.RenderAlertSource(alert.Source)
 
-		titleMaxLen := m.listWidth - 18
+		// Short ID
+		shortID := styles.TextDim.Render(alert.ShortID)
+		if alert.ShortID == "" {
+			shortID = ""
+		}
+
+		titleMaxLen := m.listWidth - 22
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
@@ -167,7 +174,12 @@ func (m AlertsModel) renderList(height int) string {
 			summary = summary[:titleMaxLen-3] + "..."
 		}
 
-		line := fmt.Sprintf("%s %s %s", dot, source, summary)
+		var line string
+		if alert.ShortID != "" {
+			line = fmt.Sprintf("%s %s %s %s", dot, source, shortID, summary)
+		} else {
+			line = fmt.Sprintf("%s %s %s", dot, source, summary)
+		}
 
 		if i == m.cursor {
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
@@ -196,7 +208,11 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Summary as title
+	// Short ID and Summary as title
+	if alert.ShortID != "" {
+		b.WriteString(styles.Primary.Bold(true).Render(alert.ShortID))
+		b.WriteString("\n")
+	}
 	b.WriteString(styles.DetailTitle.Render(alert.Summary))
 	b.WriteString("\n\n")
 

@@ -12,8 +12,8 @@ func TestDefaultEndpoint(t *testing.T) {
 	}
 }
 
-func TestConfigPath(t *testing.T) {
-	path := ConfigPath()
+func TestPath(t *testing.T) {
+	path := Path()
 	if path == "" {
 		t.Error("expected config path to be non-empty")
 	}
@@ -30,8 +30,8 @@ func TestConfigPath(t *testing.T) {
 	}
 }
 
-func TestConfigDir(t *testing.T) {
-	dir := ConfigDir()
+func TestDir(t *testing.T) {
+	dir := Dir()
 	if dir == "" {
 		t.Error("expected config dir to be non-empty")
 	}

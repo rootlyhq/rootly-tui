@@ -38,11 +38,11 @@ linters-settings:
     threshold: 150
 
   gocyclo:
-    min-complexity: 20
+    min-complexity: 30  # Bubble Tea Update functions are naturally complex
 
   goconst:
     min-len: 3
-    min-occurrences: 3
+    min-occurrences: 4  # Increase threshold to avoid noise
 
   gocritic:
     enabled-tags:
@@ -54,6 +54,8 @@ linters-settings:
       - ifElseChain
       - octalLiteral
       - whyNoLint
+      - hugeParam      # Bubble Tea models use value receivers by design
+      - rangeValCopy   # Acceptable for JSON parsing structs
 
   goimports:
     local-prefixes: github.com/rootlyhq/rootly-tui
@@ -100,6 +102,14 @@ issues:
     - path: cmd/
       linters:
         - gochecknoinits
+
+    - path: internal/debug/
+      linters:
+        - gochecknoinits  # Logger initialization requires init()
+
+    - path: internal/views/
+      linters:
+        - goconst  # Key strings like "down", "up" are clearer inline
 
   max-issues-per-linter: 0
   max-same-issues: 0

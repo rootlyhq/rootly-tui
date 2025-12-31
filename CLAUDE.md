@@ -8,6 +8,7 @@ A terminal user interface for viewing Rootly incidents and alerts.
 - **Bubble Tea** - TUI framework (Elm Architecture)
 - **Bubbles** - UI components (text input, spinner)
 - **Lipgloss** - Terminal styling
+- **Log** - Structured logging (charmbracelet/log)
 - **rootly-go** - Rootly API client
 
 ## Project Structure
@@ -21,6 +22,7 @@ internal/
     keymap.go               # Keybindings
     messages.go             # Message types
   config/config.go          # Config management (~/.rootly-tui/config.yaml)
+  debug/debug.go            # Debug logging utilities
   styles/styles.go          # Lipgloss styles
   views/                    # UI views
     setup.go                # API key setup screen
@@ -71,3 +73,30 @@ endpoint: "api.rootly.com"
 - `r`: Refresh data
 - `?`: Help
 - `q`: Quit
+
+## Debug Mode
+
+Enable debug logging to troubleshoot API issues:
+
+```bash
+# Debug to stderr
+rootly-tui --debug
+
+# Debug to file
+rootly-tui --log debug.log
+
+# Debug to stderr, redirect to file
+rootly-tui --debug 2> debug.log
+```
+
+Debug logs include:
+- API requests (method, URL)
+- Response status and body length
+- JSON parsing errors with prettified response body
+- Configuration details
+
+The debug package (`internal/debug/debug.go`) provides:
+- `debug.Logger` - Global structured logger
+- `debug.Enable()` - Turn on debug logging
+- `debug.PrettyJSON()` - Format JSON for readable output
+- `debug.SetLogFile()` - Write logs to file

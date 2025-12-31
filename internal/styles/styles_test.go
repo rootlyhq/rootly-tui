@@ -36,6 +36,36 @@ func TestRenderSeverity(t *testing.T) {
 	}
 }
 
+func TestRenderSeveritySignal(t *testing.T) {
+	tests := []struct {
+		severity string
+		expected string
+	}{
+		{"critical", "▁▃▅▇"},
+		{"Critical", "▁▃▅▇"},
+		{"sev0", "▁▃▅▇"},
+		{"high", "▁▃▅░"},
+		{"High", "▁▃▅░"},
+		{"sev1", "▁▃▅░"},
+		{"medium", "▁▃░░"},
+		{"Medium", "▁▃░░"},
+		{"sev2", "▁▃░░"},
+		{"low", "▁░░░"},
+		{"Low", "▁░░░"},
+		{"sev3", "▁░░░"},
+		{"unknown", "░░░░"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.severity, func(t *testing.T) {
+			result := RenderSeveritySignal(tt.severity)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("RenderSeveritySignal(%s) = %s, expected to contain %s", tt.severity, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestRenderStatus(t *testing.T) {
 	tests := []struct {
 		status   string

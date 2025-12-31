@@ -7,19 +7,20 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
 type IncidentsModel struct {
-	incidents    []api.Incident
-	cursor       int
-	width        int
-	height       int
-	listWidth    int
-	detailWidth  int
-	loading      bool
-	error        string
+	incidents   []api.Incident
+	cursor      int
+	width       int
+	height      int
+	listWidth   int
+	detailWidth int
+	loading     bool
+	error       string
 }
 
 func NewIncidentsModel() IncidentsModel {
@@ -166,11 +167,17 @@ func (m IncidentsModel) renderList(height int) string {
 		// Status dot
 		dot := styles.RenderStatusDot(inc.Status)
 
-		// Severity badge
-		sev := styles.RenderSeverity(inc.Severity)
+		// Severity signal bars
+		sev := styles.RenderSeveritySignal(inc.Severity)
+
+		// Sequential ID (e.g., INC-123)
+		seqID := styles.TextDim.Render(inc.SequentialID)
+		if inc.SequentialID == "" {
+			seqID = styles.TextDim.Render("INC-?")
+		}
 
 		// Title (truncated)
-		titleMaxLen := m.listWidth - 15
+		titleMaxLen := m.listWidth - 25
 		if titleMaxLen < 10 {
 			titleMaxLen = 10
 		}
@@ -182,7 +189,7 @@ func (m IncidentsModel) renderList(height int) string {
 			title = title[:titleMaxLen-3] + "..."
 		}
 
-		line := fmt.Sprintf("%s %s %s", dot, sev, title)
+		line := fmt.Sprintf("%s %s %s %s", dot, sev, seqID, title)
 
 		if i == m.cursor {
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
@@ -212,7 +219,11 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	var b strings.Builder
 
-	// Title
+	// Sequential ID and Title
+	if inc.SequentialID != "" {
+		b.WriteString(styles.Primary.Bold(true).Render(inc.SequentialID))
+		b.WriteString("\n")
+	}
 	title := inc.Summary
 	if title == "" {
 		title = inc.Title
@@ -222,8 +233,9 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	// Status and Severity row
 	statusBadge := styles.RenderStatus(inc.Status)
+	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
-	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s\n\n", statusBadge, sevBadge))
+	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s\n\n", statusBadge, sevSignal, sevBadge))
 
 	// Timeline
 	b.WriteString(styles.TextBold.Render("Timeline"))

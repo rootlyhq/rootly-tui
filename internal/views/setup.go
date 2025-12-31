@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
@@ -19,6 +20,11 @@ const (
 	FieldEndpoint SetupField = iota
 	FieldAPIKey
 	FieldButtons
+)
+
+const (
+	testResultSuccess = "success"
+	testResultError   = "error"
 )
 
 type SetupModel struct {
@@ -121,21 +127,20 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 					m.testResult = ""
 					m.testError = ""
 					return m, tea.Batch(m.spinner.Tick, m.doTestConnection())
-				} else {
-					// Save and continue
-					if m.testResult == "success" {
-						m.saving = true
-						return m, m.doSaveConfig()
-					}
 				}
-			} else {
-				// Move to next field on enter
-				m.focusIndex++
-				if m.focusIndex > FieldButtons {
-					m.focusIndex = FieldButtons
+				// Save and continue
+				if m.testResult == testResultSuccess {
+					m.saving = true
+					return m, m.doSaveConfig()
 				}
-				m.updateFocus()
+				return m, nil
 			}
+			// Move to next field on enter
+			m.focusIndex++
+			if m.focusIndex > FieldButtons {
+				m.focusIndex = FieldButtons
+			}
+			m.updateFocus()
 			return m, nil
 		}
 
@@ -213,10 +218,10 @@ func (m SetupModel) doSaveConfig() tea.Cmd {
 func (m *SetupModel) HandleValidationResult(msg APIKeyValidatedMsg) {
 	m.testing = false
 	if msg.Valid {
-		m.testResult = "success"
+		m.testResult = testResultSuccess
 		m.testError = ""
 	} else {
-		m.testResult = "error"
+		m.testResult = testResultError
 		m.testError = msg.Error
 	}
 }
@@ -268,10 +273,10 @@ func (m SetupModel) View() string {
 	if m.testing {
 		b.WriteString(m.spinner.View() + " Testing connection...")
 		b.WriteString("\n\n")
-	} else if m.testResult == "success" {
+	} else if m.testResult == testResultSuccess {
 		b.WriteString(styles.SuccessMsg.Render("Connection successful!"))
 		b.WriteString("\n\n")
-	} else if m.testResult == "error" {
+	} else if m.testResult == testResultError {
 		b.WriteString(styles.Error.Render("Error: " + m.testError))
 		b.WriteString("\n\n")
 	}
@@ -285,7 +290,7 @@ func (m SetupModel) View() string {
 	}
 
 	if m.focusIndex == FieldButtons && m.buttonIndex == 1 {
-		if m.testResult == "success" {
+		if m.testResult == testResultSuccess {
 			saveBtn = styles.ButtonFocused.Render("Save & Continue")
 		} else {
 			saveBtn = styles.Button.Render("Save & Continue")

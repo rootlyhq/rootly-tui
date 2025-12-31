@@ -239,6 +239,14 @@ var (
 
 // Helper functions
 
+// Signal bar severity indicators
+var (
+	SignalCritical = lipgloss.NewStyle().Foreground(ColorCritical).Bold(true)
+	SignalHigh     = lipgloss.NewStyle().Foreground(ColorHigh).Bold(true)
+	SignalMedium   = lipgloss.NewStyle().Foreground(ColorMedium).Bold(true)
+	SignalLow      = lipgloss.NewStyle().Foreground(ColorLow).Bold(true)
+)
+
 func RenderSeverity(severity string) string {
 	switch severity {
 	case "critical", "Critical", "CRITICAL", "sev0", "SEV0":
@@ -251,6 +259,22 @@ func RenderSeverity(severity string) string {
 		return SeverityLow.Render("LOW")
 	default:
 		return Muted.Render(severity)
+	}
+}
+
+// RenderSeveritySignal renders severity as signal bars (▁▃▅▇)
+func RenderSeveritySignal(severity string) string {
+	switch severity {
+	case "critical", "Critical", "CRITICAL", "sev0", "SEV0":
+		return SignalCritical.Render("▁▃▅▇")
+	case "high", "High", "HIGH", "sev1", "SEV1":
+		return SignalHigh.Render("▁▃▅░")
+	case "medium", "Medium", "MEDIUM", "sev2", "SEV2":
+		return SignalMedium.Render("▁▃░░")
+	case "low", "Low", "LOW", "sev3", "SEV3":
+		return SignalLow.Render("▁░░░")
+	default:
+		return Muted.Render("░░░░")
 	}
 }
 

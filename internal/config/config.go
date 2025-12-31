@@ -19,7 +19,7 @@ type Config struct {
 	Endpoint string `yaml:"endpoint"`
 }
 
-func ConfigDir() string {
+func Dir() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
@@ -27,17 +27,17 @@ func ConfigDir() string {
 	return filepath.Join(home, configDir)
 }
 
-func ConfigPath() string {
-	return filepath.Join(ConfigDir(), configFile)
+func Path() string {
+	return filepath.Join(Dir(), configFile)
 }
 
 func Exists() bool {
-	_, err := os.Stat(ConfigPath())
+	_, err := os.Stat(Path())
 	return err == nil
 }
 
 func Load() (*Config, error) {
-	data, err := os.ReadFile(ConfigPath())
+	data, err := os.ReadFile(Path())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, errors.New("config file not found")
@@ -62,7 +62,7 @@ func Save(cfg *Config) error {
 		cfg.Endpoint = DefaultEndpoint
 	}
 
-	if err := os.MkdirAll(ConfigDir(), 0700); err != nil {
+	if err := os.MkdirAll(Dir(), 0700); err != nil {
 		return err
 	}
 
@@ -71,7 +71,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	return os.WriteFile(ConfigPath(), data, 0600)
+	return os.WriteFile(Path(), data, 0600)
 }
 
 func (c *Config) IsValid() bool {

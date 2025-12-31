@@ -52,6 +52,7 @@ func (m HelpModel) View() string {
 	// General section
 	b.WriteString(styles.TextBold.Render("General"))
 	b.WriteString("\n")
+	b.WriteString(renderHelpLine("l", "View debug logs"))
 	b.WriteString(renderHelpLine("?", "Toggle this help"))
 	b.WriteString(renderHelpLine("q / Ctrl+C", "Quit"))
 	b.WriteString("\n\n")
@@ -72,6 +73,7 @@ func RenderHelpBar(width int) string {
 		styles.RenderHelpItem("j/k", "navigate"),
 		styles.RenderHelpItem("Tab", "switch"),
 		styles.RenderHelpItem("r", "refresh"),
+		styles.RenderHelpItem("l", "logs"),
 		styles.RenderHelpItem("?", "help"),
 		styles.RenderHelpItem("q", "quit"),
 	}

@@ -197,7 +197,61 @@ func TestDefaultKeyMap(t *testing.T) {
 	if len(km.Help.Keys()) == 0 {
 		t.Error("expected Help key binding to be set")
 	}
+	if len(km.Logs.Keys()) == 0 {
+		t.Error("expected Logs key binding to be set")
+	}
 	if len(km.Quit.Keys()) == 0 {
 		t.Error("expected Quit key binding to be set")
+	}
+}
+
+func TestModelUpdateLogs(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.logs.Visible = false
+
+	// Test logs toggle with 'l'
+	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	model := newModel.(Model)
+
+	if !model.logs.Visible {
+		t.Error("expected logs to be visible after 'l' press")
+	}
+
+	// Toggle off with 'l'
+	newModel, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	model = newModel.(Model)
+
+	if model.logs.Visible {
+		t.Error("expected logs to be hidden after second 'l' press")
+	}
+}
+
+func TestModelUpdateLogsEscape(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.logs.Visible = true
+
+	// Test closing logs with Escape
+	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	model := newModel.(Model)
+
+	if model.logs.Visible {
+		t.Error("expected logs to be hidden after Escape press")
+	}
+}
+
+func TestModelLogsBlocksOtherKeys(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.activeTab = TabIncidents
+	m.logs.Visible = true
+
+	// Tab should not switch tabs when logs overlay is visible
+	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	model := newModel.(Model)
+
+	if model.activeTab != TabIncidents {
+		t.Error("expected tab switch to be blocked when logs are visible")
 	}
 }
