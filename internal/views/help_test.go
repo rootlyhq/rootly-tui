@@ -80,7 +80,7 @@ func TestHelpModelView(t *testing.T) {
 }
 
 func TestRenderHelpBar(t *testing.T) {
-	bar := RenderHelpBar(80, false, false)
+	bar := RenderHelpBar(80, false, false, false)
 
 	expectedItems := []string{
 		"navigate",
@@ -100,10 +100,15 @@ func TestRenderHelpBar(t *testing.T) {
 	if strings.Contains(bar, "open") {
 		t.Error("expected help bar to NOT contain 'open' when hasSelection is false")
 	}
+
+	// 'sort' should not be shown when isIncidentsTab is false
+	if strings.Contains(bar, "sort") {
+		t.Error("expected help bar to NOT contain 'sort' when isIncidentsTab is false")
+	}
 }
 
 func TestRenderHelpBarWithSelection(t *testing.T) {
-	bar := RenderHelpBar(80, true, false)
+	bar := RenderHelpBar(80, true, false, false)
 
 	// 'open' should be shown when hasSelection is true
 	if !strings.Contains(bar, "open") {
@@ -117,7 +122,7 @@ func TestRenderHelpBarWithSelection(t *testing.T) {
 }
 
 func TestRenderHelpBarWhileLoading(t *testing.T) {
-	bar := RenderHelpBar(80, true, true)
+	bar := RenderHelpBar(80, true, true, false)
 
 	// 'refresh' should NOT be shown when loading
 	if strings.Contains(bar, "refresh") {
@@ -127,5 +132,23 @@ func TestRenderHelpBarWhileLoading(t *testing.T) {
 	// 'open' should NOT be shown when loading (even with selection)
 	if strings.Contains(bar, "open") {
 		t.Error("expected help bar to NOT contain 'open' when loading")
+	}
+}
+
+func TestRenderHelpBarWithIncidentsTab(t *testing.T) {
+	bar := RenderHelpBar(80, false, false, true)
+
+	// 'sort' should be shown when isIncidentsTab is true
+	if !strings.Contains(bar, "sort") {
+		t.Error("expected help bar to contain 'sort' when isIncidentsTab is true")
+	}
+}
+
+func TestRenderHelpBarWithoutIncidentsTab(t *testing.T) {
+	bar := RenderHelpBar(80, false, false, false)
+
+	// 'sort' should NOT be shown when isIncidentsTab is false
+	if strings.Contains(bar, "sort") {
+		t.Error("expected help bar to NOT contain 'sort' when isIncidentsTab is false")
 	}
 }
