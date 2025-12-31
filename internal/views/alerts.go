@@ -430,7 +430,19 @@ func (m AlertsModel) renderDetailRow(label, value string) string {
 }
 
 func (m AlertsModel) renderLinkRow(label, url string) string {
-	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, url) + "\n"
+	// Calculate available width for URL display
+	// Account for label, colon, space, and container padding (~10 chars)
+	maxURLLen := m.detailWidth - len(label) - 12
+	if maxURLLen < 20 {
+		maxURLLen = 20
+	}
+
+	displayURL := url
+	if len(displayURL) > maxURLLen {
+		displayURL = displayURL[:maxURLLen-3] + "..."
+	}
+
+	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, displayURL) + "\n"
 }
 
 func formatAlertTime(t time.Time) string {
