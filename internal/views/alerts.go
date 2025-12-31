@@ -157,8 +157,8 @@ func (m AlertsModel) renderList(height int) string {
 	for i := start; i < end; i++ {
 		alert := m.alerts[i]
 
-		// Source icon
-		source := styles.RenderAlertSource(alert.Source)
+		// Source icon (emoji only in list)
+		source := styles.AlertSourceIcon(alert.Source)
 
 		// Short ID (e.g., ABC123)
 		shortID := alert.ShortID

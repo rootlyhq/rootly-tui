@@ -109,7 +109,7 @@ var (
 	// Status badges
 	StatusActive = lipgloss.NewStyle().
 			Foreground(ColorText).
-			Background(ColorSuccess).
+			Background(ColorDanger).
 			Padding(0, 1).
 			Bold(true)
 
@@ -121,9 +121,14 @@ var (
 
 	StatusResolved = lipgloss.NewStyle().
 			Foreground(ColorText).
-			Background(ColorMuted).
+			Background(ColorSuccess).
 			Padding(0, 1).
 			Bold(true)
+
+	StatusMuted = lipgloss.NewStyle().
+			Foreground(ColorText).
+			Background(ColorMuted).
+			Padding(0, 1)
 
 	// Severity badges
 	SeverityCritical = lipgloss.NewStyle().
@@ -283,15 +288,23 @@ func RenderSeveritySignal(severity string) string {
 }
 
 func RenderStatus(status string) string {
-	switch status {
-	case "started", "in_progress", "acknowledged":
-		return StatusInProgress.Render(status)
-	case "resolved", "closed", "mitigated":
-		return StatusResolved.Render(status)
-	case "open", "triggered":
+	// Normalize status for comparison
+	s := strings.ToLower(strings.TrimSpace(status))
+	switch s {
+	// Active/urgent - needs attention (red)
+	case "open", "triggered", "firing", "critical":
 		return StatusActive.Render(status)
+	// In progress - being worked on (yellow)
+	case "started", "in_progress", "acknowledged", "investigating", "identified", "monitoring":
+		return StatusInProgress.Render(status)
+	// Resolved - completed successfully (green)
+	case "resolved", "mitigated", "fixed":
+		return StatusResolved.Render(status)
+	// Closed/cancelled - done but neutral (gray)
+	case "closed", "cancelled", "canceled", "suppressed":
+		return StatusMuted.Render(status)
 	default:
-		return Muted.Render(status)
+		return StatusMuted.Render(status)
 	}
 }
 
@@ -308,66 +321,119 @@ func RenderStatusDot(status string) string {
 	}
 }
 
+// AlertSourceIcon returns just the emoji icon for an alert source
+func AlertSourceIcon(source string) string {
+	switch source {
+	case "datadog":
+		return "🐶"
+	case "pagerduty":
+		return "📟"
+	case "grafana":
+		return "📊"
+	case "new_relic":
+		return "🔮"
+	case "prometheus", "alertmanager":
+		return "🔥"
+	case "opsgenie":
+		return "🔔"
+	case "sentry":
+		return "🐛"
+	case "splunk":
+		return "📈"
+	case "honeycomb":
+		return "🍯"
+	case "chronosphere":
+		return "⏱️"
+	case "cloud_watch", "cloudwatch":
+		return "☁️"
+	case "azure":
+		return "☁️"
+	case "google_cloud":
+		return "☁️"
+	case "slack":
+		return "💬"
+	case "email":
+		return "📧"
+	case "generic_webhook":
+		return "🔗"
+	case "api":
+		return "🔌"
+	case "manual":
+		return "✋"
+	case "jira":
+		return "📋"
+	case "zendesk":
+		return "🎫"
+	case "rollbar":
+		return "🪵"
+	case "bugsnag", "bug_snag":
+		return "🐞"
+	default:
+		return "📡"
+	}
+}
+
 func RenderAlertSource(source string) string {
+	icon := AlertSourceIcon(source)
 	switch source {
 	// Major monitoring platforms
 	case "datadog":
-		return Info.Render("🐶DD")
+		return Info.Render(icon + "DD")
 	case "pagerduty":
-		return Success.Render("📟PD")
+		return Success.Render(icon + "PD")
 	case "grafana":
-		return Warning.Render("📊GF")
+		return Warning.Render(icon + "GF")
 	case "new_relic":
-		return Info.Render("🔮NR")
+		return Info.Render(icon + "NR")
 	case "prometheus", "alertmanager":
-		return Danger.Render("🔥PM")
+		return Danger.Render(icon + "PM")
 	case "opsgenie":
-		return Info.Render("🔔OG")
+		return Info.Render(icon + "OG")
 	case "sentry":
-		return Danger.Render("🐛SE")
+		return Danger.Render(icon + "SE")
 	case "splunk":
-		return Success.Render("📈SP")
+		return Success.Render(icon + "SP")
 	case "honeycomb":
-		return Warning.Render("🍯HC")
+		return Warning.Render(icon + "HC")
 	case "chronosphere":
-		return Info.Render("⏱️CS")
+		return Info.Render(icon + "CS")
 
 	// Cloud providers
 	case "cloud_watch", "cloudwatch":
-		return Warning.Render("☁️CW")
+		return Warning.Render(icon + "CW")
 	case "azure":
-		return Info.Render("☁️AZ")
+		return Info.Render(icon + "AZ")
 	case "google_cloud":
-		return Info.Render("☁️GC")
+		return Info.Render(icon + "GC")
 
 	// Communication
 	case "slack":
-		return Primary.Render("💬SL")
+		return Primary.Render(icon + "SL")
 	case "email":
-		return Muted.Render("📧EM")
+		return Muted.Render(icon + "EM")
 
 	// Other
 	case "generic_webhook":
-		return Muted.Render("🔗GW")
+		return Muted.Render(icon + "GW")
 	case "api":
-		return Muted.Render("🔌AP")
+		return Muted.Render(icon + "AP")
 	case "manual":
-		return Muted.Render("✋MN")
+		return Muted.Render(icon + "MN")
 	case "jira":
-		return Info.Render("📋JI")
+		return Info.Render(icon + "JI")
 	case "zendesk":
-		return Success.Render("🎫ZD")
+		return Success.Render(icon + "ZD")
 	case "rollbar":
-		return Danger.Render("🪵RB")
+		return Danger.Render(icon + "RB")
 	case "bugsnag", "bug_snag":
-		return Danger.Render("🐞BS")
+		return Danger.Render(icon + "BS")
 
 	default:
 		// Fallback: first 2 chars uppercase
 		if len(source) >= 2 {
-			return Muted.Render("📡" + strings.ToUpper(source[:2]))
+			return Muted.Render(icon + strings.ToUpper(source[:2]))
 		}
-		return Muted.Render("📡??")
+		return Muted.Render(icon + "??")
 	}
 }
 
