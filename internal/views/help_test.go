@@ -71,7 +71,7 @@ func TestHelpModelView(t *testing.T) {
 }
 
 func TestRenderHelpBar(t *testing.T) {
-	bar := RenderHelpBar(80, false)
+	bar := RenderHelpBar(80, false, false)
 
 	expectedItems := []string{
 		"navigate",
@@ -94,9 +94,28 @@ func TestRenderHelpBar(t *testing.T) {
 }
 
 func TestRenderHelpBarWithSelection(t *testing.T) {
-	bar := RenderHelpBar(80, true)
+	bar := RenderHelpBar(80, true, false)
 
 	// 'open' should be shown when hasSelection is true
+	if !strings.Contains(bar, "open") {
+		t.Error("expected help bar to contain 'open' when hasSelection is true")
+	}
+
+	// 'refresh' should be shown when not loading
+	if !strings.Contains(bar, "refresh") {
+		t.Error("expected help bar to contain 'refresh' when not loading")
+	}
+}
+
+func TestRenderHelpBarWhileLoading(t *testing.T) {
+	bar := RenderHelpBar(80, true, true)
+
+	// 'refresh' should NOT be shown when loading
+	if strings.Contains(bar, "refresh") {
+		t.Error("expected help bar to NOT contain 'refresh' when loading")
+	}
+
+	// 'open' should still be shown
 	if !strings.Contains(bar, "open") {
 		t.Error("expected help bar to contain 'open' when hasSelection is true")
 	}

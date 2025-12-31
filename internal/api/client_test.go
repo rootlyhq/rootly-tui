@@ -822,15 +822,14 @@ func TestGetAlert(t *testing.T) {
 							"attributes": map[string]interface{}{"name": "production"},
 						},
 					},
-					"responders": map[string]interface{}{
-						"data": []map[string]interface{}{
-							{
-								"attributes": map[string]interface{}{
-									"user": map[string]interface{}{
-										"data": map[string]interface{}{
-											"attributes": map[string]interface{}{
-												"name": "On-call Engineer",
-											},
+					"responders": []map[string]interface{}{
+						{
+							"id": 123,
+							"attributes": map[string]interface{}{
+								"user": map[string]interface{}{
+									"data": map[string]interface{}{
+										"attributes": map[string]interface{}{
+											"name": "On-call Engineer",
 										},
 									},
 								},

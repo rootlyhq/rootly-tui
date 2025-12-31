@@ -73,12 +73,15 @@ func renderHelpLine(key, desc string) string {
 
 // RenderHelpBar renders the bottom help bar
 // hasSelection indicates whether an incident or alert is currently selected
-func RenderHelpBar(width int, hasSelection bool) string {
+// isLoading indicates whether data is currently being loaded
+func RenderHelpBar(width int, hasSelection, isLoading bool) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", "navigate"),
 		styles.RenderHelpItem("[/]", "page"),
 		styles.RenderHelpItem("Tab", "switch"),
-		styles.RenderHelpItem("r", "refresh"),
+	}
+	if !isLoading {
+		items = append(items, styles.RenderHelpItem("r", "refresh"))
 	}
 	if hasSelection {
 		items = append(items, styles.RenderHelpItem("o", "open"))

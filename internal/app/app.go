@@ -401,7 +401,7 @@ func (m Model) View() string {
 	} else {
 		hasSelection = m.alerts.SelectedAlert() != nil
 	}
-	b.WriteString(views.RenderHelpBar(m.width, hasSelection))
+	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading))
 
 	// Wrap content
 	content := styles.App.Render(b.String())

@@ -870,18 +870,17 @@ func (c *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
 						Name string `json:"name"`
 					} `json:"attributes"`
 				} `json:"groups"`
-				Responders *struct {
-					Data []struct {
-						Attributes struct {
-							User *struct {
-								Data *struct {
-									Attributes struct {
-										Name string `json:"name"`
-									} `json:"attributes"`
-								} `json:"data"`
-							} `json:"user"`
-						} `json:"attributes"`
-					} `json:"data"`
+				Responders []struct {
+					ID         interface{} `json:"id"`
+					Attributes struct {
+						User *struct {
+							Data *struct {
+								Attributes struct {
+									Name string `json:"name"`
+								} `json:"attributes"`
+							} `json:"data"`
+						} `json:"user"`
+					} `json:"attributes"`
 				} `json:"responders"`
 				AlertUrgency *struct {
 					Data *struct {
@@ -947,11 +946,9 @@ func (c *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
 		alert.Groups = append(alert.Groups, g.Attributes.Name)
 	}
 
-	if d.Attributes.Responders != nil {
-		for _, r := range d.Attributes.Responders.Data {
-			if r.Attributes.User != nil && r.Attributes.User.Data != nil {
-				alert.Responders = append(alert.Responders, r.Attributes.User.Data.Attributes.Name)
-			}
+	for _, r := range d.Attributes.Responders {
+		if r.Attributes.User != nil && r.Attributes.User.Data != nil {
+			alert.Responders = append(alert.Responders, r.Attributes.User.Data.Attributes.Name)
 		}
 	}
 
