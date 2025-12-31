@@ -5,13 +5,28 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/rootlyhq/rootly-tui/internal/config"
 )
 
+// setupTestEnv sets up a temporary HOME directory for test isolation.
+// Returns a cleanup function that should be deferred.
+func setupTestEnv(t *testing.T) func() {
+	t.Helper()
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	return func() {
+		os.Setenv("HOME", originalHome)
+	}
+}
+
 func TestNewClient(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	cfg := &config.Config{
 		APIKey:   "test-api-key",
 		Endpoint: "api.rootly.com",
@@ -28,6 +43,8 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientWithHTTPS(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	tests := []struct {
 		name     string
 		endpoint string
@@ -57,6 +74,8 @@ func TestNewClientWithHTTPS(t *testing.T) {
 }
 
 func TestValidateAPIKey(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	// Create mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check authorization header
@@ -105,6 +124,8 @@ func TestValidateAPIKey(t *testing.T) {
 }
 
 func TestListIncidents(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	// Create mock server that returns incidents
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify path
@@ -177,6 +198,8 @@ func TestListIncidents(t *testing.T) {
 }
 
 func TestListAlerts(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	// Create mock server that returns alerts
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify path
@@ -252,6 +275,8 @@ func TestListAlerts(t *testing.T) {
 }
 
 func TestListIncidentsError(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	// Create mock server that returns error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -321,6 +346,8 @@ func TestMockAlerts(t *testing.T) {
 }
 
 func TestClearCache(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	cfg := &config.Config{
 		APIKey:   "test-key",
 		Endpoint: "api.rootly.com",
@@ -384,6 +411,8 @@ func strPtr(s string) *string {
 }
 
 func TestListIncidentsWithCache(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	callCount := 0
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -440,6 +469,8 @@ func TestListIncidentsWithCache(t *testing.T) {
 }
 
 func TestListAlertsWithLabels(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.api+json")
 		w.WriteHeader(http.StatusOK)
@@ -521,6 +552,8 @@ func TestListAlertsWithLabels(t *testing.T) {
 }
 
 func TestListIncidentsWithTimestamps(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.api+json")
 		w.WriteHeader(http.StatusOK)
@@ -610,6 +643,8 @@ func TestListIncidentsWithTimestamps(t *testing.T) {
 }
 
 func TestListAlertsError(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -632,6 +667,8 @@ func TestListAlertsError(t *testing.T) {
 }
 
 func TestGetIncident(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify the request path includes the incident ID
 		if !strings.Contains(r.URL.Path, "/v1/incidents/inc_123") {
@@ -821,6 +858,8 @@ func TestGetIncident(t *testing.T) {
 }
 
 func TestGetAlert(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify the request path includes the alert ID
 		if !strings.Contains(r.URL.Path, "/v1/alerts/alert_123") {
@@ -945,6 +984,8 @@ func TestGetAlert(t *testing.T) {
 }
 
 func TestGetIncidentError(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -967,6 +1008,8 @@ func TestGetIncidentError(t *testing.T) {
 }
 
 func TestGetAlertError(t *testing.T) {
+	defer setupTestEnv(t)()
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
