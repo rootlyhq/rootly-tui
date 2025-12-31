@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -292,21 +293,29 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 
 	debug.Logger.Debug("Fetching alerts", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
 
-	resp, err := c.client.ListAlertsWithResponse(ctx, params)
+	// Use raw ListAlerts to bypass SDK's broken parsing (labels.value is interface{}, not string)
+	httpResp, err := c.client.ListAlerts(ctx, params)
 	if err != nil {
 		debug.Logger.Error("Failed to list alerts", "error", err)
 		return nil, fmt.Errorf("failed to list alerts: %w", err)
 	}
+	defer httpResp.Body.Close()
+
+	body, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		debug.Logger.Error("Failed to read alerts response", "error", err)
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
 
 	debug.Logger.Debug("Alerts response",
-		"status", resp.StatusCode(),
-		"bodyLength", len(resp.Body),
+		"status", httpResp.StatusCode,
+		"bodyLength", len(body),
 	)
-	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(resp.Body))
+	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(body))
 
-	if resp.StatusCode() != 200 {
-		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
-		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
+	if httpResp.StatusCode != 200 {
+		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
+		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
 	}
 
 	var result struct {
@@ -340,10 +349,10 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		} `json:"data"`
 	}
 
-	if err := json.Unmarshal(resp.Body, &result); err != nil {
+	if err := json.Unmarshal(body, &result); err != nil {
 		debug.Logger.Error("Failed to parse alerts response",
 			"error", err,
-			"body", debug.PrettyJSON(resp.Body),
+			"body", debug.PrettyJSON(body),
 		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
