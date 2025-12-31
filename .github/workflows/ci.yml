@@ -84,7 +84,7 @@ jobs:
   # status that succeeds only if all matrix test jobs succeed.
   validate-tests-passed:
     name: Check Tests Passed
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs: test
     if: always()
     steps:
