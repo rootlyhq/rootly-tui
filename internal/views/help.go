@@ -49,6 +49,7 @@ func (m HelpModel) View() string {
 	b.WriteString("\n")
 	b.WriteString(renderHelpLine("r", "Refresh data"))
 	b.WriteString(renderHelpLine("Enter", "View details / Select"))
+	b.WriteString(renderHelpLine("o", "Open URL in browser"))
 	b.WriteString("\n")
 
 	// General section
@@ -77,6 +78,7 @@ func RenderHelpBar(width int) string {
 		styles.RenderHelpItem("[/]", "page"),
 		styles.RenderHelpItem("Tab", "switch"),
 		styles.RenderHelpItem("r", "refresh"),
+		styles.RenderHelpItem("o", "open"),
 		styles.RenderHelpItem("l", "logs"),
 		styles.RenderHelpItem("s", "setup"),
 		styles.RenderHelpItem("?", "help"),

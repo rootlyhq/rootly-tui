@@ -342,3 +342,73 @@ func TestModelCloseWithClient(t *testing.T) {
 
 	// Client should be closed (calling Close again is safe but we just verify no panic)
 }
+
+func TestModelOpenKeyBinding(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.activeTab = TabIncidents
+
+	// Add a test incident
+	m.incidents.SetIncidents([]api.Incident{
+		{
+			ID:       "inc_123",
+			Title:    "Test Incident",
+			ShortURL: "https://root.ly/i/abc123",
+		},
+	}, api.PaginationInfo{CurrentPage: 1})
+
+	// Press 'o' key - should not panic even without a real browser
+	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	if newModel == nil {
+		t.Error("expected model to be non-nil")
+	}
+	// Command should be nil (openURL is fire-and-forget)
+	if cmd != nil {
+		t.Error("expected nil command for open key")
+	}
+}
+
+func TestModelOpenKeyBindingWithFallbackURL(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.activeTab = TabIncidents
+
+	// Add a test incident without ShortURL or URL (should construct from ID)
+	m.incidents.SetIncidents([]api.Incident{
+		{
+			ID:    "inc_456",
+			Title: "Test Incident Without URL",
+		},
+	}, api.PaginationInfo{CurrentPage: 1})
+
+	// Press 'o' key - should not panic
+	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	if newModel == nil {
+		t.Error("expected model to be non-nil")
+	}
+}
+
+func TestModelOpenKeyBindingForAlerts(t *testing.T) {
+	m := New("1.0.0")
+	m.screen = ScreenMain
+	m.activeTab = TabAlerts
+
+	// Add a test alert
+	m.alerts.SetAlerts([]api.Alert{
+		{
+			ID:      "alert_123",
+			ShortID: "ABC123",
+			Summary: "Test Alert",
+		},
+	}, api.PaginationInfo{CurrentPage: 1})
+
+	// Press 'o' key - should not panic
+	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	if newModel == nil {
+		t.Error("expected model to be non-nil")
+	}
+	// Command should be nil (openURL is fire-and-forget)
+	if cmd != nil {
+		t.Error("expected nil command for open key")
+	}
+}

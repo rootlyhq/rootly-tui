@@ -47,6 +47,7 @@ type Incident struct {
 	JiraIssueURL    string
 	// Detail fields (populated by GetIncident)
 	URL              string
+	ShortURL         string
 	Causes           []string
 	IncidentTypes    []string
 	Functionalities  []string
@@ -600,6 +601,7 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 				} `json:"severity"`
 				Kind            string  `json:"kind"`
 				URL             *string `json:"url"`
+				ShortURL        *string `json:"short_url"`
 				CreatedAt       string  `json:"created_at"`
 				UpdatedAt       string  `json:"updated_at"`
 				StartedAt       *string `json:"started_at"`
@@ -697,6 +699,9 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 
 	if d.Attributes.URL != nil {
 		incident.URL = *d.Attributes.URL
+	}
+	if d.Attributes.ShortURL != nil {
+		incident.ShortURL = *d.Attributes.ShortURL
 	}
 
 	if t, err := time.Parse(time.RFC3339, d.Attributes.CreatedAt); err == nil {

@@ -353,10 +353,21 @@ func (m AlertsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("Groups", strings.Join(alert.Groups, ", ")))
 	}
 
-	// External URL (clickable)
-	if alert.ExternalURL != "" {
+	// Links section
+	rootlyURL := ""
+	if alert.ShortID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
+	}
+	if rootlyURL != "" || alert.ExternalURL != "" {
 		b.WriteString("\n")
-		b.WriteString(m.renderLinkRow("External URL", alert.ExternalURL))
+		b.WriteString(styles.TextBold.Render("Links"))
+		b.WriteString("\n")
+		if rootlyURL != "" {
+			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
+		}
+		if alert.ExternalURL != "" {
+			b.WriteString(m.renderLinkRow("Source", alert.ExternalURL))
+		}
 	}
 
 	// Extended info (populated when DetailLoaded is true)

@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -219,6 +221,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.alerts.SetDetailLoading(true)
 					return m, m.loadAlertDetail(alert.ID, m.alerts.SelectedIndex())
 				}
+			}
+			return m, nil
+
+		case key.Matches(msg, m.keys.Open):
+			// Open URL in browser
+			var url string
+			if m.activeTab == TabIncidents {
+				inc := m.incidents.SelectedIncident()
+				if inc != nil {
+					// Prefer short URL, then URL, then construct from ID
+					if inc.ShortURL != "" {
+						url = inc.ShortURL
+					} else if inc.URL != "" {
+						url = inc.URL
+					} else if inc.ID != "" {
+						url = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
+					}
+				}
+			} else {
+				alert := m.alerts.SelectedAlert()
+				if alert != nil {
+					// Construct URL from short ID
+					if alert.ShortID != "" {
+						url = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
+					}
+				}
+			}
+			if url != "" {
+				_ = openURL(url)
 			}
 			return m, nil
 
@@ -526,4 +557,21 @@ func (m Model) Close() error {
 		return m.apiClient.Close()
 	}
 	return nil
+}
+
+// openURL opens the given URL in the default browser
+func openURL(url string) error {
+	ctx := context.Background()
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.CommandContext(ctx, "open", url)
+	case "linux":
+		cmd = exec.CommandContext(ctx, "xdg-open", url)
+	case "windows":
+		cmd = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", url)
+	default:
+		return fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+	}
+	return cmd.Start()
 }

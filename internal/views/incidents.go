@@ -295,6 +295,7 @@ func (m IncidentsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
+//nolint:gocyclo // complexity from rendering many optional detail fields
 func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
@@ -413,12 +414,19 @@ func (m IncidentsModel) renderDetail(height int) string {
 	}
 
 	// External links (clickable)
-	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || inc.URL != "" {
+	rootlyURL := inc.ShortURL
+	if rootlyURL == "" {
+		rootlyURL = inc.URL
+	}
+	if rootlyURL == "" && inc.ID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
+	}
+	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
 		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render("Links"))
 		b.WriteString("\n")
-		if inc.URL != "" {
-			b.WriteString(m.renderLinkRow("Rootly", inc.URL))
+		if rootlyURL != "" {
+			b.WriteString(m.renderLinkRow("Rootly", rootlyURL))
 		}
 		if inc.SlackChannelURL != "" {
 			b.WriteString(m.renderLinkRow("Slack", inc.SlackChannelURL))

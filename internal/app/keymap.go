@@ -12,6 +12,7 @@ type KeyMap struct {
 	Setup    key.Binding
 	Quit     key.Binding
 	Enter    key.Binding
+	Open     key.Binding
 	Top      key.Binding
 	Bottom   key.Binding
 	PrevPage key.Binding
@@ -55,6 +56,10 @@ func DefaultKeyMap() KeyMap {
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "select"),
+		),
+		Open: key.NewBinding(
+			key.WithKeys("o"),
+			key.WithHelp("o", "open in browser"),
 		),
 		Top: key.NewBinding(
 			key.WithKeys("g"),
