@@ -172,9 +172,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case key.Matches(msg, m.keys.Setup):
-			// Reset to setup screen
+			// Reset to setup screen with existing config
 			m.screen = ScreenSetup
-			m.setup = views.NewSetupModel()
+			m.setup = views.NewSetupModelWithConfig(m.cfg)
 			m.setup.SetDimensions(m.width, m.height)
 			return m, m.setup.Init()
 

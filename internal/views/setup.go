@@ -60,9 +60,13 @@ type ConfigSavedMsg struct {
 }
 
 func NewSetupModel() SetupModel {
+	return NewSetupModelWithConfig(nil)
+}
+
+// NewSetupModelWithConfig creates a setup model pre-populated with existing config values
+func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 	endpointInput := textinput.New()
 	endpointInput.Placeholder = "api.rootly.com"
-	endpointInput.SetValue(config.DefaultEndpoint)
 	endpointInput.Focus()
 	endpointInput.Width = 45
 
@@ -75,22 +79,45 @@ func NewSetupModel() SetupModel {
 	// Load available timezones from system
 	timezones := config.ListTimezones()
 
-	// Detect timezone and find index in list
-	detectedTZ := config.DetectTimezone()
-	tzIndex := 0 // Default to first (usually UTC)
-	for i, tz := range timezones {
-		if tz == detectedTZ {
-			tzIndex = i
-			break
-		}
-	}
-
 	// Load available languages
 	languages := i18n.ListLanguages()
 
-	// Detect language and find index in list
-	detectedLang := i18n.DetectLanguage()
-	langIndex := i18n.LanguageIndex(string(detectedLang))
+	// Default values
+	tzIndex := 0
+	langIndex := 0
+
+	if cfg != nil && cfg.IsValid() {
+		// Use existing config values
+		endpointInput.SetValue(cfg.Endpoint)
+		apiKeyInput.SetValue(cfg.APIKey)
+
+		// Find timezone index
+		for i, tz := range timezones {
+			if tz == cfg.Timezone {
+				tzIndex = i
+				break
+			}
+		}
+
+		// Find language index
+		langIndex = i18n.LanguageIndex(cfg.Language)
+	} else {
+		// Use defaults for new setup
+		endpointInput.SetValue(config.DefaultEndpoint)
+
+		// Detect timezone and find index in list
+		detectedTZ := config.DetectTimezone()
+		for i, tz := range timezones {
+			if tz == detectedTZ {
+				tzIndex = i
+				break
+			}
+		}
+
+		// Detect language and find index in list
+		detectedLang := i18n.DetectLanguage()
+		langIndex = i18n.LanguageIndex(string(detectedLang))
+	}
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
