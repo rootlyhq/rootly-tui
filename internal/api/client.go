@@ -886,23 +886,15 @@ func (c *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
 					Key   string      `json:"key"`
 					Value interface{} `json:"value"`
 				} `json:"labels"`
+				// Direct arrays (same format as list API)
 				Services []struct {
-					ID         string `json:"id"`
-					Attributes struct {
-						Name string `json:"name"`
-					} `json:"attributes"`
+					Name string `json:"name"`
 				} `json:"services"`
 				Environments []struct {
-					ID         string `json:"id"`
-					Attributes struct {
-						Name string `json:"name"`
-					} `json:"attributes"`
+					Name string `json:"name"`
 				} `json:"environments"`
 				Groups []struct {
-					ID         string `json:"id"`
-					Attributes struct {
-						Name string `json:"name"`
-					} `json:"attributes"`
+					Name string `json:"name"`
 				} `json:"groups"`
 				Responders []struct {
 					ID         interface{} `json:"id"`
@@ -971,13 +963,13 @@ func (c *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
 	}
 
 	for _, s := range d.Attributes.Services {
-		alert.Services = append(alert.Services, s.Attributes.Name)
+		alert.Services = append(alert.Services, s.Name)
 	}
 	for _, e := range d.Attributes.Environments {
-		alert.Environments = append(alert.Environments, e.Attributes.Name)
+		alert.Environments = append(alert.Environments, e.Name)
 	}
 	for _, g := range d.Attributes.Groups {
-		alert.Groups = append(alert.Groups, g.Attributes.Name)
+		alert.Groups = append(alert.Groups, g.Name)
 	}
 
 	for _, r := range d.Attributes.Responders {

@@ -348,9 +348,9 @@ func (m AlertsModel) renderDetail(height int) string {
 		b.WriteString(m.renderDetailRow("Environments", strings.Join(alert.Environments, ", ")))
 	}
 
-	// Groups
+	// Teams (Groups)
 	if len(alert.Groups) > 0 {
-		b.WriteString(m.renderDetailRow("Groups", strings.Join(alert.Groups, ", ")))
+		b.WriteString(m.renderDetailRow("Teams", strings.Join(alert.Groups, ", ")))
 	}
 
 	// Links section

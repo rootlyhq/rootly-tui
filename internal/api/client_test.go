@@ -851,16 +851,13 @@ func TestGetAlert(t *testing.T) {
 						{"key": "severity", "value": "high"},
 					},
 					"services": []map[string]interface{}{
-						{
-							"id":         "svc_1",
-							"attributes": map[string]interface{}{"name": "web-service"},
-						},
+						{"name": "web-service"},
 					},
 					"environments": []map[string]interface{}{
-						{
-							"id":         "env_1",
-							"attributes": map[string]interface{}{"name": "production"},
-						},
+						{"name": "production"},
+					},
+					"groups": []map[string]interface{}{
+						{"name": "platform-team"},
 					},
 					"responders": []map[string]interface{}{
 						{
@@ -938,6 +935,9 @@ func TestGetAlert(t *testing.T) {
 	}
 	if len(alert.Environments) != 1 || alert.Environments[0] != "production" {
 		t.Errorf("expected Environments=['production'], got %v", alert.Environments)
+	}
+	if len(alert.Groups) != 1 || alert.Groups[0] != "platform-team" {
+		t.Errorf("expected Groups=['platform-team'], got %v", alert.Groups)
 	}
 	if alert.UpdatedAt.IsZero() {
 		t.Error("expected UpdatedAt to be set")
