@@ -682,6 +682,14 @@ func TestGetIncident(t *testing.T) {
 							{"attributes": map[string]interface{}{"name": "Infrastructure"}},
 						},
 					},
+					"user": map[string]interface{}{
+						"data": map[string]interface{}{
+							"attributes": map[string]interface{}{
+								"name":  "Creator User",
+								"email": "creator@example.com",
+							},
+						},
+					},
 				},
 			},
 			"included": []map[string]interface{}{
@@ -790,6 +798,13 @@ func TestGetIncident(t *testing.T) {
 		if role.Name == "Communications Lead" && role.UserEmail != "jane.smith@example.com" {
 			t.Errorf("expected Communications Lead email='jane.smith@example.com', got %s", role.UserEmail)
 		}
+	}
+	// Check creator is populated
+	if incident.CreatedByName != "Creator User" {
+		t.Errorf("expected CreatedByName='Creator User', got %s", incident.CreatedByName)
+	}
+	if incident.CreatedByEmail != "creator@example.com" {
+		t.Errorf("expected CreatedByEmail='creator@example.com', got %s", incident.CreatedByEmail)
 	}
 	if len(incident.Causes) != 1 || incident.Causes[0] != "Configuration Error" {
 		t.Errorf("expected Causes=['Configuration Error'], got %v", incident.Causes)

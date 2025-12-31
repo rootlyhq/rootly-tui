@@ -323,7 +323,17 @@ func (m IncidentsModel) renderDetail(height int) string {
 	statusBadge := styles.RenderStatus(inc.Status)
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
-	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s\n\n", statusBadge, sevSignal, sevBadge))
+	b.WriteString(fmt.Sprintf("Status: %s  Severity: %s %s", statusBadge, sevSignal, sevBadge))
+
+	// Show creator if available (from detail view)
+	if inc.CreatedByName != "" {
+		creatorInfo := inc.CreatedByName
+		if inc.CreatedByEmail != "" {
+			creatorInfo += " " + styles.TextDim.Render(inc.CreatedByEmail)
+		}
+		b.WriteString(fmt.Sprintf("  Created by: %s", creatorInfo))
+	}
+	b.WriteString("\n\n")
 
 	// Description (shows the summary if different from title)
 	summaryClean := strings.ReplaceAll(inc.Summary, "\n", " ")

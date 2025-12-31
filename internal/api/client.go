@@ -54,6 +54,8 @@ type Incident struct {
 	Roles            []IncidentRole
 	CommanderName    string
 	CommunicatorName string
+	CreatedByName    string
+	CreatedByEmail   string
 	DetailLoaded     bool
 }
 
@@ -554,7 +556,7 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
 	}
-	url := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups", baseURL, id)
+	url := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups,user", baseURL, id)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -654,6 +656,15 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 						} `json:"attributes"`
 					} `json:"data"`
 				} `json:"functionalities"`
+				// User who created the incident
+				User *struct {
+					Data *struct {
+						Attributes struct {
+							Name  string `json:"name"`
+							Email string `json:"email"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"user"`
 			} `json:"attributes"`
 		} `json:"data"`
 		Included []struct {
@@ -710,6 +721,12 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 	}
 	if d.Attributes.ShortURL != nil {
 		incident.ShortURL = *d.Attributes.ShortURL
+	}
+
+	// Parse creator (user who created the incident)
+	if d.Attributes.User != nil && d.Attributes.User.Data != nil {
+		incident.CreatedByName = d.Attributes.User.Data.Attributes.Name
+		incident.CreatedByEmail = d.Attributes.User.Data.Attributes.Email
 	}
 
 	if t, err := time.Parse(time.RFC3339, d.Attributes.CreatedAt); err == nil {
