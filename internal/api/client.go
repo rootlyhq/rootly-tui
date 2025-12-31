@@ -167,11 +167,8 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) ValidateAPIKey(ctx context.Context) error {
-	pageSize := 1
-	params := &rootly.ListIncidentsParams{
-		PageSize: &pageSize,
-	}
-	resp, err := c.client.ListIncidentsWithResponse(ctx, params)
+	// Use /v1/users/me endpoint to validate the API key
+	resp, err := c.client.GetCurrentUserWithResponse(ctx)
 	if err != nil {
 		return fmt.Errorf("API request failed: %w", err)
 	}
@@ -221,6 +218,10 @@ func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult,
 	)
 	debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(resp.Body))
 
+	if resp.StatusCode() == 403 {
+		debug.Logger.Error("API forbidden", "status", resp.StatusCode())
+		return nil, fmt.Errorf("access denied: API key lacks 'read incidents' permission")
+	}
 	if resp.StatusCode() != 200 {
 		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
 		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
@@ -406,6 +407,10 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 	)
 	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(body))
 
+	if httpResp.StatusCode == 403 {
+		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
+		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
+	}
 	if httpResp.StatusCode != 200 {
 		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
@@ -584,6 +589,10 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	)
 	debug.Logger.Debug("Incident detail response body", "json", debug.PrettyJSON(body))
 
+	if httpResp.StatusCode == 403 {
+		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
+		return nil, fmt.Errorf("access denied: API key lacks 'read incidents' permission")
+	}
 	if httpResp.StatusCode != 200 {
 		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
@@ -882,6 +891,10 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	)
 	debug.Logger.Debug("Alert detail response body", "json", debug.PrettyJSON(body))
 
+	if httpResp.StatusCode == 403 {
+		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
+		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
+	}
 	if httpResp.StatusCode != 200 {
 		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)

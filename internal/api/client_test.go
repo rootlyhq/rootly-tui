@@ -79,7 +79,7 @@ func TestNewClientWithHTTPS(t *testing.T) {
 func TestValidateAPIKey(t *testing.T) {
 	defer setupTestEnv(t)()
 
-	// Create mock server
+	// Create mock server for /v1/users/me endpoint
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check authorization header
 		auth := r.Header.Get("Authorization")
@@ -88,11 +88,24 @@ func TestValidateAPIKey(t *testing.T) {
 			return
 		}
 
-		// Return valid response
+		// Check that it's the users/me endpoint
+		if r.URL.Path != "/v1/users/me" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// Return valid user response
 		w.Header().Set("Content-Type", "application/vnd.api+json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"data": []interface{}{},
+			"data": map[string]interface{}{
+				"id":   "123",
+				"type": "users",
+				"attributes": map[string]interface{}{
+					"name":  "Test User",
+					"email": "test@example.com",
+				},
+			},
 		})
 	}))
 	defer server.Close()
