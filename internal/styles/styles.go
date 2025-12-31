@@ -285,11 +285,11 @@ func RenderStatus(status string) string {
 	// Active/urgent - needs attention (red)
 	case "open", "triggered", "firing", "critical":
 		return StatusActive.Render(status)
-	// In progress - being worked on (yellow)
-	case "started", "in_progress", "acknowledged", "investigating", "identified", "monitoring":
+	// In progress/mitigated - being worked on (yellow)
+	case "started", "in_progress", "acknowledged", "investigating", "identified", "monitoring", "mitigated":
 		return StatusInProgress.Render(status)
 	// Resolved - completed successfully (green)
-	case "resolved", "mitigated", "fixed":
+	case "resolved", "fixed":
 		return StatusResolved.Render(status)
 	// Closed/cancelled - done but neutral (gray)
 	case "closed", "cancelled", "canceled", "suppressed":

@@ -317,8 +317,9 @@ func TestRenderStatusExtended(t *testing.T) {
 		{"investigating"},
 		// Resolved (green)
 		{"resolved"},
-		{"mitigated"},
 		{"fixed"},
+		// Mitigated is yellow (in progress category)
+		{"mitigated"},
 		// Muted (gray)
 		{"closed"},
 		{"cancelled"},
