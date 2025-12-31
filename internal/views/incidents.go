@@ -101,26 +101,26 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 			}
 			return m, nil
 
-		// Detail viewport scrolling (works regardless of focus)
-		case "ctrl+j":
+		// Detail viewport scrolling (Shift+j/k = J/K)
+		case "J":
 			if m.detailViewportReady {
 				m.detailViewport.ScrollDown(3)
 			}
 			return m, nil
 
-		case "ctrl+k":
+		case "K":
 			if m.detailViewportReady {
 				m.detailViewport.ScrollUp(3)
 			}
 			return m, nil
 
-		case "ctrl+d":
+		case "pgdown":
 			if m.detailViewportReady {
 				m.detailViewport.HalfPageDown()
 			}
 			return m, nil
 
-		case "ctrl+u":
+		case "pgup":
 			if m.detailViewportReady {
 				m.detailViewport.HalfPageUp()
 			}
@@ -131,13 +131,12 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateDimensions()
+	}
 
-	case tea.MouseMsg:
-		// Forward mouse messages to viewport for mouse wheel scrolling
-		if m.detailViewportReady {
-			m.detailViewport, cmd = m.detailViewport.Update(msg)
-			cmds = append(cmds, cmd)
-		}
+	// Forward all messages to viewport (handles mouse wheel, arrow keys, pgup/pgdown, etc.)
+	if m.detailViewportReady {
+		m.detailViewport, cmd = m.detailViewport.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -419,7 +418,7 @@ func (m *IncidentsModel) renderDetail(height int) string {
 	var footer string
 	if m.detailViewport.TotalLineCount() > m.detailViewport.VisibleLineCount() {
 		scrollPercent := int(m.detailViewport.ScrollPercent() * 100)
-		footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (Ctrl+j/k scroll) ───", scrollPercent))
+		footer = styles.TextDim.Render(fmt.Sprintf("─── %d%% (J/K or mouse scroll) ───", scrollPercent))
 	}
 
 	// Use viewport for rendering

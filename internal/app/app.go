@@ -295,6 +295,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.logs.SetDimensions(msg.Width, msg.Height)
 		return m, nil
 
+	case tea.MouseMsg:
+		// Forward mouse events to active view for viewport scrolling
+		if m.screen == ScreenMain && !m.help.Visible && !m.logs.Visible {
+			if m.activeTab == TabIncidents {
+				var cmd tea.Cmd
+				m.incidents, cmd = m.incidents.Update(msg)
+				cmds = append(cmds, cmd)
+			} else {
+				var cmd tea.Cmd
+				m.alerts, cmd = m.alerts.Update(msg)
+				cmds = append(cmds, cmd)
+			}
+		}
+		return m, tea.Batch(cmds...)
+
 	case spinner.TickMsg:
 		// Only continue spinner when actually loading
 		if m.loading || m.initialLoading || m.incidents.IsDetailLoading() || m.alerts.IsDetailLoading() {
