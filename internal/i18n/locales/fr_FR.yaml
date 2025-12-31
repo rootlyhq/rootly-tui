@@ -1,0 +1,185 @@
+# French (FR) translations
+
+# Setup screen
+welcome:
+  other: "Bienvenue dans Rootly TUI"
+enter_credentials:
+  other: "Entrez vos identifiants API Rootly pour commencer."
+api_endpoint:
+  other: "Point de terminaison API"
+api_key:
+  other: "Cle API"
+timezone:
+  other: "Fuseau horaire"
+language:
+  other: "Langue"
+use_arrows_to_change:
+  other: "(utilisez les fleches pour changer)"
+testing_connection:
+  other: "Test de connexion..."
+connection_success:
+  other: "Connexion reussie !"
+test_connection:
+  other: "Tester la connexion"
+save_and_continue:
+  other: "Enregistrer et continuer"
+setup_help:
+  other: "Tab/Fleches pour naviguer, Entree pour selectionner, q pour quitter"
+error:
+  other: "Erreur"
+
+# Incidents view
+incidents:
+  other: "INCIDENTS"
+loading_page:
+  other: "Chargement page {{.Page}}..."
+no_incidents:
+  other: "Aucun incident trouve"
+select_incident:
+  other: "Selectionnez un incident pour voir les details"
+description:
+  other: "Description"
+timeline:
+  other: "Chronologie"
+created:
+  other: "Cree"
+started:
+  other: "Demarre"
+detected:
+  other: "Detecte"
+acknowledged:
+  other: "Acquitte"
+mitigated:
+  other: "Attenue"
+resolved:
+  other: "Resolu"
+services:
+  other: "Services"
+environments:
+  other: "Environnements"
+teams:
+  other: "Equipes"
+roles:
+  other: "Roles"
+causes:
+  other: "Causes"
+types:
+  other: "Types"
+functionalities:
+  other: "Fonctionnalites"
+links:
+  other: "Liens"
+press_enter_details:
+  other: "Appuyez sur Entree pour plus de details"
+page:
+  other: "Page"
+status:
+  other: "Statut"
+severity:
+  other: "Severite"
+created_by:
+  other: "Cree par"
+
+# Alerts view
+alerts:
+  other: "ALERTES"
+no_alerts:
+  other: "Aucune alerte trouvee"
+select_alert:
+  other: "Selectionnez une alerte pour voir les details"
+source:
+  other: "Source"
+ended:
+  other: "Termine"
+urgency:
+  other: "Urgence"
+responders:
+  other: "Intervenants"
+labels:
+  other: "Etiquettes"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "Raccourcis clavier"
+navigation:
+  other: "Navigation"
+actions:
+  other: "Actions"
+general:
+  other: "General"
+move_down:
+  other: "Deplacer le curseur vers le bas"
+move_up:
+  other: "Deplacer le curseur vers le haut"
+go_to_first:
+  other: "Aller au premier element"
+go_to_last:
+  other: "Aller au dernier element"
+previous_page:
+  other: "Page precedente"
+next_page:
+  other: "Page suivante"
+switch_tabs:
+  other: "Basculer entre les onglets"
+refresh_data:
+  other: "Actualiser les donnees"
+view_details:
+  other: "Voir les details / Selectionner"
+open_url:
+  other: "Ouvrir l'URL dans le navigateur"
+view_logs:
+  other: "Voir les journaux de debogage"
+open_setup:
+  other: "Ouvrir la configuration"
+toggle_help:
+  other: "Afficher/masquer cette aide"
+quit:
+  other: "Quitter"
+press_to_close:
+  other: "Appuyez sur ? ou Echap pour fermer"
+
+# Logs view
+debug_logs:
+  other: "Journaux de debogage"
+no_logs_yet:
+  other: "Pas encore de journaux. Les journaux sont captures automatiquement."
+showing_lines:
+  other: "Affichage lignes"
+of:
+  other: "sur"
+copied:
+  other: "Copie !"
+clipboard_unavailable:
+  other: "Presse-papiers indisponible (voir journaux)"
+logs_help:
+  other: "j/k defiler | g/G haut/bas | a tout selectionner | y copier | c effacer | l/Echap fermer"
+
+# Help bar items
+navigate:
+  other: "naviguer"
+page_nav:
+  other: "page"
+switch:
+  other: "basculer"
+refresh:
+  other: "actualiser"
+open:
+  other: "ouvrir"
+logs:
+  other: "journaux"
+setup:
+  other: "config"
+help:
+  other: "aide"
+
+# App
+loading:
+  other: "Chargement..."
+refreshing:
+  other: "Actualisation..."

@@ -50,6 +50,12 @@ func TestSetupModelUpdateNavigation(t *testing.T) {
 		t.Errorf("expected focus on timezone after tab, got %v", m.focusIndex)
 	}
 
+	// Tab to language field
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	if m.focusIndex != FieldLanguage {
+		t.Errorf("expected focus on language after tab, got %v", m.focusIndex)
+	}
+
 	// Tab to buttons
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
 	if m.focusIndex != FieldButtons {
@@ -115,6 +121,12 @@ func TestSetupModelUpdateEnterMovesToNext(t *testing.T) {
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	if m.focusIndex != FieldTimezone {
 		t.Errorf("expected focus on timezone after enter, got %v", m.focusIndex)
+	}
+
+	// Enter moves to language
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if m.focusIndex != FieldLanguage {
+		t.Errorf("expected focus on language after enter, got %v", m.focusIndex)
 	}
 
 	// Enter moves to buttons
@@ -227,7 +239,7 @@ func TestSetupModelView(t *testing.T) {
 
 	view := m.View()
 
-	// Should contain key elements
+	// Should contain key elements (using i18n translations)
 	if !containsStr(view, "Welcome to Rootly TUI") {
 		t.Error("expected view to contain welcome message")
 	}
@@ -239,6 +251,9 @@ func TestSetupModelView(t *testing.T) {
 	}
 	if !containsStr(view, "Timezone") {
 		t.Error("expected view to contain Timezone label")
+	}
+	if !containsStr(view, "Language") {
+		t.Error("expected view to contain Language label")
 	}
 	if !containsStr(view, "Test Connection") {
 		t.Error("expected view to contain Test Connection button")
@@ -464,5 +479,61 @@ func TestSetupModelTimezoneAtBounds(t *testing.T) {
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
 	if m.timezoneIndex != len(m.timezones)-1 {
 		t.Error("expected timezone index to stay at end at right bound")
+	}
+}
+
+func TestSetupModelLanguageNavigation(t *testing.T) {
+	m := NewSetupModel()
+	m.focusIndex = FieldLanguage
+
+	// Should have at least 2 languages (en_US and fr_FR)
+	if len(m.languages) < 2 {
+		t.Fatal("expected at least 2 languages")
+	}
+
+	// Start at first language
+	m.languageIndex = 0
+
+	// Move right
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	if m.languageIndex != 1 {
+		t.Errorf("expected language index 1 after right, got %d", m.languageIndex)
+	}
+
+	// Move left
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	if m.languageIndex != 0 {
+		t.Errorf("expected language index 0 after left, got %d", m.languageIndex)
+	}
+
+	// Test 'h' and 'l' keys
+	m.languageIndex = 1
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}})
+	if m.languageIndex != 0 {
+		t.Errorf("expected language index 0 after 'h', got %d", m.languageIndex)
+	}
+
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	if m.languageIndex != 1 {
+		t.Errorf("expected language index 1 after 'l', got %d", m.languageIndex)
+	}
+}
+
+func TestSetupModelLanguageAtBounds(t *testing.T) {
+	m := NewSetupModel()
+	m.focusIndex = FieldLanguage
+
+	// Move to start
+	m.languageIndex = 0
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	if m.languageIndex != 0 {
+		t.Error("expected language index to stay at 0 at left bound")
+	}
+
+	// Move to end
+	m.languageIndex = len(m.languages) - 1
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	if m.languageIndex != len(m.languages)-1 {
+		t.Error("expected language index to stay at end at right bound")
 	}
 }

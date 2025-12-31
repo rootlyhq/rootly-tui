@@ -14,6 +14,7 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 	"github.com/rootlyhq/rootly-tui/internal/views"
 )
@@ -93,6 +94,10 @@ func New(version string) Model {
 		cfg, err := config.Load()
 		if err == nil && cfg.IsValid() {
 			m.cfg = cfg
+			// Set language from config
+			if cfg.Language != "" {
+				i18n.SetLanguage(i18n.Language(cfg.Language))
+			}
 			// Create the API client once here
 			client, err := api.NewClient(cfg)
 			if err == nil {
@@ -182,7 +187,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Refresh):
 			m.loading = true
-			m.statusMsg = "Refreshing..."
+			m.statusMsg = i18n.T("refreshing")
 			// Clear cache on manual refresh
 			if m.apiClient != nil {
 				m.apiClient.ClearCache()
@@ -304,6 +309,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cfg, err := config.Load()
 			if err == nil && cfg.IsValid() {
 				m.cfg = cfg
+				// Update language from saved config
+				if cfg.Language != "" {
+					i18n.SetLanguage(i18n.Language(cfg.Language))
+				}
 				client, err := api.NewClient(cfg)
 				if err == nil {
 					m.apiClient = client
@@ -368,7 +377,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.width == 0 {
-		return "Loading..."
+		return i18n.T("loading")
 	}
 
 	// Setup screen
@@ -386,7 +395,7 @@ func (m Model) View() string {
 
 	// Main content
 	if m.initialLoading {
-		b.WriteString(m.spinner.View() + " Loading...")
+		b.WriteString(m.spinner.View() + " " + i18n.T("loading"))
 	} else {
 		// Pass spinner to views for loading state
 		m.incidents.SetSpinner(m.spinner.View())
@@ -437,11 +446,11 @@ func (m Model) renderHeader() string {
 	// Tab indicators
 	var incidentsTab, alertsTab string
 	if m.activeTab == TabIncidents {
-		incidentsTab = styles.TabActive.Render("Incidents")
-		alertsTab = styles.TabInactive.Render("Alerts")
+		incidentsTab = styles.TabActive.Render(i18n.T("incidents"))
+		alertsTab = styles.TabInactive.Render(i18n.T("alerts"))
 	} else {
-		incidentsTab = styles.TabInactive.Render("Incidents")
-		alertsTab = styles.TabActive.Render("Alerts")
+		incidentsTab = styles.TabInactive.Render(i18n.T("incidents"))
+		alertsTab = styles.TabActive.Render(i18n.T("alerts"))
 	}
 	tabs := incidentsTab + " " + alertsTab
 

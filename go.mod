@@ -7,9 +7,11 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/log v0.4.2
+	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/rootlyhq/rootly-go v0.2.0
 	go.etcd.io/bbolt v1.4.3
 	golang.design/x/clipboard v0.7.1
+	golang.org/x/text v0.26.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -50,5 +52,4 @@ require (
 	golang.org/x/image v0.28.0 // indirect
 	golang.org/x/mobile v0.0.0-20250606033058-a2a15c67f36f // indirect
 	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
 )

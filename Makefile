@@ -51,7 +51,7 @@ coverage-html: coverage
 
 # Run linter
 lint:
-	golangci-lint run ./...
+	@which golangci-lint > /dev/null 2>&1 && golangci-lint run ./... || ~/go/bin/golangci-lint run ./...
 
 # Format code
 fmt:

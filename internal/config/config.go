@@ -21,9 +21,11 @@ type Config struct {
 	APIKey   string `yaml:"api_key"`
 	Endpoint string `yaml:"endpoint"`
 	Timezone string `yaml:"timezone"`
+	Language string `yaml:"language"`
 }
 
 const DefaultTimezone = "UTC"
+const DefaultLanguage = "en_US"
 
 func Dir() string {
 	home, err := os.UserHomeDir()
@@ -64,6 +66,10 @@ func Load() (*Config, error) {
 		cfg.Timezone = DefaultTimezone
 	}
 
+	if cfg.Language == "" {
+		cfg.Language = DefaultLanguage
+	}
+
 	return &cfg, nil
 }
 
@@ -74,6 +80,10 @@ func Save(cfg *Config) error {
 
 	if cfg.Timezone == "" {
 		cfg.Timezone = DefaultTimezone
+	}
+
+	if cfg.Language == "" {
+		cfg.Language = DefaultLanguage
 	}
 
 	if err := os.MkdirAll(Dir(), 0700); err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -21,6 +22,7 @@ const (
 	FieldEndpoint SetupField = iota
 	FieldAPIKey
 	FieldTimezone
+	FieldLanguage
 	FieldButtons
 )
 
@@ -34,6 +36,8 @@ type SetupModel struct {
 	apiKey        textinput.Model
 	timezones     []string // Available timezones from system
 	timezoneIndex int      // Index into timezones
+	languages     []string // Available languages
+	languageIndex int      // Index into languages
 	spinner       spinner.Model
 	focusIndex    SetupField
 	buttonIndex   int // 0 = Test, 1 = Save
@@ -81,6 +85,16 @@ func NewSetupModel() SetupModel {
 		}
 	}
 
+	// Load available languages
+	languages := i18n.ListLanguages()
+
+	// Detect language and find index in list
+	detectedLang := i18n.DetectLanguage()
+	langIndex := i18n.LanguageIndex(string(detectedLang))
+
+	// Set the detected language as active
+	i18n.SetLanguage(detectedLang)
+
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = styles.Spinner
@@ -90,6 +104,8 @@ func NewSetupModel() SetupModel {
 		apiKey:        apiKeyInput,
 		timezones:     timezones,
 		timezoneIndex: tzIndex,
+		languages:     languages,
+		languageIndex: langIndex,
 		spinner:       s,
 		focusIndex:    FieldEndpoint,
 		buttonIndex:   0,
@@ -131,6 +147,10 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 				m.buttonIndex--
 			} else if m.focusIndex == FieldTimezone && m.timezoneIndex > 0 {
 				m.timezoneIndex--
+			} else if m.focusIndex == FieldLanguage && m.languageIndex > 0 {
+				m.languageIndex--
+				// Update active language immediately for UI preview
+				i18n.SetLanguage(i18n.Language(m.languages[m.languageIndex]))
 			}
 			return m, nil
 
@@ -139,6 +159,10 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 				m.buttonIndex++
 			} else if m.focusIndex == FieldTimezone && m.timezoneIndex < len(m.timezones)-1 {
 				m.timezoneIndex++
+			} else if m.focusIndex == FieldLanguage && m.languageIndex < len(m.languages)-1 {
+				m.languageIndex++
+				// Update active language immediately for UI preview
+				i18n.SetLanguage(i18n.Language(m.languages[m.languageIndex]))
 			}
 			return m, nil
 
@@ -231,11 +255,18 @@ func (m SetupModel) doSaveConfig() tea.Cmd {
 		timezone = m.timezones[m.timezoneIndex]
 	}
 
+	// Capture language value
+	language := string(i18n.DefaultLanguage)
+	if m.languageIndex >= 0 && m.languageIndex < len(m.languages) {
+		language = m.languages[m.languageIndex]
+	}
+
 	return func() tea.Msg {
 		cfg := &config.Config{
 			Endpoint: m.endpoint.Value(),
 			APIKey:   m.apiKey.Value(),
 			Timezone: timezone,
+			Language: language,
 		}
 
 		if err := config.Save(cfg); err != nil {
@@ -274,17 +305,17 @@ func (m SetupModel) View() string {
 	var b strings.Builder
 
 	// Title
-	title := styles.DialogTitle.Render("Welcome to Rootly TUI")
+	title := styles.DialogTitle.Render(i18n.T("welcome"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
 	// Description
-	desc := styles.TextDim.Render("Enter your Rootly API credentials to get started.")
+	desc := styles.TextDim.Render(i18n.T("enter_credentials"))
 	b.WriteString(desc)
 	b.WriteString("\n\n")
 
 	// Endpoint field
-	endpointLabel := styles.InputLabel.Render("API Endpoint")
+	endpointLabel := styles.InputLabel.Render(i18n.T("api_endpoint"))
 	b.WriteString(endpointLabel)
 	b.WriteString("\n")
 	if m.focusIndex == FieldEndpoint {
@@ -295,7 +326,7 @@ func (m SetupModel) View() string {
 	b.WriteString("\n\n")
 
 	// API Key field
-	apiKeyLabel := styles.InputLabel.Render("API Key")
+	apiKeyLabel := styles.InputLabel.Render(i18n.T("api_key"))
 	b.WriteString(apiKeyLabel)
 	b.WriteString("\n")
 	if m.focusIndex == FieldAPIKey {
@@ -306,10 +337,10 @@ func (m SetupModel) View() string {
 	b.WriteString("\n\n")
 
 	// Timezone selector
-	timezoneLabel := styles.InputLabel.Render("Timezone")
+	timezoneLabel := styles.InputLabel.Render(i18n.T("timezone"))
 	b.WriteString(timezoneLabel)
 	b.WriteString(" ")
-	b.WriteString(styles.TextDim.Render("(use ←/→ to change)"))
+	b.WriteString(styles.TextDim.Render(i18n.T("use_arrows_to_change")))
 	b.WriteString("\n")
 
 	// Show the selected timezone with navigation hints
@@ -325,41 +356,61 @@ func (m SetupModel) View() string {
 	}
 	b.WriteString("\n\n")
 
+	// Language selector
+	languageLabel := styles.InputLabel.Render(i18n.T("language"))
+	b.WriteString(languageLabel)
+	b.WriteString(" ")
+	b.WriteString(styles.TextDim.Render(i18n.T("use_arrows_to_change")))
+	b.WriteString("\n")
+
+	// Show the selected language with navigation hints
+	selectedLang := i18n.LanguageName(string(i18n.DefaultLanguage))
+	if m.languageIndex >= 0 && m.languageIndex < len(m.languages) {
+		selectedLang = i18n.LanguageName(m.languages[m.languageIndex])
+	}
+	langDisplay := fmt.Sprintf("◀ %s ▶", selectedLang)
+	if m.focusIndex == FieldLanguage {
+		b.WriteString(styles.InputFieldFocused.Render(langDisplay))
+	} else {
+		b.WriteString(styles.InputField.Render(langDisplay))
+	}
+	b.WriteString("\n\n")
+
 	// Test result
 	if m.testing {
-		b.WriteString(m.spinner.View() + " Testing connection...")
+		b.WriteString(m.spinner.View() + " " + i18n.T("testing_connection"))
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultSuccess {
-		b.WriteString(styles.SuccessMsg.Render("Connection successful!"))
+		b.WriteString(styles.SuccessMsg.Render(i18n.T("connection_success")))
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultError {
-		b.WriteString(styles.Error.Render("Error: " + m.testError))
+		b.WriteString(styles.Error.Render(i18n.T("error") + ": " + m.testError))
 		b.WriteString("\n\n")
 	}
 
 	// Buttons
 	var testBtn, saveBtn string
 	if m.focusIndex == FieldButtons && m.buttonIndex == 0 {
-		testBtn = styles.ButtonFocused.Render("Test Connection")
+		testBtn = styles.ButtonFocused.Render(i18n.T("test_connection"))
 	} else {
-		testBtn = styles.Button.Render("Test Connection")
+		testBtn = styles.Button.Render(i18n.T("test_connection"))
 	}
 
 	if m.focusIndex == FieldButtons && m.buttonIndex == 1 {
 		if m.testResult == testResultSuccess {
-			saveBtn = styles.ButtonFocused.Render("Save & Continue")
+			saveBtn = styles.ButtonFocused.Render(i18n.T("save_and_continue"))
 		} else {
-			saveBtn = styles.Button.Render("Save & Continue")
+			saveBtn = styles.Button.Render(i18n.T("save_and_continue"))
 		}
 	} else {
-		saveBtn = styles.Button.Render("Save & Continue")
+		saveBtn = styles.Button.Render(i18n.T("save_and_continue"))
 	}
 
 	b.WriteString(testBtn + "  " + saveBtn)
 	b.WriteString("\n\n")
 
 	// Help
-	help := styles.HelpBar.Render("Tab/Arrow keys to navigate, Enter to select, q to quit")
+	help := styles.HelpBar.Render(i18n.T("setup_help"))
 	b.WriteString(help)
 
 	// Wrap in dialog

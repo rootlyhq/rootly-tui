@@ -1,0 +1,185 @@
+# English (US) translations
+
+# Setup screen
+welcome:
+  other: "Welcome to Rootly TUI"
+enter_credentials:
+  other: "Enter your Rootly API credentials to get started."
+api_endpoint:
+  other: "API Endpoint"
+api_key:
+  other: "API Key"
+timezone:
+  other: "Timezone"
+language:
+  other: "Language"
+use_arrows_to_change:
+  other: "(use arrows to change)"
+testing_connection:
+  other: "Testing connection..."
+connection_success:
+  other: "Connection successful!"
+test_connection:
+  other: "Test Connection"
+save_and_continue:
+  other: "Save & Continue"
+setup_help:
+  other: "Tab/Arrow keys to navigate, Enter to select, q to quit"
+error:
+  other: "Error"
+
+# Incidents view
+incidents:
+  other: "INCIDENTS"
+loading_page:
+  other: "Loading page {{.Page}}..."
+no_incidents:
+  other: "No incidents found"
+select_incident:
+  other: "Select an incident to view details"
+description:
+  other: "Description"
+timeline:
+  other: "Timeline"
+created:
+  other: "Created"
+started:
+  other: "Started"
+detected:
+  other: "Detected"
+acknowledged:
+  other: "Acknowledged"
+mitigated:
+  other: "Mitigated"
+resolved:
+  other: "Resolved"
+services:
+  other: "Services"
+environments:
+  other: "Environments"
+teams:
+  other: "Teams"
+roles:
+  other: "Roles"
+causes:
+  other: "Causes"
+types:
+  other: "Types"
+functionalities:
+  other: "Functionalities"
+links:
+  other: "Links"
+press_enter_details:
+  other: "Press Enter for more details"
+page:
+  other: "Page"
+status:
+  other: "Status"
+severity:
+  other: "Severity"
+created_by:
+  other: "Created by"
+
+# Alerts view
+alerts:
+  other: "ALERTS"
+no_alerts:
+  other: "No alerts found"
+select_alert:
+  other: "Select an alert to view details"
+source:
+  other: "Source"
+ended:
+  other: "Ended"
+urgency:
+  other: "Urgency"
+responders:
+  other: "Responders"
+labels:
+  other: "Labels"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "Keyboard Shortcuts"
+navigation:
+  other: "Navigation"
+actions:
+  other: "Actions"
+general:
+  other: "General"
+move_down:
+  other: "Move cursor down"
+move_up:
+  other: "Move cursor up"
+go_to_first:
+  other: "Go to first item"
+go_to_last:
+  other: "Go to last item"
+previous_page:
+  other: "Previous page"
+next_page:
+  other: "Next page"
+switch_tabs:
+  other: "Switch between tabs"
+refresh_data:
+  other: "Refresh data"
+view_details:
+  other: "View details / Select"
+open_url:
+  other: "Open URL in browser"
+view_logs:
+  other: "View debug logs"
+open_setup:
+  other: "Open setup / settings"
+toggle_help:
+  other: "Toggle this help"
+quit:
+  other: "Quit"
+press_to_close:
+  other: "Press ? or Esc to close"
+
+# Logs view
+debug_logs:
+  other: "Debug Logs"
+no_logs_yet:
+  other: "No logs yet. Logs are captured automatically."
+showing_lines:
+  other: "Showing lines"
+of:
+  other: "of"
+copied:
+  other: "Copied!"
+clipboard_unavailable:
+  other: "Clipboard unavailable (see logs)"
+logs_help:
+  other: "j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close"
+
+# Help bar items
+navigate:
+  other: "navigate"
+page_nav:
+  other: "page"
+switch:
+  other: "switch"
+refresh:
+  other: "refresh"
+open:
+  other: "open"
+logs:
+  other: "logs"
+setup:
+  other: "setup"
+help:
+  other: "help"
+
+# App
+loading:
+  other: "Loading..."
+refreshing:
+  other: "Refreshing..."
