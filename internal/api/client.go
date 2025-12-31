@@ -139,7 +139,7 @@ func (c *Client) ValidateAPIKey(ctx context.Context) error {
 }
 
 func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
-	pageSize := 50
+	pageSize := 25
 
 	// Build cache key with parameters
 	cacheKey := NewCacheKey(CacheKeyPrefixIncidents).
@@ -300,7 +300,7 @@ func (c *Client) ListIncidents(ctx context.Context) ([]Incident, error) {
 }
 
 func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
-	pageSize := 50
+	pageSize := 25
 
 	// Build cache key with parameters
 	cacheKey := NewCacheKey(CacheKeyPrefixAlerts).
