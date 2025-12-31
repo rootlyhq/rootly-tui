@@ -81,7 +81,7 @@ func NewAlertsModel() AlertsModel {
 
 	t := table.New(columns).
 		Focused(true).
-		BorderRounded().
+		Border(borderNoDividers()).
 		WithBaseStyle(lipgloss.NewStyle().Foreground(styles.ColorText)).
 		HighlightStyle(lipgloss.NewStyle().Background(styles.ColorHighlight).Bold(true)).
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))

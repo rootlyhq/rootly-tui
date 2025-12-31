@@ -69,6 +69,29 @@ type IncidentsModel struct {
 	table table.Model
 }
 
+// borderNoDividers creates a rounded border without vertical column dividers
+func borderNoDividers() table.Border {
+	return table.Border{
+		Top:    "─",
+		Left:   "│",
+		Right:  "│",
+		Bottom: "─",
+
+		TopRight:    "╮",
+		TopLeft:     "╭",
+		BottomRight: "╯",
+		BottomLeft:  "╰",
+
+		TopJunction:    "─",
+		LeftJunction:   "│",
+		RightJunction:  "│",
+		BottomJunction: "─",
+		InnerJunction:  " ",
+
+		InnerDivider: " ", // Space instead of vertical line between columns
+	}
+}
+
 func NewIncidentsModel() IncidentsModel {
 	// Define table columns with i18n headers using evertras/bubble-table
 	columns := []table.Column{
@@ -80,7 +103,7 @@ func NewIncidentsModel() IncidentsModel {
 
 	t := table.New(columns).
 		Focused(true).
-		BorderRounded().
+		Border(borderNoDividers()).
 		WithBaseStyle(lipgloss.NewStyle().Foreground(styles.ColorText)).
 		HighlightStyle(lipgloss.NewStyle().Background(styles.ColorHighlight).Bold(true)).
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
