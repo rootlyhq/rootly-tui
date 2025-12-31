@@ -671,6 +671,9 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 			ID         string `json:"id"`
 			Type       string `json:"type"`
 			Attributes struct {
+				// For groups, services, environments
+				Name string `json:"name"`
+				// For incident_role_assignments
 				IncidentRole *struct {
 					Data *struct {
 						Attributes struct {
@@ -763,28 +766,40 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 			incident.Teams = append(incident.Teams, g.Attributes.Name)
 		}
 	}
-	// Parse roles from included array (JSON:API format)
+	// Parse included array (JSON:API format) for roles, groups, services, environments
 	for _, inc := range result.Included {
-		if inc.Type != "incident_role_assignments" {
-			continue
-		}
-		var roleName, userName, userEmail string
-		if inc.Attributes.IncidentRole != nil && inc.Attributes.IncidentRole.Data != nil {
-			roleName = inc.Attributes.IncidentRole.Data.Attributes.Name
-		}
-		if inc.Attributes.User != nil && inc.Attributes.User.Data != nil {
-			userName = inc.Attributes.User.Data.Attributes.Name
-			userEmail = inc.Attributes.User.Data.Attributes.Email
-		}
-		if roleName != "" {
-			role := IncidentRole{Name: roleName, UserName: userName, UserEmail: userEmail}
-			incident.Roles = append(incident.Roles, role)
-			// Extract commander and communicator
-			if strings.EqualFold(roleName, "commander") && userName != "" {
-				incident.CommanderName = userName
+		switch inc.Type {
+		case "incident_role_assignments":
+			var roleName, userName, userEmail string
+			if inc.Attributes.IncidentRole != nil && inc.Attributes.IncidentRole.Data != nil {
+				roleName = inc.Attributes.IncidentRole.Data.Attributes.Name
 			}
-			if strings.Contains(strings.ToLower(roleName), "communications") && userName != "" {
-				incident.CommunicatorName = userName
+			if inc.Attributes.User != nil && inc.Attributes.User.Data != nil {
+				userName = inc.Attributes.User.Data.Attributes.Name
+				userEmail = inc.Attributes.User.Data.Attributes.Email
+			}
+			if roleName != "" {
+				role := IncidentRole{Name: roleName, UserName: userName, UserEmail: userEmail}
+				incident.Roles = append(incident.Roles, role)
+				// Extract commander and communicator
+				if strings.EqualFold(roleName, "commander") && userName != "" {
+					incident.CommanderName = userName
+				}
+				if strings.Contains(strings.ToLower(roleName), "communications") && userName != "" {
+					incident.CommunicatorName = userName
+				}
+			}
+		case "groups":
+			if inc.Attributes.Name != "" {
+				incident.Teams = append(incident.Teams, inc.Attributes.Name)
+			}
+		case "services":
+			if inc.Attributes.Name != "" {
+				incident.Services = append(incident.Services, inc.Attributes.Name)
+			}
+		case "environments":
+			if inc.Attributes.Name != "" {
+				incident.Environments = append(incident.Environments, inc.Attributes.Name)
 			}
 		}
 	}
