@@ -182,7 +182,7 @@ setup:
 help:
   other: "aide"
 about:
-  other: "infos"
+  other: "à propos"
 quit_action:
   other: "quitter"
 
