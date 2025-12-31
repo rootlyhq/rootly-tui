@@ -181,6 +181,8 @@ setup:
   other: "सेटअप"
 help:
   other: "सहायता"
+about:
+  other: "परिचय"
 quit_action:
   other: "बाहर"
 
@@ -191,3 +193,21 @@ loading:
   other: "लोड हो रहा है..."
 refreshing:
   other: "रीफ्रेश हो रहा है..."
+
+# About view
+about_title:
+  other: "परिचय"
+about_description:
+  other: "Rootly घटनाओं और अलर्ट देखने के लिए टर्मिनल इंटरफ़ेस।"
+system_info:
+  other: "सिस्टम"
+go_version:
+  other: "Go"
+platform:
+  other: "प्लेटफ़ॉर्म"
+documentation:
+  other: "दस्तावेज़"
+press_a_to_close:
+  other: "बंद करने के लिए A या Esc दबाएं"
+view_about:
+  other: "परिचय"

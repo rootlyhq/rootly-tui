@@ -58,6 +58,7 @@ func (m HelpModel) View() string {
 	b.WriteString("\n")
 	b.WriteString(renderHelpLine("l", i18n.T("view_logs")))
 	b.WriteString(renderHelpLine("s", i18n.T("open_setup")))
+	b.WriteString(renderHelpLine("A", i18n.T("view_about")))
 	b.WriteString(renderHelpLine("?", i18n.T("toggle_help")))
 	b.WriteString(renderHelpLine("q / Ctrl+C", i18n.T("quit")))
 	b.WriteString("\n\n")
@@ -90,6 +91,7 @@ func RenderHelpBar(width int, hasSelection, isLoading bool) string {
 	items = append(items,
 		styles.RenderHelpItem("l", i18n.T("logs")),
 		styles.RenderHelpItem("s", i18n.T("setup")),
+		styles.RenderHelpItem("A", i18n.T("about")),
 		styles.RenderHelpItem("?", i18n.T("help")),
 		styles.RenderHelpItem("q", i18n.T("quit_action")),
 	)

@@ -74,6 +74,9 @@ var (
 
 	// fileOutput holds file writer if logging to file
 	fileOutput io.Writer
+
+	// LogFilePath is the path to the log file (if set via --log)
+	LogFilePath string
 )
 
 func init() {
@@ -118,8 +121,111 @@ func SetLogFile(path string) error {
 		return err
 	}
 	fileOutput = f
+	LogFilePath = path
 	Logger.SetOutput(io.MultiWriter(LogBuffer, f))
 	return nil
+}
+
+// MaxLogLines is the maximum number of lines to read from log file
+const MaxLogLines = 1000
+
+// ReadLogFile reads the last MaxLogLines lines from the log file
+func ReadLogFile() (string, error) {
+	if LogFilePath == "" {
+		return "", nil
+	}
+
+	f, err := os.Open(LogFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = f.Close() }()
+
+	// Get file size
+	stat, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+
+	// For small files, read the whole thing
+	fileSize := stat.Size()
+	if fileSize < 100*1024 { // Less than 100KB
+		data, err := io.ReadAll(f)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	}
+
+	// For larger files, read from the end (tail)
+	// Start with last 100KB and increase if needed
+	bufSize := int64(100 * 1024)
+	if bufSize > fileSize {
+		bufSize = fileSize
+	}
+
+	// Seek to near end
+	_, err = f.Seek(-bufSize, io.SeekEnd)
+	if err != nil {
+		// If seek fails, read from start
+		_, _ = f.Seek(0, io.SeekStart)
+	}
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+
+	content := string(data)
+
+	// Split into lines and keep only the last MaxLogLines
+	lines := splitLines(content)
+	if len(lines) > MaxLogLines {
+		lines = lines[len(lines)-MaxLogLines:]
+	}
+
+	return joinLines(lines), nil
+}
+
+// splitLines splits content into lines, handling both \n and \r\n
+func splitLines(content string) []string {
+	var lines []string
+	start := 0
+	for i := 0; i < len(content); i++ {
+		if content[i] == '\n' {
+			line := content[start:i]
+			if line != "" && line[len(line)-1] == '\r' {
+				line = line[:len(line)-1]
+			}
+			lines = append(lines, line)
+			start = i + 1
+		}
+	}
+	// Handle last line without newline
+	if start < len(content) {
+		lines = append(lines, content[start:])
+	}
+	return lines
+}
+
+// joinLines joins lines back with newlines
+func joinLines(lines []string) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	var b bytes.Buffer
+	for i, line := range lines {
+		b.WriteString(line)
+		if i < len(lines)-1 {
+			b.WriteByte('\n')
+		}
+	}
+	return b.String()
+}
+
+// HasLogFile returns true if logging to a file
+func HasLogFile() bool {
+	return LogFilePath != ""
 }
 
 // GetLogs returns all log entries from the buffer

@@ -10,6 +10,7 @@ type KeyMap struct {
 	Help     key.Binding
 	Logs     key.Binding
 	Setup    key.Binding
+	About    key.Binding
 	Quit     key.Binding
 	Enter    key.Binding
 	Open     key.Binding
@@ -48,6 +49,10 @@ func DefaultKeyMap() KeyMap {
 		Setup: key.NewBinding(
 			key.WithKeys("s"),
 			key.WithHelp("s", "setup"),
+		),
+		About: key.NewBinding(
+			key.WithKeys("A"),
+			key.WithHelp("A", "about"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("q", "ctrl+c"),

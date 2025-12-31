@@ -181,6 +181,8 @@ setup:
   other: "config"
 help:
   other: "ajuda"
+about:
+  other: "sobre"
 quit_action:
   other: "sair"
 
@@ -191,3 +193,21 @@ loading:
   other: "Carregando..."
 refreshing:
   other: "Atualizando..."
+
+# About view
+about_title:
+  other: "Sobre"
+about_description:
+  other: "Uma interface de terminal para visualizar incidentes e alertas do Rootly."
+system_info:
+  other: "Sistema"
+go_version:
+  other: "Go"
+platform:
+  other: "Plataforma"
+documentation:
+  other: "Documentacao"
+press_a_to_close:
+  other: "Pressione A ou Esc para fechar"
+view_about:
+  other: "Sobre"

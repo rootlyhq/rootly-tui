@@ -181,6 +181,8 @@ setup:
   other: "Einstellungen"
 help:
   other: "Hilfe"
+about:
+  other: "Info"
 quit_action:
   other: "beenden"
 
@@ -191,3 +193,21 @@ loading:
   other: "Laden..."
 refreshing:
   other: "Aktualisieren..."
+
+# About view
+about_title:
+  other: "Info"
+about_description:
+  other: "Eine Terminal-Oberflaeche zur Anzeige von Rootly Vorfaellen und Warnungen."
+system_info:
+  other: "System"
+go_version:
+  other: "Go"
+platform:
+  other: "Plattform"
+documentation:
+  other: "Dokumentation"
+press_a_to_close:
+  other: "A oder Esc zum Schliessen"
+view_about:
+  other: "Info"

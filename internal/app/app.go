@@ -59,6 +59,7 @@ type Model struct {
 	alerts    views.AlertsModel
 	help      views.HelpModel
 	logs      views.LogsModel
+	about     views.AboutModel
 	spinner   spinner.Model
 
 	// Loading state
@@ -86,6 +87,7 @@ func New(version string) Model {
 		alerts:    views.NewAlertsModel(),
 		help:      views.NewHelpModel(),
 		logs:      views.NewLogsModel(),
+		about:     views.NewAboutModel(version),
 		spinner:   s,
 		urlOpener: defaultURLOpener,
 	}
@@ -149,6 +151,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+		// Handle about overlay
+		if m.about.Visible {
+			if key.Matches(msg, m.keys.About) || msg.String() == "esc" {
+				m.about.Toggle()
+				return m, nil
+			}
+			return m, nil
+		}
+
 		// Handle help overlay
 		if m.help.Visible {
 			if key.Matches(msg, m.keys.Help) || msg.String() == "esc" {
@@ -174,6 +185,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Logs):
 			m.logs.Toggle()
+			if m.logs.Visible {
+				return m, m.logs.StartAutoRefresh()
+			}
+			return m, nil
+
+		case key.Matches(msg, m.keys.About):
+			m.about.Toggle()
 			return m, nil
 
 		case key.Matches(msg, m.keys.Setup):
@@ -307,8 +325,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.MouseMsg:
+		// Forward mouse events to logs view when visible
+		if m.logs.Visible {
+			var cmd tea.Cmd
+			m.logs, cmd = m.logs.Update(msg)
+			cmds = append(cmds, cmd)
+			return m, tea.Batch(cmds...)
+		}
 		// Forward mouse events to active view for viewport scrolling
-		if m.screen == ScreenMain && !m.help.Visible && !m.logs.Visible {
+		if m.screen == ScreenMain && !m.help.Visible {
 			if m.activeTab == TabIncidents {
 				var cmd tea.Cmd
 				m.incidents, cmd = m.incidents.Update(msg)
@@ -353,6 +378,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(m.spinner.Tick, m.loadData())
 				}
 			}
+		}
+		return m, nil
+
+	// Logs refresh message
+	case views.LogsRefreshMsg:
+		if m.logs.Visible {
+			var cmd tea.Cmd
+			m.logs, cmd = m.logs.Update(msg)
+			return m, cmd
 		}
 		return m, nil
 
@@ -471,6 +505,12 @@ func (m Model) View() string {
 	if m.logs.Visible {
 		logsDialog := m.logs.View()
 		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, logsDialog)
+	}
+
+	// About overlay
+	if m.about.Visible {
+		aboutDialog := m.about.View()
+		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, aboutDialog)
 	}
 
 	return content

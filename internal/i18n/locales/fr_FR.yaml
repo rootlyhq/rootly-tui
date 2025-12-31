@@ -181,6 +181,8 @@ setup:
   other: "config"
 help:
   other: "aide"
+about:
+  other: "infos"
 quit_action:
   other: "quitter"
 
@@ -191,3 +193,21 @@ loading:
   other: "Chargement..."
 refreshing:
   other: "Actualisation..."
+
+# About view
+about_title:
+  other: "À propos"
+about_description:
+  other: "Une interface terminal pour visualiser les incidents et alertes Rootly."
+system_info:
+  other: "Système"
+go_version:
+  other: "Go"
+platform:
+  other: "Plateforme"
+documentation:
+  other: "Documentation"
+press_a_to_close:
+  other: "Appuyez sur A ou Échap pour fermer"
+view_about:
+  other: "À propos"

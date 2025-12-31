@@ -181,6 +181,8 @@ setup:
   other: "设置"
 help:
   other: "帮助"
+about:
+  other: "关于"
 quit_action:
   other: "退出"
 
@@ -191,3 +193,21 @@ loading:
   other: "加载中..."
 refreshing:
   other: "刷新中..."
+
+# About view
+about_title:
+  other: "关于"
+about_description:
+  other: "用于查看 Rootly 事件和警报的终端界面。"
+system_info:
+  other: "系统"
+go_version:
+  other: "Go"
+platform:
+  other: "平台"
+documentation:
+  other: "文档"
+press_a_to_close:
+  other: "按 A 或 Esc 关闭"
+view_about:
+  other: "关于"

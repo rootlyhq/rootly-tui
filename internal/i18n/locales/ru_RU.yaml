@@ -181,6 +181,8 @@ setup:
   other: "настройки"
 help:
   other: "справка"
+about:
+  other: "о прог."
 quit_action:
   other: "выход"
 
@@ -191,3 +193,21 @@ loading:
   other: "Загрузка..."
 refreshing:
   other: "Обновление..."
+
+# About view
+about_title:
+  other: "О программе"
+about_description:
+  other: "Терминальный интерфейс для просмотра инцидентов и оповещений Rootly."
+system_info:
+  other: "Система"
+go_version:
+  other: "Go"
+platform:
+  other: "Платформа"
+documentation:
+  other: "Документация"
+press_a_to_close:
+  other: "Нажмите A или Esc для закрытия"
+view_about:
+  other: "О программе"

@@ -181,6 +181,8 @@ setup:
   other: "設定"
 help:
   other: "ヘルプ"
+about:
+  other: "情報"
 quit_action:
   other: "終了"
 
@@ -191,3 +193,21 @@ loading:
   other: "読み込み中..."
 refreshing:
   other: "更新中..."
+
+# About view
+about_title:
+  other: "情報"
+about_description:
+  other: "Rootlyのインシデントとアラートを表示するターミナルUI。"
+system_info:
+  other: "システム"
+go_version:
+  other: "Go"
+platform:
+  other: "プラットフォーム"
+documentation:
+  other: "ドキュメント"
+press_a_to_close:
+  other: "A または Esc で閉じる"
+view_about:
+  other: "情報"

@@ -796,7 +796,7 @@ func TestModelMouseMsg(t *testing.T) {
 	m.incidents.SetDimensions(116, 30)
 
 	// Send mouse message - should not panic
-	newModel, _ := m.Update(tea.MouseMsg{Type: tea.MouseMotion, X: 50, Y: 20})
+	newModel, _ := m.Update(tea.MouseMsg{Action: tea.MouseActionMotion, X: 50, Y: 20})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.design/x/clipboard"
@@ -13,43 +14,56 @@ import (
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
+// LogsRefreshMsg triggers a log refresh
+type LogsRefreshMsg struct{}
+
 // LogsStatusClearMsg is sent to clear the status message
 type LogsStatusClearMsg struct{}
 
 var (
-	logDebugStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))  // Gray
-	logInfoStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // Blue
-	logWarnStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("11")) // Yellow
-	logErrorStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))  // Red
-	logSelectedStyle = lipgloss.NewStyle().Background(lipgloss.Color("4")).Foreground(lipgloss.Color("15"))
+	logDebugStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))  // Gray
+	logInfoStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // Blue
+	logWarnStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("11")) // Yellow
+	logErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))  // Red
 )
 
 type LogsModel struct {
-	Visible    bool
-	width      int
-	height     int
-	scrollPos  int
-	logs       []string
-	totalLines int
+	Visible  bool
+	width    int
+	height   int
+	viewport viewport.Model
+
+	// Content tracking
+	content    string
+	lineCount  int
+	lastLength int // Track file size for change detection
+
+	// Auto-tail mode
+	autoTail bool
 
 	// Mouse selection
 	selecting    bool
-	selectStart  int // Line index where selection started
-	selectEnd    int // Line index where selection ended
+	selectStart  int
+	selectEnd    int
 	hasSelection bool
-	dialogTop    int // Y offset of dialog content for mouse coordinate translation
 
 	// Status message
-	statusMsg     string
-	statusTimeout int
+	statusMsg string
 
-	// Clipboard availability (requires CGO_ENABLED=1)
+	// Clipboard availability
 	clipboardChecked   bool
 	clipboardAvailable bool
 }
 
 func NewLogsModel() LogsModel {
-	return LogsModel{}
+	vp := viewport.New(80, 20)
+	vp.Style = lipgloss.NewStyle()
+	vp.MouseWheelEnabled = true
+
+	return LogsModel{
+		viewport: vp,
+		autoTail: true, // Auto-scroll to bottom by default
+	}
 }
 
 func (m LogsModel) Init() tea.Cmd {
@@ -61,9 +75,15 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 		return m, nil
 	}
 
-	var cmd tea.Cmd
+	var cmds []tea.Cmd
+	var vpCmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case LogsRefreshMsg:
+		m.loadContent()
+		// Continue ticking for auto-refresh
+		cmds = append(cmds, m.scheduleRefresh())
+
 	case LogsStatusClearMsg:
 		m.statusMsg = ""
 		return m, nil
@@ -71,102 +91,143 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
-			maxScroll := m.maxScrollPos()
-			if m.scrollPos < maxScroll {
-				m.scrollPos++
-			}
+			m.autoTail = false
+			m.viewport, vpCmd = m.viewport.Update(msg)
+			cmds = append(cmds, vpCmd)
 		case "k", "up":
-			if m.scrollPos > 0 {
-				m.scrollPos--
-			}
+			m.autoTail = false
+			m.viewport, vpCmd = m.viewport.Update(msg)
+			cmds = append(cmds, vpCmd)
 		case "g":
-			m.scrollPos = 0
+			m.autoTail = false
+			m.viewport.GotoTop()
 		case "G":
-			m.scrollPos = m.maxScrollPos()
+			m.autoTail = true
+			m.viewport.GotoBottom()
+		case "f":
+			// Toggle auto-tail (follow) mode
+			m.autoTail = !m.autoTail
+			if m.autoTail {
+				m.viewport.GotoBottom()
+			}
 		case "c":
 			debug.ClearLogs()
-			m.logs = nil
-			m.totalLines = 0
-			m.scrollPos = 0
+			m.content = ""
+			m.lineCount = 0
+			m.lastLength = 0
+			m.viewport.SetContent("")
 			m.clearSelection()
 		case "y":
-			// Yank/copy selected text or all visible logs (only if clipboard available)
 			if m.clipboardAvailable {
 				m.copyToClipboard()
 				if m.statusMsg != "" {
-					cmd = tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+					cmds = append(cmds, tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
 						return LogsStatusClearMsg{}
-					})
+					}))
 				}
 			}
 		case "a":
 			// Select all
-			if len(m.logs) > 0 {
+			if m.lineCount > 0 {
 				m.selectStart = 0
-				m.selectEnd = len(m.logs) - 1
+				m.selectEnd = m.lineCount - 1
 				m.hasSelection = true
 			}
 		case "esc":
 			if m.hasSelection {
 				m.clearSelection()
 			}
+		case "ctrl+d", "pgdown":
+			m.autoTail = false
+			m.viewport, vpCmd = m.viewport.Update(msg)
+			cmds = append(cmds, vpCmd)
+		case "ctrl+u", "pgup":
+			m.autoTail = false
+			m.viewport, vpCmd = m.viewport.Update(msg)
+			cmds = append(cmds, vpCmd)
 		}
 
 	case tea.MouseMsg:
-		m = m.handleMouse(msg)
+		// Forward scroll events to viewport
+		m.viewport, vpCmd = m.viewport.Update(msg)
+		cmds = append(cmds, vpCmd)
+		// Disable auto-tail on manual scroll
+		if msg.Action == tea.MouseActionPress && (msg.Button == tea.MouseButtonWheelUp || msg.Button == tea.MouseButtonWheelDown) {
+			m.autoTail = false
+		}
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		// Calculate dialog top position for mouse translation
-		m.dialogTop = (msg.Height - m.visibleLines() - 8) / 2
+		m.updateViewportSize()
 	}
 
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
-func (m *LogsModel) handleMouse(msg tea.MouseMsg) LogsModel {
-	// Calculate the line index from mouse Y position
-	// Account for dialog position and header
-	contentStartY := m.dialogTop + 4 // Title + spacing
+func (m *LogsModel) updateViewportSize() {
+	// Calculate viewport dimensions (leave room for title, help, borders)
+	vpHeight := m.height - 12
+	vpWidth := m.width - 8
 
-	switch msg.Action {
-	case tea.MouseActionPress:
-		if msg.Button == tea.MouseButtonLeft {
-			lineIdx := m.mouseYToLineIndex(msg.Y, contentStartY)
-			if lineIdx >= 0 && lineIdx < len(m.logs) {
-				m.selecting = true
-				m.selectStart = lineIdx
-				m.selectEnd = lineIdx
-				m.hasSelection = true
-			}
-		}
-
-	case tea.MouseActionMotion:
-		if m.selecting {
-			lineIdx := m.mouseYToLineIndex(msg.Y, contentStartY)
-			if lineIdx >= 0 && lineIdx < len(m.logs) {
-				m.selectEnd = lineIdx
-			}
-		}
-
-	case tea.MouseActionRelease:
-		if msg.Button == tea.MouseButtonLeft {
-			m.selecting = false
-		}
+	if vpHeight < 1 {
+		vpHeight = 1
+	}
+	if vpWidth < 20 {
+		vpWidth = 20
 	}
 
-	return *m
+	m.viewport.Width = vpWidth
+	m.viewport.Height = vpHeight
 }
 
-func (m *LogsModel) mouseYToLineIndex(mouseY, contentStartY int) int {
-	// Convert mouse Y to log line index
-	relativeY := mouseY - contentStartY
-	if relativeY < 0 {
-		return -1
+func (m *LogsModel) loadContent() {
+	var content string
+	var lines []string
+
+	if debug.HasLogFile() {
+		// Read from file
+		fileContent, err := debug.ReadLogFile()
+		if err != nil {
+			content = "Error reading log file: " + err.Error()
+		} else {
+			// Only update if content changed
+			if len(fileContent) == m.lastLength {
+				return
+			}
+			m.lastLength = len(fileContent)
+			content = fileContent
+		}
+		lines = strings.Split(strings.TrimSuffix(content, "\n"), "\n")
+	} else {
+		// Read from memory buffer
+		logEntries := debug.GetLogs()
+		lines = logEntries
 	}
-	lineIdx := m.scrollPos + relativeY
-	return lineIdx
+
+	// Colorize lines
+	var colorized []string
+	for _, line := range lines {
+		line = strings.TrimSuffix(line, "\n")
+		if line != "" {
+			colorized = append(colorized, colorizeLogEntry(line))
+		}
+	}
+
+	m.content = strings.Join(colorized, "\n")
+	m.lineCount = len(colorized)
+	m.viewport.SetContent(m.content)
+
+	// Auto-scroll to bottom if in tail mode
+	if m.autoTail {
+		m.viewport.GotoBottom()
+	}
+}
+
+func (m *LogsModel) scheduleRefresh() tea.Cmd {
+	return tea.Tick(500*time.Millisecond, func(t time.Time) tea.Msg {
+		return LogsRefreshMsg{}
+	})
 }
 
 func (m *LogsModel) clearSelection() {
@@ -176,113 +237,33 @@ func (m *LogsModel) clearSelection() {
 	m.hasSelection = false
 }
 
-func (m *LogsModel) getSelectedLines() []string {
-	if !m.hasSelection || len(m.logs) == 0 {
-		return nil
-	}
-
-	start, end := m.selectStart, m.selectEnd
-	if start > end {
-		start, end = end, start
-	}
-
-	if start < 0 {
-		start = 0
-	}
-	if end >= len(m.logs) {
-		end = len(m.logs) - 1
-	}
-
-	return m.logs[start : end+1]
-}
-
 func (m *LogsModel) copyToClipboard() {
-	var lines []string
-
-	if m.hasSelection {
-		lines = m.getSelectedLines()
-	} else {
-		// Copy all visible logs if no selection
-		visibleLines := m.visibleLines()
-		start := m.scrollPos
-		end := start + visibleLines
-		if end > len(m.logs) {
-			end = len(m.logs)
-		}
-		if start < len(m.logs) {
-			lines = m.logs[start:end]
-		}
-	}
-
-	if len(lines) == 0 {
+	text := m.content
+	if text == "" {
 		return
 	}
 
-	// Clean up lines and join
-	var cleaned []string
-	for _, line := range lines {
-		cleaned = append(cleaned, strings.TrimSuffix(line, "\n"))
-	}
-
-	text := strings.Join(cleaned, "\n")
-
-	// Copy to clipboard
 	if err := clipboard.Init(); err != nil {
-		debug.Logger.Error("Failed to initialize clipboard",
-			"error", err,
-			"hint", "Clipboard requires CGO_ENABLED=1. On Linux, also install xclip/xsel. On headless systems, clipboard is unavailable.",
-		)
+		debug.Logger.Error("Failed to initialize clipboard", "error", err)
 		m.statusMsg = i18n.T("clipboard_unavailable")
-		m.statusTimeout = 3
 		return
 	}
 
 	clipboard.Write(clipboard.FmtText, []byte(text))
-	debug.Logger.Debug("Copied to clipboard", "lines", len(lines), "bytes", len(text))
 	m.statusMsg = i18n.T("copied")
-	m.statusTimeout = 2
-}
-
-func (m *LogsModel) isLineSelected(lineIdx int) bool {
-	if !m.hasSelection {
-		return false
-	}
-
-	start, end := m.selectStart, m.selectEnd
-	if start > end {
-		start, end = end, start
-	}
-
-	return lineIdx >= start && lineIdx <= end
-}
-
-func (m *LogsModel) visibleLines() int {
-	lines := m.height - 8 // Account for header, footer, borders
-	if lines < 1 {
-		return 1
-	}
-	return lines
-}
-
-func (m *LogsModel) maxScrollPos() int {
-	maxScroll := m.totalLines - m.visibleLines()
-	if maxScroll < 0 {
-		return 0
-	}
-	return maxScroll
 }
 
 func (m *LogsModel) Toggle() {
 	m.Visible = !m.Visible
 	if m.Visible {
-		m.Refresh()
+		m.Show()
 	}
 }
 
 func (m *LogsModel) Show() {
 	m.Visible = true
 	m.checkClipboard()
-	m.Refresh()
+	m.loadContent()
 }
 
 func (m *LogsModel) checkClipboard() {
@@ -292,7 +273,6 @@ func (m *LogsModel) checkClipboard() {
 	m.clipboardChecked = true
 	if err := clipboard.Init(); err != nil {
 		m.clipboardAvailable = false
-		debug.Logger.Debug("Clipboard not available", "error", err)
 	} else {
 		m.clipboardAvailable = true
 	}
@@ -303,81 +283,63 @@ func (m *LogsModel) Hide() {
 }
 
 func (m *LogsModel) Refresh() {
-	m.logs = debug.GetLogs()
-	m.totalLines = len(m.logs)
-	// Auto-scroll to bottom on refresh
-	m.scrollPos = m.maxScrollPos()
+	m.loadContent()
 }
 
 func (m *LogsModel) SetDimensions(width, height int) {
 	m.width = width
 	m.height = height
+	m.updateViewportSize()
+}
+
+// StartAutoRefresh returns a command to start the auto-refresh ticker
+func (m LogsModel) StartAutoRefresh() tea.Cmd {
+	return m.scheduleRefresh()
 }
 
 func (m LogsModel) View() string {
 	var b strings.Builder
 
-	// Title
-	title := styles.DialogTitle.Render(i18n.T("debug_logs"))
+	// Title with source indicator
+	var titleSuffix string
+	if debug.HasLogFile() {
+		titleSuffix = " (" + debug.LogFilePath + ")"
+	} else {
+		titleSuffix = " (" + i18n.T("memory") + ")"
+	}
+	title := styles.DialogTitle.Render(i18n.T("debug_logs") + titleSuffix)
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
-	// Log entries
-	visibleLines := m.visibleLines()
-	if visibleLines < 1 {
-		visibleLines = 1
-	}
-
-	if len(m.logs) == 0 {
+	// Viewport content
+	if m.lineCount == 0 {
 		b.WriteString(styles.TextDim.Render(i18n.T("no_logs_yet")))
 		b.WriteString("\n")
 	} else {
-		start := m.scrollPos
-		end := start + visibleLines
-		if end > len(m.logs) {
-			end = len(m.logs)
-		}
-
-		for i := start; i < end; i++ {
-			entry := m.logs[i]
-			// Trim trailing newline
-			entry = strings.TrimSuffix(entry, "\n")
-			// Truncate long lines
-			maxLen := m.width - 10
-			if maxLen > 0 && len(entry) > maxLen {
-				entry = entry[:maxLen-3] + "..."
-			}
-			// Check if line is selected
-			if m.isLineSelected(i) {
-				b.WriteString(logSelectedStyle.Render(entry))
-			} else {
-				// Colorize based on log level
-				b.WriteString(colorizeLogEntry(entry))
-			}
-			b.WriteString("\n")
-		}
+		b.WriteString(m.viewport.View())
 	}
 
-	// Scroll indicator
-	if m.totalLines > visibleLines {
-		b.WriteString("\n")
-		// Scroll info is rendered below using itoa
-		b.WriteString(styles.TextDim.Render(
-			"  " + i18n.T("showing_lines") + " " + itoa(m.scrollPos+1) + "-" +
-				itoa(minInt(m.scrollPos+visibleLines, m.totalLines)) +
-				" " + i18n.T("of") + " " + itoa(m.totalLines),
-		))
+	// Scroll indicator and tail status
+	b.WriteString("\n")
+	var statusParts []string
+	statusParts = append(statusParts, i18n.Tf("line_count", map[string]interface{}{"Count": m.lineCount}))
+	if m.autoTail {
+		statusParts = append(statusParts, "["+i18n.T("following")+"]")
 	}
+	if m.viewport.ScrollPercent() < 1.0 {
+		statusParts = append(statusParts, i18n.Tf("scroll_percent", map[string]interface{}{"Percent": int(m.viewport.ScrollPercent() * 100)}))
+	}
+	b.WriteString(styles.TextDim.Render(strings.Join(statusParts, " • ")))
 
 	b.WriteString("\n\n")
 
-	// Status message (if any)
+	// Status message
 	if m.statusMsg != "" {
 		b.WriteString(styles.Success.Render(m.statusMsg))
 		b.WriteString("\n\n")
 	}
 
-	// Help (conditionally show 'y copy' based on clipboard availability)
+	// Help
 	help := styles.HelpBar.Render(m.getHelpText())
 	b.WriteString(help)
 
@@ -392,40 +354,17 @@ func (m LogsModel) View() string {
 	return dialog
 }
 
-// Simple int to string conversion
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	if n < 0 {
-		return "-" + itoa(-n)
-	}
-	var digits []byte
-	for n > 0 {
-		digits = append([]byte{byte('0' + n%10)}, digits...)
-		n /= 10
-	}
-	return string(digits)
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func (m LogsModel) getHelpText() string {
+	base := "j/k:scroll g/G:top/bottom f:follow"
 	if m.clipboardAvailable {
-		return i18n.T("logs_help")
+		base += " y:copy"
 	}
-	return i18n.T("logs_help_no_clipboard")
+	base += " c:clear q:close"
+	return base
 }
 
 // colorizeLogEntry applies color based on log level
 func colorizeLogEntry(entry string) string {
-	// charmbracelet/log format: "LEVL prefix message key=value..."
-	// Look for level indicators at the start
 	upperEntry := strings.ToUpper(entry)
 
 	switch {

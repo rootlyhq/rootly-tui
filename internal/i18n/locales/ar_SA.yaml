@@ -181,6 +181,8 @@ setup:
   other: "اعدادات"
 help:
   other: "مساعدة"
+about:
+  other: "حول"
 quit_action:
   other: "خروج"
 
@@ -191,3 +193,21 @@ loading:
   other: "جاري التحميل..."
 refreshing:
   other: "جاري التحديث..."
+
+# About view
+about_title:
+  other: "حول"
+about_description:
+  other: "واجهة طرفية لعرض حوادث وتنبيهات Rootly."
+system_info:
+  other: "النظام"
+go_version:
+  other: "Go"
+platform:
+  other: "المنصة"
+documentation:
+  other: "التوثيق"
+press_a_to_close:
+  other: "اضغط A أو Esc للإغلاق"
+view_about:
+  other: "حول"

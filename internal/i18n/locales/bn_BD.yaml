@@ -181,6 +181,8 @@ setup:
   other: "সেটআপ"
 help:
   other: "সাহায্য"
+about:
+  other: "সম্পর্কে"
 quit_action:
   other: "প্রস্থান"
 
@@ -191,3 +193,21 @@ loading:
   other: "লোড হচ্ছে..."
 refreshing:
   other: "রিফ্রেশ হচ্ছে..."
+
+# About view
+about_title:
+  other: "সম্পর্কে"
+about_description:
+  other: "Rootly ইনসিডেন্ট এবং অ্যালার্ট দেখার জন্য টার্মিনাল ইন্টারফেস।"
+system_info:
+  other: "সিস্টেম"
+go_version:
+  other: "Go"
+platform:
+  other: "প্ল্যাটফর্ম"
+documentation:
+  other: "ডকুমেন্টেশন"
+press_a_to_close:
+  other: "বন্ধ করতে A বা Esc চাপুন"
+view_about:
+  other: "সম্পর্কে"

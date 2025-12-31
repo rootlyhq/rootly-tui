@@ -1468,4 +1468,3 @@ func TestAlertsWithEmptyData(t *testing.T) {
 		t.Errorf("expected empty services, got %d", len(alert.Services))
 	}
 }
-
