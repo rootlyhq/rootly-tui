@@ -3,6 +3,7 @@ package styles
 import (
 	"strings"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -515,4 +516,48 @@ func RenderNameWithEmail(name, email string) string {
 		return name
 	}
 	return name + " [" + RenderEmail(email) + "]"
+}
+
+// markdownRenderer is a cached glamour renderer for dark terminals
+var markdownRenderer *glamour.TermRenderer
+
+// getMarkdownRenderer returns a cached glamour renderer
+func getMarkdownRenderer(width int) *glamour.TermRenderer {
+	if markdownRenderer == nil {
+		r, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(width),
+		)
+		if err != nil {
+			return nil
+		}
+		markdownRenderer = r
+	}
+	return markdownRenderer
+}
+
+// RenderMarkdown renders markdown text for terminal display using glamour
+// Falls back to plain text if rendering fails
+func RenderMarkdown(text string, width int) string {
+	if text == "" {
+		return ""
+	}
+
+	// Use a reasonable default width
+	if width <= 0 {
+		width = 80
+	}
+
+	r := getMarkdownRenderer(width)
+	if r == nil {
+		return text
+	}
+
+	rendered, err := r.Render(text)
+	if err != nil {
+		return text
+	}
+
+	// Trim extra whitespace that glamour adds
+	return strings.TrimSpace(rendered)
 }

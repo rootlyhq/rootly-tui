@@ -359,13 +359,19 @@ func (m IncidentsModel) renderDetail(height int) string {
 	}
 	b.WriteString("\n\n")
 
-	// Description (shows the summary if different from title)
-	summaryClean := strings.ReplaceAll(inc.Summary, "\n", " ")
-	summaryClean = strings.ReplaceAll(summaryClean, "\r", "")
-	if summaryClean != "" && summaryClean != title {
+	// Description (shows the summary if different from title, rendered as markdown)
+	summaryClean := strings.ReplaceAll(inc.Summary, "\r", "")
+	titleClean := strings.ReplaceAll(title, "\n", " ")
+	titleClean = strings.ReplaceAll(titleClean, "\r", "")
+	if summaryClean != "" && strings.TrimSpace(summaryClean) != strings.TrimSpace(titleClean) {
 		b.WriteString(styles.TextBold.Render(i18n.T("description")))
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render(summaryClean))
+		// Render as markdown, use detail width minus padding
+		descWidth := m.detailWidth - 4
+		if descWidth < 40 {
+			descWidth = 40
+		}
+		b.WriteString(styles.RenderMarkdown(summaryClean, descWidth))
 		b.WriteString("\n\n")
 	}
 

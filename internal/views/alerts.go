@@ -338,15 +338,16 @@ func (m AlertsModel) renderDetail(height int) string {
 	sourceName := styles.AlertSourceName(alert.Source)
 	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName))
 
-	// Description
+	// Description (rendered as markdown)
 	if alert.Description != "" {
 		b.WriteString(styles.TextBold.Render(i18n.T("description")))
 		b.WriteString("\n")
-		desc := alert.Description
-		if len(desc) > 200 {
-			desc = desc[:197] + "..."
+		// Render as markdown, use detail width minus padding
+		descWidth := m.detailWidth - 4
+		if descWidth < 40 {
+			descWidth = 40
 		}
-		b.WriteString(styles.Text.Render(desc))
+		b.WriteString(styles.RenderMarkdown(alert.Description, descWidth))
 		b.WriteString("\n\n")
 	}
 
