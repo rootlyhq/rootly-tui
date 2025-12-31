@@ -340,17 +340,32 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	// Services
 	if len(alert.Services) > 0 {
-		b.WriteString(m.renderDetailRow("Services", strings.Join(alert.Services, ", ")))
+		b.WriteString(styles.TextBold.Render("Services"))
+		b.WriteString("\n")
+		for _, s := range alert.Services {
+			b.WriteString("  • " + styles.DetailValue.Render(s) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Environments
 	if len(alert.Environments) > 0 {
-		b.WriteString(m.renderDetailRow("Environments", strings.Join(alert.Environments, ", ")))
+		b.WriteString(styles.TextBold.Render("Environments"))
+		b.WriteString("\n")
+		for _, e := range alert.Environments {
+			b.WriteString("  • " + styles.DetailValue.Render(e) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Teams (Groups)
 	if len(alert.Groups) > 0 {
-		b.WriteString(m.renderDetailRow("Teams", strings.Join(alert.Groups, ", ")))
+		b.WriteString(styles.TextBold.Render("Teams"))
+		b.WriteString("\n")
+		for _, g := range alert.Groups {
+			b.WriteString("  • " + styles.DetailValue.Render(g) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Links section

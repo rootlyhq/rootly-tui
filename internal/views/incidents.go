@@ -295,6 +295,7 @@ func (m IncidentsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
+//nolint:gocyclo // complexity from rendering many optional detail fields with lists
 func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
@@ -371,30 +372,45 @@ func (m IncidentsModel) renderDetail(height int) string {
 
 	// Services
 	if len(inc.Services) > 0 {
-		b.WriteString(m.renderDetailRow("Services", strings.Join(inc.Services, ", ")))
+		b.WriteString(styles.TextBold.Render("Services"))
+		b.WriteString("\n")
+		for _, s := range inc.Services {
+			b.WriteString("  • " + styles.DetailValue.Render(s) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Environments
 	if len(inc.Environments) > 0 {
-		b.WriteString(m.renderDetailRow("Environments", strings.Join(inc.Environments, ", ")))
+		b.WriteString(styles.TextBold.Render("Environments"))
+		b.WriteString("\n")
+		for _, e := range inc.Environments {
+			b.WriteString("  • " + styles.DetailValue.Render(e) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Teams
 	if len(inc.Teams) > 0 {
-		b.WriteString(m.renderDetailRow("Teams", strings.Join(inc.Teams, ", ")))
+		b.WriteString(styles.TextBold.Render("Teams"))
+		b.WriteString("\n")
+		for _, t := range inc.Teams {
+			b.WriteString("  • " + styles.DetailValue.Render(t) + "\n")
+		}
+		b.WriteString("\n")
 	}
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
 		// Roles (Commander, Communicator, etc.)
 		if len(inc.Roles) > 0 {
-			b.WriteString("\n")
 			b.WriteString(styles.TextBold.Render("Roles"))
 			b.WriteString("\n")
 			for _, role := range inc.Roles {
 				if role.UserName == "" {
 					continue
 				}
+				b.WriteString("  • ")
 				b.WriteString(styles.DetailLabel.Render(role.Name + ":"))
 				b.WriteString(" ")
 				b.WriteString(styles.DetailValue.Render(role.UserName))
@@ -404,21 +420,37 @@ func (m IncidentsModel) renderDetail(height int) string {
 				}
 				b.WriteString("\n")
 			}
+			b.WriteString("\n")
 		}
 
 		// Causes
 		if len(inc.Causes) > 0 {
-			b.WriteString(m.renderDetailRow("Causes", strings.Join(inc.Causes, ", ")))
+			b.WriteString(styles.TextBold.Render("Causes"))
+			b.WriteString("\n")
+			for _, c := range inc.Causes {
+				b.WriteString("  • " + styles.DetailValue.Render(c) + "\n")
+			}
+			b.WriteString("\n")
 		}
 
 		// Incident Types
 		if len(inc.IncidentTypes) > 0 {
-			b.WriteString(m.renderDetailRow("Types", strings.Join(inc.IncidentTypes, ", ")))
+			b.WriteString(styles.TextBold.Render("Types"))
+			b.WriteString("\n")
+			for _, t := range inc.IncidentTypes {
+				b.WriteString("  • " + styles.DetailValue.Render(t) + "\n")
+			}
+			b.WriteString("\n")
 		}
 
 		// Functionalities
 		if len(inc.Functionalities) > 0 {
-			b.WriteString(m.renderDetailRow("Functions", strings.Join(inc.Functionalities, ", ")))
+			b.WriteString(styles.TextBold.Render("Functionalities"))
+			b.WriteString("\n")
+			for _, f := range inc.Functionalities {
+				b.WriteString("  • " + styles.DetailValue.Render(f) + "\n")
+			}
+			b.WriteString("\n")
 		}
 	}
 
