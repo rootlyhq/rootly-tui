@@ -371,6 +371,60 @@ func RenderAlertSource(source string) string {
 	}
 }
 
+// AlertSourceName returns the human-readable name for an alert source
+func AlertSourceName(source string) string {
+	switch source {
+	case "datadog":
+		return "Datadog"
+	case "pagerduty":
+		return "PagerDuty"
+	case "grafana":
+		return "Grafana"
+	case "new_relic":
+		return "New Relic"
+	case "prometheus":
+		return "Prometheus"
+	case "alertmanager":
+		return "Alertmanager"
+	case "opsgenie":
+		return "OpsGenie"
+	case "sentry":
+		return "Sentry"
+	case "splunk":
+		return "Splunk"
+	case "honeycomb":
+		return "Honeycomb"
+	case "chronosphere":
+		return "Chronosphere"
+	case "cloud_watch", "cloudwatch":
+		return "CloudWatch"
+	case "azure":
+		return "Azure"
+	case "google_cloud":
+		return "Google Cloud"
+	case "slack":
+		return "Slack"
+	case "email":
+		return "Email"
+	case "generic_webhook":
+		return "Generic Webhook"
+	case "api":
+		return "API"
+	case "manual":
+		return "Manual"
+	case "jira":
+		return "Jira"
+	case "zendesk":
+		return "Zendesk"
+	case "rollbar":
+		return "Rollbar"
+	case "bugsnag", "bug_snag":
+		return "BugSnag"
+	default:
+		return source
+	}
+}
+
 func RenderHelpItem(key, desc string) string {
 	return HelpKey.Render(key) + " " + HelpDesc.Render(desc)
 }

@@ -222,8 +222,9 @@ func (m AlertsModel) renderDetail(height int) string {
 
 	// Status and Source row
 	statusBadge := styles.RenderStatus(alert.Status)
-	sourceBadge := styles.RenderAlertSource(alert.Source)
-	b.WriteString(fmt.Sprintf("Status: %s  Source: %s\n\n", statusBadge, sourceBadge))
+	sourceIcon := styles.RenderAlertSource(alert.Source)
+	sourceName := styles.AlertSourceName(alert.Source)
+	b.WriteString(fmt.Sprintf("Status: %s  Source: %s %s\n\n", statusBadge, sourceIcon, sourceName))
 
 	// Description
 	if alert.Description != "" {
