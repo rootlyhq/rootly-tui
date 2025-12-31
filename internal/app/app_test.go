@@ -347,6 +347,8 @@ func TestModelOpenKeyBinding(t *testing.T) {
 	m := New("1.0.0")
 	m.screen = ScreenMain
 	m.activeTab = TabIncidents
+	// Use no-op URL opener to prevent opening real browser during tests
+	m.urlOpener = func(url string) error { return nil }
 
 	// Add a test incident
 	m.incidents.SetIncidents([]api.Incident{
@@ -372,6 +374,8 @@ func TestModelOpenKeyBindingWithFallbackURL(t *testing.T) {
 	m := New("1.0.0")
 	m.screen = ScreenMain
 	m.activeTab = TabIncidents
+	// Use no-op URL opener to prevent opening real browser during tests
+	m.urlOpener = func(url string) error { return nil }
 
 	// Add a test incident without ShortURL or URL (should construct from ID)
 	m.incidents.SetIncidents([]api.Incident{
@@ -392,6 +396,8 @@ func TestModelOpenKeyBindingForAlerts(t *testing.T) {
 	m := New("1.0.0")
 	m.screen = ScreenMain
 	m.activeTab = TabAlerts
+	// Use no-op URL opener to prevent opening real browser during tests
+	m.urlOpener = func(url string) error { return nil }
 
 	// Add a test alert
 	m.alerts.SetAlerts([]api.Alert{

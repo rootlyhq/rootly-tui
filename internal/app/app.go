@@ -32,6 +32,12 @@ const (
 	TabAlerts
 )
 
+// URLOpener is a function type for opening URLs in a browser (injectable for testing)
+type URLOpener func(url string) error
+
+// defaultURLOpener is the production URL opener
+var defaultURLOpener URLOpener = openURLInBrowser
+
 type Model struct {
 	// Core state
 	version   string
@@ -58,6 +64,9 @@ type Model struct {
 	initialLoading bool
 	statusMsg      string
 	errorMsg       string
+
+	// URL opener (injectable for testing)
+	urlOpener URLOpener
 }
 
 func New(version string) Model {
@@ -76,6 +85,7 @@ func New(version string) Model {
 		help:      views.NewHelpModel(),
 		logs:      views.NewLogsModel(),
 		spinner:   s,
+		urlOpener: defaultURLOpener,
 	}
 
 	// Check if config exists
@@ -248,8 +258,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
-			if url != "" {
-				_ = openURL(url)
+			if url != "" && m.urlOpener != nil {
+				_ = m.urlOpener(url)
 			}
 			return m, nil
 
@@ -565,8 +575,8 @@ func (m Model) Close() error {
 	return nil
 }
 
-// openURL opens the given URL in the default browser
-func openURL(url string) error {
+// openURLInBrowser opens the given URL in the default browser
+func openURLInBrowser(url string) error {
 	ctx := context.Background()
 	var cmd *exec.Cmd
 	switch runtime.GOOS {

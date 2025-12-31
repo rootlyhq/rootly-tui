@@ -295,7 +295,6 @@ func (m IncidentsModel) renderList(height int) string {
 	return styles.ListContainer.Width(m.listWidth).Height(height).Render(content)
 }
 
-//nolint:gocyclo // complexity from rendering many optional detail fields
 func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
@@ -378,22 +377,22 @@ func (m IncidentsModel) renderDetail(height int) string {
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
 		// Roles (Commander, Communicator, etc.)
-		if inc.CommanderName != "" || inc.CommunicatorName != "" || len(inc.Roles) > 0 {
+		if len(inc.Roles) > 0 {
 			b.WriteString("\n")
 			b.WriteString(styles.TextBold.Render("Roles"))
 			b.WriteString("\n")
-			if inc.CommanderName != "" {
-				b.WriteString(m.renderDetailRow("Commander", inc.CommanderName))
-			}
-			if inc.CommunicatorName != "" {
-				b.WriteString(m.renderDetailRow("Comms Lead", inc.CommunicatorName))
-			}
-			// Other roles
 			for _, role := range inc.Roles {
-				roleName := strings.ToLower(role.Name)
-				if roleName != "commander" && roleName != "communications lead" && role.UserName != "" {
-					b.WriteString(m.renderDetailRow(role.Name, role.UserName))
+				if role.UserName == "" {
+					continue
 				}
+				b.WriteString(styles.DetailLabel.Render(role.Name + ":"))
+				b.WriteString(" ")
+				b.WriteString(styles.DetailValue.Render(role.UserName))
+				if role.UserEmail != "" {
+					b.WriteString(" ")
+					b.WriteString(styles.TextDim.Render(role.UserEmail))
+				}
+				b.WriteString("\n")
 			}
 		}
 

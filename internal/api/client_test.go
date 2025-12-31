@@ -672,34 +672,6 @@ func TestGetIncident(t *testing.T) {
 							{"attributes": map[string]interface{}{"name": "api-server"}},
 						},
 					},
-					"roles": map[string]interface{}{
-						"data": []map[string]interface{}{
-							{
-								"attributes": map[string]interface{}{
-									"name": "Commander",
-									"user": map[string]interface{}{
-										"data": map[string]interface{}{
-											"attributes": map[string]interface{}{
-												"name": "John Doe",
-											},
-										},
-									},
-								},
-							},
-							{
-								"attributes": map[string]interface{}{
-									"name": "Communications Lead",
-									"user": map[string]interface{}{
-										"data": map[string]interface{}{
-											"attributes": map[string]interface{}{
-												"name": "Jane Smith",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
 					"causes": map[string]interface{}{
 						"data": []map[string]interface{}{
 							{"attributes": map[string]interface{}{"name": "Configuration Error"}},
@@ -708,6 +680,50 @@ func TestGetIncident(t *testing.T) {
 					"incident_types": map[string]interface{}{
 						"data": []map[string]interface{}{
 							{"attributes": map[string]interface{}{"name": "Infrastructure"}},
+						},
+					},
+				},
+			},
+			"included": []map[string]interface{}{
+				{
+					"id":   "role_1",
+					"type": "incident_role_assignments",
+					"attributes": map[string]interface{}{
+						"incident_role": map[string]interface{}{
+							"data": map[string]interface{}{
+								"attributes": map[string]interface{}{
+									"name": "Commander",
+								},
+							},
+						},
+						"user": map[string]interface{}{
+							"data": map[string]interface{}{
+								"attributes": map[string]interface{}{
+									"name":  "John Doe",
+									"email": "john.doe@example.com",
+								},
+							},
+						},
+					},
+				},
+				{
+					"id":   "role_2",
+					"type": "incident_role_assignments",
+					"attributes": map[string]interface{}{
+						"incident_role": map[string]interface{}{
+							"data": map[string]interface{}{
+								"attributes": map[string]interface{}{
+									"name": "Communications Lead",
+								},
+							},
+						},
+						"user": map[string]interface{}{
+							"data": map[string]interface{}{
+								"attributes": map[string]interface{}{
+									"name":  "Jane Smith",
+									"email": "jane.smith@example.com",
+								},
+							},
 						},
 					},
 				},
@@ -765,6 +781,15 @@ func TestGetIncident(t *testing.T) {
 	}
 	if len(incident.Roles) != 2 {
 		t.Errorf("expected 2 roles, got %d", len(incident.Roles))
+	}
+	// Check email is populated
+	for _, role := range incident.Roles {
+		if role.Name == "Commander" && role.UserEmail != "john.doe@example.com" {
+			t.Errorf("expected Commander email='john.doe@example.com', got %s", role.UserEmail)
+		}
+		if role.Name == "Communications Lead" && role.UserEmail != "jane.smith@example.com" {
+			t.Errorf("expected Communications Lead email='jane.smith@example.com', got %s", role.UserEmail)
+		}
 	}
 	if len(incident.Causes) != 1 || incident.Causes[0] != "Configuration Error" {
 		t.Errorf("expected Causes=['Configuration Error'], got %v", incident.Causes)

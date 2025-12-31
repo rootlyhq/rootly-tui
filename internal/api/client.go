@@ -58,8 +58,9 @@ type Incident struct {
 }
 
 type IncidentRole struct {
-	Name     string
-	UserName string
+	Name      string
+	UserName  string
+	UserEmail string
 }
 
 type Alert struct {
@@ -632,20 +633,6 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 						} `json:"attributes"`
 					} `json:"data"`
 				} `json:"groups"`
-				Roles *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-							User *struct {
-								Data *struct {
-									Attributes struct {
-										Name string `json:"name"`
-									} `json:"attributes"`
-								} `json:"data"`
-							} `json:"user"`
-						} `json:"attributes"`
-					} `json:"data"`
-				} `json:"roles"`
 				Causes *struct {
 					Data []struct {
 						Attributes struct {
@@ -669,6 +656,27 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 				} `json:"functionalities"`
 			} `json:"attributes"`
 		} `json:"data"`
+		Included []struct {
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Attributes struct {
+				IncidentRole *struct {
+					Data *struct {
+						Attributes struct {
+							Name string `json:"name"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"incident_role"`
+				User *struct {
+					Data *struct {
+						Attributes struct {
+							Name  string `json:"name"`
+							Email string `json:"email"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"user"`
+			} `json:"attributes"`
+		} `json:"included"`
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
@@ -738,19 +746,28 @@ func (c *Client) GetIncident(ctx context.Context, id string) (*Incident, error) 
 			incident.Teams = append(incident.Teams, g.Attributes.Name)
 		}
 	}
-	if d.Attributes.Roles != nil {
-		for _, r := range d.Attributes.Roles.Data {
-			role := IncidentRole{Name: r.Attributes.Name}
-			if r.Attributes.User != nil && r.Attributes.User.Data != nil {
-				role.UserName = r.Attributes.User.Data.Attributes.Name
-			}
+	// Parse roles from included array (JSON:API format)
+	for _, inc := range result.Included {
+		if inc.Type != "incident_role_assignments" {
+			continue
+		}
+		var roleName, userName, userEmail string
+		if inc.Attributes.IncidentRole != nil && inc.Attributes.IncidentRole.Data != nil {
+			roleName = inc.Attributes.IncidentRole.Data.Attributes.Name
+		}
+		if inc.Attributes.User != nil && inc.Attributes.User.Data != nil {
+			userName = inc.Attributes.User.Data.Attributes.Name
+			userEmail = inc.Attributes.User.Data.Attributes.Email
+		}
+		if roleName != "" {
+			role := IncidentRole{Name: roleName, UserName: userName, UserEmail: userEmail}
 			incident.Roles = append(incident.Roles, role)
 			// Extract commander and communicator
-			if strings.EqualFold(r.Attributes.Name, "commander") && role.UserName != "" {
-				incident.CommanderName = role.UserName
+			if strings.EqualFold(roleName, "commander") && userName != "" {
+				incident.CommanderName = userName
 			}
-			if strings.EqualFold(r.Attributes.Name, "communications lead") && role.UserName != "" {
-				incident.CommunicatorName = role.UserName
+			if strings.Contains(strings.ToLower(roleName), "communications") && userName != "" {
+				incident.CommunicatorName = userName
 			}
 		}
 	}
