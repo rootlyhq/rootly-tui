@@ -292,3 +292,230 @@ func TestColorizeLogEntry(t *testing.T) {
 		})
 	}
 }
+
+func TestLogsModelMouseSelection(t *testing.T) {
+	debug.ClearLogs()
+	for i := 0; i < 20; i++ {
+		debug.Logger.Info("test log entry")
+	}
+
+	m := NewLogsModel()
+	m.Visible = true
+	m.SetDimensions(100, 50)
+	m.Refresh()
+
+	// Simulate mouse press
+	m = m.handleMouse(tea.MouseMsg{
+		Action: tea.MouseActionPress,
+		Button: tea.MouseButtonLeft,
+		Y:      10,
+	})
+
+	if !m.selecting {
+		t.Error("expected selecting to be true after mouse press")
+	}
+	if !m.hasSelection {
+		t.Error("expected hasSelection to be true after mouse press")
+	}
+
+	// Simulate mouse motion
+	m = m.handleMouse(tea.MouseMsg{
+		Action: tea.MouseActionMotion,
+		Y:      15,
+	})
+
+	if m.selectStart == m.selectEnd {
+		t.Error("expected selection range to change after motion")
+	}
+
+	// Simulate mouse release
+	m = m.handleMouse(tea.MouseMsg{
+		Action: tea.MouseActionRelease,
+		Button: tea.MouseButtonLeft,
+	})
+
+	if m.selecting {
+		t.Error("expected selecting to be false after mouse release")
+	}
+}
+
+func TestLogsModelMouseYToLineIndex(t *testing.T) {
+	m := NewLogsModel()
+	m.SetDimensions(100, 50)
+	m.dialogTop = 5
+	m.scrollPos = 0
+
+	// Content starts at dialogTop + 4
+	contentStartY := m.dialogTop + 4
+
+	// Clicking at content start should return scroll position
+	idx := m.mouseYToLineIndex(contentStartY, contentStartY)
+	if idx != 0 {
+		t.Errorf("expected line index 0, got %d", idx)
+	}
+
+	// Clicking above content should return -1
+	idx = m.mouseYToLineIndex(contentStartY-1, contentStartY)
+	if idx != -1 {
+		t.Errorf("expected line index -1 for click above content, got %d", idx)
+	}
+
+	// Clicking further down
+	m.scrollPos = 5
+	idx = m.mouseYToLineIndex(contentStartY+3, contentStartY)
+	if idx != 8 { // scrollPos + relativeY = 5 + 3
+		t.Errorf("expected line index 8, got %d", idx)
+	}
+}
+
+func TestLogsModelGetSelectedLines(t *testing.T) {
+	m := NewLogsModel()
+	m.logs = []string{"line1", "line2", "line3", "line4", "line5"}
+
+	// No selection
+	m.hasSelection = false
+	lines := m.getSelectedLines()
+	if lines != nil {
+		t.Error("expected nil when no selection")
+	}
+
+	// Normal selection
+	m.hasSelection = true
+	m.selectStart = 1
+	m.selectEnd = 3
+	lines = m.getSelectedLines()
+	if len(lines) != 3 {
+		t.Errorf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0] != "line2" || lines[2] != "line4" {
+		t.Error("unexpected selected lines")
+	}
+
+	// Reversed selection (end < start)
+	m.selectStart = 3
+	m.selectEnd = 1
+	lines = m.getSelectedLines()
+	if len(lines) != 3 {
+		t.Errorf("expected 3 lines for reversed selection, got %d", len(lines))
+	}
+
+	// Selection beyond bounds
+	m.selectStart = -1
+	m.selectEnd = 10
+	lines = m.getSelectedLines()
+	if len(lines) != 5 {
+		t.Errorf("expected 5 lines (clamped), got %d", len(lines))
+	}
+}
+
+func TestLogsModelIsLineSelected(t *testing.T) {
+	m := NewLogsModel()
+
+	// No selection
+	m.hasSelection = false
+	if m.isLineSelected(5) {
+		t.Error("expected false when no selection")
+	}
+
+	// With selection
+	m.hasSelection = true
+	m.selectStart = 2
+	m.selectEnd = 5
+
+	if m.isLineSelected(1) {
+		t.Error("expected line 1 not selected")
+	}
+	if !m.isLineSelected(2) {
+		t.Error("expected line 2 selected")
+	}
+	if !m.isLineSelected(4) {
+		t.Error("expected line 4 selected")
+	}
+	if !m.isLineSelected(5) {
+		t.Error("expected line 5 selected")
+	}
+	if m.isLineSelected(6) {
+		t.Error("expected line 6 not selected")
+	}
+
+	// Reversed selection
+	m.selectStart = 5
+	m.selectEnd = 2
+	if !m.isLineSelected(3) {
+		t.Error("expected line 3 selected in reversed selection")
+	}
+}
+
+func TestLogsModelClearSelection(t *testing.T) {
+	m := NewLogsModel()
+	m.selecting = true
+	m.selectStart = 5
+	m.selectEnd = 10
+	m.hasSelection = true
+
+	m.clearSelection()
+
+	if m.selecting {
+		t.Error("expected selecting to be false")
+	}
+	if m.selectStart != 0 {
+		t.Error("expected selectStart to be 0")
+	}
+	if m.selectEnd != 0 {
+		t.Error("expected selectEnd to be 0")
+	}
+	if m.hasSelection {
+		t.Error("expected hasSelection to be false")
+	}
+}
+
+func TestLogsModelSelectAll(t *testing.T) {
+	m := NewLogsModel()
+	m.Visible = true
+	m.logs = []string{"line1", "line2", "line3"}
+
+	// Press 'a' to select all
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+
+	if !m.hasSelection {
+		t.Error("expected hasSelection to be true")
+	}
+	if m.selectStart != 0 {
+		t.Errorf("expected selectStart 0, got %d", m.selectStart)
+	}
+	if m.selectEnd != 2 {
+		t.Errorf("expected selectEnd 2, got %d", m.selectEnd)
+	}
+}
+
+func TestLogsModelEscapeClearsSelection(t *testing.T) {
+	m := NewLogsModel()
+	m.Visible = true
+	m.hasSelection = true
+	m.selectStart = 1
+	m.selectEnd = 5
+
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+
+	if m.hasSelection {
+		t.Error("expected hasSelection to be false after escape")
+	}
+}
+
+func TestLogsModelViewWithSelection(t *testing.T) {
+	debug.ClearLogs()
+	debug.Logger.Info("test line 1")
+	debug.Logger.Info("test line 2")
+
+	m := NewLogsModel()
+	m.SetDimensions(100, 50)
+	m.Refresh()
+	m.hasSelection = true
+	m.selectStart = 0
+	m.selectEnd = 0
+
+	view := m.View()
+	if view == "" {
+		t.Error("expected non-empty view")
+	}
+}
