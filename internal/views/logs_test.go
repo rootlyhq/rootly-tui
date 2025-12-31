@@ -1,6 +1,7 @@
 package views
 
 import (
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -517,5 +518,75 @@ func TestLogsModelViewWithSelection(t *testing.T) {
 	view := m.View()
 	if view == "" {
 		t.Error("expected non-empty view")
+	}
+}
+
+func TestLogsModelCopyToClipboard(t *testing.T) {
+	debug.ClearLogs()
+	debug.Logger.Info("line to copy")
+
+	m := NewLogsModel()
+	m.Visible = true
+	m.SetDimensions(100, 50)
+	m.Refresh()
+
+	// Select all
+	m.hasSelection = true
+	m.selectStart = 0
+	m.selectEnd = len(m.logs) - 1
+
+	// Copy should set status message (regardless of clipboard availability)
+	m.copyToClipboard()
+
+	// Status should be set (either "Copied!" or "Clipboard unavailable")
+	if m.statusMsg == "" {
+		t.Error("expected status message after copy")
+	}
+}
+
+func TestLogsModelCopyYKeypress(t *testing.T) {
+	debug.ClearLogs()
+	debug.Logger.Info("test log")
+
+	m := NewLogsModel()
+	m.Visible = true
+	m.SetDimensions(100, 50)
+	m.Refresh()
+
+	// Press 'y' to copy
+	m, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+
+	// Status message should be set
+	if m.statusMsg == "" {
+		t.Error("expected status message after 'y' keypress")
+	}
+
+	// Should return a tick command to clear status
+	if cmd == nil {
+		t.Error("expected tick command to clear status")
+	}
+}
+
+func TestLogsModelStatusClearMsg(t *testing.T) {
+	m := NewLogsModel()
+	m.Visible = true
+	m.statusMsg = "Test status"
+
+	// Send clear message
+	m, _ = m.Update(LogsStatusClearMsg{})
+
+	if m.statusMsg != "" {
+		t.Errorf("expected empty status after LogsStatusClearMsg, got %q", m.statusMsg)
+	}
+}
+
+func TestLogsModelViewWithStatus(t *testing.T) {
+	m := NewLogsModel()
+	m.SetDimensions(100, 50)
+	m.statusMsg = "Copied!"
+
+	view := m.View()
+	if !strings.Contains(view, "Copied!") {
+		t.Error("expected view to contain status message")
 	}
 }

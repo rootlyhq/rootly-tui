@@ -2,6 +2,7 @@ package views
 
 import (
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,6 +11,9 @@ import (
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
+
+// LogsStatusClearMsg is sent to clear the status message
+type LogsStatusClearMsg struct{}
 
 var (
 	logDebugStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))  // Gray
@@ -33,6 +37,10 @@ type LogsModel struct {
 	selectEnd    int // Line index where selection ended
 	hasSelection bool
 	dialogTop    int // Y offset of dialog content for mouse coordinate translation
+
+	// Status message
+	statusMsg     string
+	statusTimeout int
 }
 
 func NewLogsModel() LogsModel {
@@ -48,7 +56,13 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 		return m, nil
 	}
 
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
+	case LogsStatusClearMsg:
+		m.statusMsg = ""
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
@@ -73,6 +87,11 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 		case "y":
 			// Yank/copy selected text or all visible logs
 			m.copyToClipboard()
+			if m.statusMsg != "" {
+				cmd = tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+					return LogsStatusClearMsg{}
+				})
+			}
 		case "a":
 			// Select all
 			if len(m.logs) > 0 {
@@ -96,7 +115,7 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 		m.dialogTop = (msg.Height - m.visibleLines() - 8) / 2
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m *LogsModel) handleMouse(msg tea.MouseMsg) LogsModel {
@@ -201,10 +220,17 @@ func (m *LogsModel) copyToClipboard() {
 	text := strings.Join(cleaned, "\n")
 
 	// Copy to clipboard
-	if err := clipboard.Init(); err == nil {
-		clipboard.Write(clipboard.FmtText, []byte(text))
-		debug.Logger.Debug("Copied to clipboard", "lines", len(lines))
+	if err := clipboard.Init(); err != nil {
+		debug.Logger.Error("Failed to initialize clipboard", "error", err)
+		m.statusMsg = "Clipboard unavailable"
+		m.statusTimeout = 3
+		return
 	}
+
+	clipboard.Write(clipboard.FmtText, []byte(text))
+	debug.Logger.Debug("Copied to clipboard", "lines", len(lines), "bytes", len(text))
+	m.statusMsg = "Copied!"
+	m.statusTimeout = 2
 }
 
 func (m *LogsModel) isLineSelected(lineIdx int) bool {
@@ -320,6 +346,12 @@ func (m LogsModel) View() string {
 	}
 
 	b.WriteString("\n\n")
+
+	// Status message (if any)
+	if m.statusMsg != "" {
+		b.WriteString(styles.Success.Render(m.statusMsg))
+		b.WriteString("\n\n")
+	}
 
 	// Help
 	help := styles.HelpBar.Render("j/k scroll • g/G top/bottom • a select all • y copy • c clear • l/Esc close")
