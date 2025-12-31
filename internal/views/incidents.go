@@ -516,9 +516,32 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
 		creatorInfo := styles.RenderNameWithEmail(inc.CreatedByName, inc.CreatedByEmail)
-		b.WriteString(fmt.Sprintf("  %s: %s", i18n.T("created_by"), creatorInfo))
+		_, _ = fmt.Fprintf(&b, "  %s: %s", i18n.T("created_by"), creatorInfo)
 	}
 	b.WriteString("\n\n")
+
+	// Links section (high up for quick access)
+	rootlyURL := inc.ShortURL
+	if rootlyURL == "" {
+		rootlyURL = inc.URL
+	}
+	if rootlyURL == "" && inc.ID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
+	}
+	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
+		b.WriteString(styles.TextBold.Render(i18n.T("links")))
+		b.WriteString("\n")
+		if rootlyURL != "" {
+			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
+		}
+		if inc.SlackChannelURL != "" {
+			b.WriteString(m.renderLinkRow(i18n.T("slack"), inc.SlackChannelURL))
+		}
+		if inc.JiraIssueURL != "" {
+			b.WriteString(m.renderLinkRow(i18n.T("jira"), inc.JiraIssueURL))
+		}
+		b.WriteString("\n")
+	}
 
 	// Description (shows the summary if different from title, rendered as markdown)
 	summaryClean := strings.ReplaceAll(inc.Summary, "\r", "")
@@ -590,28 +613,6 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		b.WriteString(renderBulletList(i18n.T("causes"), inc.Causes))
 		b.WriteString(renderBulletList(i18n.T("types"), inc.IncidentTypes))
 		b.WriteString(renderBulletList(i18n.T("functionalities"), inc.Functionalities))
-	}
-
-	// External links (clickable)
-	rootlyURL := inc.ShortURL
-	if rootlyURL == "" {
-		rootlyURL = inc.URL
-	}
-	if rootlyURL == "" && inc.ID != "" {
-		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
-	}
-	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("links")))
-		b.WriteString("\n")
-		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
-		}
-		if inc.SlackChannelURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("slack"), inc.SlackChannelURL))
-		}
-		if inc.JiraIssueURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("jira"), inc.JiraIssueURL))
-		}
 	}
 
 	// Show loading spinner or hint if detail not loaded

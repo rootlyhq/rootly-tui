@@ -497,7 +497,24 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName))
+	_, _ = fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName)
+
+	// Links section (high up for quick access)
+	rootlyURL := ""
+	if alert.ShortID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
+	}
+	if rootlyURL != "" || alert.ExternalURL != "" {
+		b.WriteString(styles.TextBold.Render(i18n.T("links")))
+		b.WriteString("\n")
+		if rootlyURL != "" {
+			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
+		}
+		if alert.ExternalURL != "" {
+			b.WriteString(m.renderLinkRow(i18n.T("source"), alert.ExternalURL))
+		}
+		b.WriteString("\n")
+	}
 
 	// Description (rendered as markdown)
 	if alert.Description != "" {
@@ -561,23 +578,6 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		sort.Strings(keys)
 		for _, k := range keys {
 			b.WriteString(m.renderDetailRow(k, alert.Labels[k]))
-		}
-	}
-
-	// Links section (after Labels)
-	rootlyURL := ""
-	if alert.ShortID != "" {
-		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
-	}
-	if rootlyURL != "" || alert.ExternalURL != "" {
-		b.WriteString("\n")
-		b.WriteString(styles.TextBold.Render(i18n.T("links")))
-		b.WriteString("\n")
-		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
-		}
-		if alert.ExternalURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("source"), alert.ExternalURL))
 		}
 	}
 
