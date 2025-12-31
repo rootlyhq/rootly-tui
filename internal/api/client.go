@@ -328,7 +328,7 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		debug.Logger.Error("Failed to list alerts", "error", err)
 		return nil, fmt.Errorf("failed to list alerts: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer func() { _ = httpResp.Body.Close() }()
 
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {

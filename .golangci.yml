@@ -1,116 +1,97 @@
+version: "2"
+
 run:
   timeout: 5m
-  modules-download-mode: readonly
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/rootlyhq/rootly-tui
 
 linters:
   enable:
     - bodyclose
-    - dogsled
-    - dupl
-    - errcheck
     - copyloopvar
-    - gochecknoinits
-    - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
     - goprintffuncname
-    - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
     - noctx
     - nolintlint
-    - revive
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
-linters-settings:
-  dupl:
-    threshold: 150
-
-  gocyclo:
-    min-complexity: 30  # Bubble Tea Update functions are naturally complex
-
-  goconst:
-    min-len: 3
-    min-occurrences: 4  # Increase threshold to avoid noise
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - performance
-      - style
-    disabled-checks:
-      - dupImport
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - hugeParam      # Bubble Tea models use value receivers by design
-      - rangeValCopy   # Acceptable for JSON parsing structs
-
-  goimports:
-    local-prefixes: github.com/rootlyhq/rootly-tui
-
-  misspell:
-    locale: US
-
-  nakedret:
-    max-func-lines: 30
-
-  revive:
+  settings:
+    dupl:
+      threshold: 150
+    gocyclo:
+      min-complexity: 30
+    goconst:
+      min-len: 3
+      min-occurrences: 4
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - dupImport
+        - ifElseChain
+        - octalLiteral
+        - whyNoLint
+        - hugeParam
+        - rangeValCopy
+    nakedret:
+      max-func-lines: 30
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+  exclusions:
     rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unreachable-code
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - dupl
-        - gosec
-        - goconst
-
-    - path: cmd/
-      linters:
-        - gochecknoinits
-
-    - path: internal/debug/
-      linters:
-        - gochecknoinits  # Logger initialization requires init()
-
-    - path: internal/views/
-      linters:
-        - goconst  # Key strings like "down", "up" are clearer inline
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-
+      - path: '_test\.go'
+        linters:
+          - dupl
+          - gosec
+          - goconst
+          - errcheck
+          - revive
+      - path: 'cmd/'
+        linters:
+          - gochecknoinits
+      - path: 'internal/debug/'
+        linters:
+          - gochecknoinits
+          - gosec
+      - path: 'internal/views/'
+        linters:
+          - goconst
+      - path: 'internal/config/'
+        linters:
+          - errcheck

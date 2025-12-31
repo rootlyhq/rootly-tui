@@ -156,10 +156,11 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 
 	// Update text inputs
 	var cmd tea.Cmd
-	if m.focusIndex == FieldEndpoint {
+	switch m.focusIndex {
+	case FieldEndpoint:
 		m.endpoint, cmd = m.endpoint.Update(msg)
 		cmds = append(cmds, cmd)
-	} else if m.focusIndex == FieldAPIKey {
+	case FieldAPIKey:
 		m.apiKey, cmd = m.apiKey.Update(msg)
 		cmds = append(cmds, cmd)
 	}

@@ -88,7 +88,7 @@ func NewPersistentCache(ttl time.Duration) (*PersistentCache, error) {
 		return err
 	})
 	if err != nil {
-		db.Close()
+		_ = db.Close()
 		debug.Logger.Error("Failed to create cache bucket", "error", err)
 		return nil, fmt.Errorf("create bucket: %w", err)
 	}
