@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -80,8 +81,14 @@ func New(version string) Model {
 		cfg, err := config.Load()
 		if err == nil && cfg.IsValid() {
 			m.cfg = cfg
-			m.screen = ScreenMain
-			m.initialLoading = true
+			// Create the API client once here
+			client, err := api.NewClient(cfg)
+			if err == nil {
+				m.apiClient = client
+				m.screen = ScreenMain
+				m.initialLoading = true
+			}
+			// If client creation fails, fall through to setup screen
 		}
 	}
 
@@ -352,22 +359,15 @@ func (m Model) loadData() tea.Cmd {
 }
 
 func (m Model) loadIncidents() tea.Cmd {
+	// Capture the client - it should already be initialized in New()
+	client := m.apiClient
 	return func() tea.Msg {
-		if m.apiClient == nil {
-			// Try to create client from config
-			cfg, err := config.Load()
-			if err != nil {
-				return IncidentsLoadedMsg{Err: err}
-			}
-			client, err := api.NewClient(cfg)
-			if err != nil {
-				return IncidentsLoadedMsg{Err: err}
-			}
-			m.apiClient = client
+		if client == nil {
+			return IncidentsLoadedMsg{Err: fmt.Errorf("API client not initialized")}
 		}
 
 		ctx := context.Background()
-		incidents, err := m.apiClient.ListIncidents(ctx)
+		incidents, err := client.ListIncidents(ctx)
 		if err != nil {
 			return IncidentsLoadedMsg{Err: err}
 		}
@@ -377,21 +377,15 @@ func (m Model) loadIncidents() tea.Cmd {
 }
 
 func (m Model) loadAlerts() tea.Cmd {
+	// Capture the client - it should already be initialized in New()
+	client := m.apiClient
 	return func() tea.Msg {
-		if m.apiClient == nil {
-			cfg, err := config.Load()
-			if err != nil {
-				return AlertsLoadedMsg{Err: err}
-			}
-			client, err := api.NewClient(cfg)
-			if err != nil {
-				return AlertsLoadedMsg{Err: err}
-			}
-			m.apiClient = client
+		if client == nil {
+			return AlertsLoadedMsg{Err: fmt.Errorf("API client not initialized")}
 		}
 
 		ctx := context.Background()
-		alerts, err := m.apiClient.ListAlerts(ctx)
+		alerts, err := client.ListAlerts(ctx)
 		if err != nil {
 			return AlertsLoadedMsg{Err: err}
 		}
