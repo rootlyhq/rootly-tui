@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Portapapeles no disponible (ver registros)"
 logs_help:
   other: "j/k desplazar | g/G arriba/abajo | a seleccionar todo | y copiar | c limpiar | l/Esc cerrar"
+logs_help_no_clipboard:
+  other: "j/k desplazar | g/G arriba/abajo | a seleccionar todo | c limpiar | l/Esc cerrar"
 
 # Help bar items
 navigate:

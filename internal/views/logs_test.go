@@ -551,19 +551,30 @@ func TestLogsModelCopyYKeypress(t *testing.T) {
 	m := NewLogsModel()
 	m.Visible = true
 	m.SetDimensions(100, 50)
+	m.Show() // This checks clipboard availability
 	m.Refresh()
 
 	// Press 'y' to copy
 	m, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
 
-	// Status message should be set
-	if m.statusMsg == "" {
-		t.Error("expected status message after 'y' keypress")
-	}
-
-	// Should return a tick command to clear status
-	if cmd == nil {
-		t.Error("expected tick command to clear status")
+	// Behavior depends on clipboard availability (requires CGO_ENABLED=1)
+	if m.clipboardAvailable {
+		// When clipboard is available, status message should be set
+		if m.statusMsg == "" {
+			t.Error("expected status message after 'y' keypress when clipboard available")
+		}
+		// Should return a tick command to clear status
+		if cmd == nil {
+			t.Error("expected tick command to clear status when clipboard available")
+		}
+	} else {
+		// When clipboard is not available, 'y' should be ignored
+		if m.statusMsg != "" {
+			t.Errorf("expected no status message when clipboard unavailable, got %q", m.statusMsg)
+		}
+		if cmd != nil {
+			t.Error("expected no command when clipboard unavailable")
+		}
 	}
 }
 

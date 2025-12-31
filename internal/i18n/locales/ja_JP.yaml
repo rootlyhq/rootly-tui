@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "クリップボードが利用できません (ログを確認)"
 logs_help:
   other: "j/k スクロール | g/G 先頭/末尾 | a 全選択 | y コピー | c クリア | l/Esc 閉じる"
+logs_help_no_clipboard:
+  other: "j/k スクロール | g/G 先頭/末尾 | a 全選択 | c クリア | l/Esc 閉じる"
 
 # Help bar items
 navigate:

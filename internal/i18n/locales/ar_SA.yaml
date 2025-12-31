@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "الحافظة غير متاحة (راجع السجلات)"
 logs_help:
   other: "j/k تمرير | g/G اعلى/اسفل | a تحديد الكل | y نسخ | c مسح | l/Esc اغلاق"
+logs_help_no_clipboard:
+  other: "j/k تمرير | g/G اعلى/اسفل | a تحديد الكل | c مسح | l/Esc اغلاق"
 
 # Help bar items
 navigate:

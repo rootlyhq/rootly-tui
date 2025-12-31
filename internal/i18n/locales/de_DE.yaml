@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Zwischenablage nicht verfuegbar (siehe Logs)"
 logs_help:
   other: "j/k scrollen | g/G oben/unten | a alles auswaehlen | y kopieren | c leeren | l/Esc schliessen"
+logs_help_no_clipboard:
+  other: "j/k scrollen | g/G oben/unten | a alles auswaehlen | c leeren | l/Esc schliessen"
 
 # Help bar items
 navigate:

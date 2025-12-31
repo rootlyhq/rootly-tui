@@ -42,6 +42,10 @@ type LogsModel struct {
 	// Status message
 	statusMsg     string
 	statusTimeout int
+
+	// Clipboard availability (requires CGO_ENABLED=1)
+	clipboardChecked   bool
+	clipboardAvailable bool
 }
 
 func NewLogsModel() LogsModel {
@@ -86,12 +90,14 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 			m.scrollPos = 0
 			m.clearSelection()
 		case "y":
-			// Yank/copy selected text or all visible logs
-			m.copyToClipboard()
-			if m.statusMsg != "" {
-				cmd = tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
-					return LogsStatusClearMsg{}
-				})
+			// Yank/copy selected text or all visible logs (only if clipboard available)
+			if m.clipboardAvailable {
+				m.copyToClipboard()
+				if m.statusMsg != "" {
+					cmd = tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+						return LogsStatusClearMsg{}
+					})
+				}
 			}
 		case "a":
 			// Select all
@@ -275,7 +281,21 @@ func (m *LogsModel) Toggle() {
 
 func (m *LogsModel) Show() {
 	m.Visible = true
+	m.checkClipboard()
 	m.Refresh()
+}
+
+func (m *LogsModel) checkClipboard() {
+	if m.clipboardChecked {
+		return
+	}
+	m.clipboardChecked = true
+	if err := clipboard.Init(); err != nil {
+		m.clipboardAvailable = false
+		debug.Logger.Debug("Clipboard not available", "error", err)
+	} else {
+		m.clipboardAvailable = true
+	}
 }
 
 func (m *LogsModel) Hide() {
@@ -357,8 +377,8 @@ func (m LogsModel) View() string {
 		b.WriteString("\n\n")
 	}
 
-	// Help
-	help := styles.HelpBar.Render(i18n.T("logs_help"))
+	// Help (conditionally show 'y copy' based on clipboard availability)
+	help := styles.HelpBar.Render(m.getHelpText())
 	b.WriteString(help)
 
 	// Wrap in dialog
@@ -393,6 +413,13 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func (m LogsModel) getHelpText() string {
+	if m.clipboardAvailable {
+		return i18n.T("logs_help")
+	}
+	return i18n.T("logs_help_no_clipboard")
 }
 
 // colorizeLogEntry applies color based on log level

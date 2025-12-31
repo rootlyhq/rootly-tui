@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Буфер обмена недоступен (см. логи)"
 logs_help:
   other: "j/k прокрутка | g/G верх/низ | a выбрать все | y копировать | c очистить | l/Esc закрыть"
+logs_help_no_clipboard:
+  other: "j/k прокрутка | g/G верх/низ | a выбрать все | c очистить | l/Esc закрыть"
 
 # Help bar items
 navigate:

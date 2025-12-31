@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Area de transferencia indisponivel (ver logs)"
 logs_help:
   other: "j/k rolar | g/G topo/fim | a selecionar tudo | y copiar | c limpar | l/Esc fechar"
+logs_help_no_clipboard:
+  other: "j/k rolar | g/G topo/fim | a selecionar tudo | c limpar | l/Esc fechar"
 
 # Help bar items
 navigate:

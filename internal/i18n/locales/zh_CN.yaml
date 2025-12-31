@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "剪贴板不可用 (查看日志)"
 logs_help:
   other: "j/k 滚动 | g/G 顶部/底部 | a 全选 | y 复制 | c 清除 | l/Esc 关闭"
+logs_help_no_clipboard:
+  other: "j/k 滚动 | g/G 顶部/底部 | a 全选 | c 清除 | l/Esc 关闭"
 
 # Help bar items
 navigate:

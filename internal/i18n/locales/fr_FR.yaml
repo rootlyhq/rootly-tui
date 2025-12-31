@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Presse-papiers indisponible (voir journaux)"
 logs_help:
   other: "j/k défiler | g/G haut/bas | a tout sélectionner | y copier | c effacer | l/Échap fermer"
+logs_help_no_clipboard:
+  other: "j/k défiler | g/G haut/bas | a tout sélectionner | c effacer | l/Échap fermer"
 
 # Help bar items
 navigate:

@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "क्लिपबोर्ड उपलब्ध नहीं (लॉग देखें)"
 logs_help:
   other: "j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | y कॉपी | c साफ करें | l/Esc बंद"
+logs_help_no_clipboard:
+  other: "j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | c साफ करें | l/Esc बंद"
 
 # Help bar items
 navigate:

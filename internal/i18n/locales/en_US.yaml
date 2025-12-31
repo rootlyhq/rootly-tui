@@ -161,6 +161,8 @@ clipboard_unavailable:
   other: "Clipboard unavailable (see logs)"
 logs_help:
   other: "j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close"
+logs_help_no_clipboard:
+  other: "j/k scroll | g/G top/bottom | a select all | c clear | l/Esc close"
 
 # Help bar items
 navigate:
