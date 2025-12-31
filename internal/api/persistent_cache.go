@@ -3,11 +3,13 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
+	berrors "go.etcd.io/bbolt/errors"
 
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 )
@@ -33,23 +35,52 @@ func NewPersistentCache(ttl time.Duration) (*PersistentCache, error) {
 	// Get cache directory
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		debug.Logger.Error("Failed to get home directory", "error", err)
+		return nil, fmt.Errorf("get home dir: %w", err)
 	}
 
 	cacheDir := filepath.Join(homeDir, ".rootly-tui")
+	debug.Logger.Debug("Cache directory", "path", cacheDir)
+
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
-		return nil, err
+		debug.Logger.Error("Failed to create cache directory", "path", cacheDir, "error", err)
+		return nil, fmt.Errorf("create cache dir: %w", err)
 	}
 
 	dbPath := filepath.Join(cacheDir, "cache.db")
 	debug.Logger.Debug("Opening cache database", "path", dbPath)
 
+	// Check if database file exists and its stats
+	if info, err := os.Stat(dbPath); err == nil {
+		debug.Logger.Debug("Cache database exists",
+			"path", dbPath,
+			"size", info.Size(),
+			"modTime", info.ModTime(),
+		)
+	} else if os.IsNotExist(err) {
+		debug.Logger.Debug("Cache database does not exist, will create", "path", dbPath)
+	}
+
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{
-		Timeout: 1 * time.Second,
+		Timeout: 2 * time.Second,
 	})
 	if err != nil {
-		return nil, err
+		debug.Logger.Error("Failed to open cache database",
+			"path", dbPath,
+			"error", err,
+			"hint", "Another instance may be running, or the database file may be corrupted",
+		)
+		// If timeout, suggest deleting the lock file
+		if errors.Is(err, berrors.ErrTimeout) {
+			debug.Logger.Warn("Database lock timeout - another process may have the file open",
+				"path", dbPath,
+				"suggestion", "Try closing other rootly-tui instances or delete the cache.db file",
+			)
+		}
+		return nil, fmt.Errorf("open cache db: %w", err)
 	}
+
+	debug.Logger.Debug("Cache database opened successfully", "path", dbPath)
 
 	// Create bucket if it doesn't exist
 	err = db.Update(func(tx *bolt.Tx) error {
@@ -58,8 +89,11 @@ func NewPersistentCache(ttl time.Duration) (*PersistentCache, error) {
 	})
 	if err != nil {
 		db.Close()
-		return nil, err
+		debug.Logger.Error("Failed to create cache bucket", "error", err)
+		return nil, fmt.Errorf("create bucket: %w", err)
 	}
+
+	debug.Logger.Info("Persistent cache initialized", "path", dbPath, "ttl", ttl)
 
 	return &PersistentCache{
 		db:  db,
