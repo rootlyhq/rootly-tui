@@ -1,0 +1,189 @@
+# Arabic (SA) translations
+
+# Setup screen
+welcome:
+  other: "مرحبا بك في Rootly"
+enter_credentials:
+  other: "ادخل بيانات اعتماد Rootly API للبدء."
+api_endpoint:
+  other: "نقطة نهاية API"
+api_key:
+  other: "مفتاح API"
+timezone:
+  other: "المنطقة الزمنية"
+language:
+  other: "اللغة"
+use_arrows_to_change:
+  other: "(استخدم الاسهم للتغيير)"
+testing_connection:
+  other: "جاري اختبار الاتصال..."
+connection_success:
+  other: "تم الاتصال بنجاح!"
+test_connection:
+  other: "اختبار الاتصال"
+save_and_continue:
+  other: "حفظ ومتابعة"
+setup_help:
+  other: "Tab/الاسهم للتنقل، Enter للاختيار، q للخروج"
+error:
+  other: "خطا"
+
+# Incidents view
+incidents:
+  other: "الحوادث"
+loading_page:
+  other: "جاري تحميل الصفحة {{.Page}}..."
+no_incidents:
+  other: "لم يتم العثور على حوادث"
+select_incident:
+  other: "اختر حادثة لعرض التفاصيل"
+description:
+  other: "الوصف"
+timeline:
+  other: "الجدول الزمني"
+created:
+  other: "تم الانشاء"
+started:
+  other: "بدا"
+detected:
+  other: "تم الاكتشاف"
+acknowledged:
+  other: "تم الاقرار"
+mitigated:
+  other: "تم التخفيف"
+resolved:
+  other: "تم الحل"
+services:
+  other: "الخدمات"
+environments:
+  other: "البيئات"
+teams:
+  other: "الفرق"
+roles:
+  other: "الادوار"
+causes:
+  other: "الاسباب"
+types:
+  other: "الانواع"
+functionalities:
+  other: "الوظائف"
+links:
+  other: "الروابط"
+press_enter_details:
+  other: "اضغط Enter لمزيد من التفاصيل"
+loading_details:
+  other: "جاري تحميل التفاصيل..."
+page:
+  other: "صفحة"
+status:
+  other: "الحالة"
+severity:
+  other: "الخطورة"
+created_by:
+  other: "انشا بواسطة"
+
+# Alerts view
+alerts:
+  other: "التنبيهات"
+no_alerts:
+  other: "لم يتم العثور على تنبيهات"
+select_alert:
+  other: "اختر تنبيها لعرض التفاصيل"
+source:
+  other: "المصدر"
+ended:
+  other: "انتهى"
+urgency:
+  other: "الاستعجال"
+responders:
+  other: "المستجيبون"
+labels:
+  other: "التسميات"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "اختصارات لوحة المفاتيح"
+navigation:
+  other: "التنقل"
+actions:
+  other: "الاجراءات"
+general:
+  other: "عام"
+move_down:
+  other: "تحريك المؤشر للاسفل"
+move_up:
+  other: "تحريك المؤشر للاعلى"
+go_to_first:
+  other: "الانتقال للعنصر الاول"
+go_to_last:
+  other: "الانتقال للعنصر الاخير"
+previous_page:
+  other: "الصفحة السابقة"
+next_page:
+  other: "الصفحة التالية"
+switch_tabs:
+  other: "التبديل بين علامات التبويب"
+refresh_data:
+  other: "تحديث البيانات"
+view_details:
+  other: "عرض التفاصيل / اختيار"
+open_url:
+  other: "فتح الرابط في المتصفح"
+view_logs:
+  other: "عرض سجلات التصحيح"
+open_setup:
+  other: "فتح الاعدادات"
+toggle_help:
+  other: "اظهار/اخفاء المساعدة"
+quit:
+  other: "خروج"
+press_to_close:
+  other: "اضغط ? او Esc للاغلاق"
+
+# Logs view
+debug_logs:
+  other: "سجلات التصحيح"
+no_logs_yet:
+  other: "لا توجد سجلات حتى الان. يتم التقاط السجلات تلقائيا."
+showing_lines:
+  other: "عرض الاسطر"
+of:
+  other: "من"
+copied:
+  other: "تم النسخ!"
+clipboard_unavailable:
+  other: "الحافظة غير متاحة (راجع السجلات)"
+logs_help:
+  other: "j/k تمرير | g/G اعلى/اسفل | a تحديد الكل | y نسخ | c مسح | l/Esc اغلاق"
+
+# Help bar items
+navigate:
+  other: "تنقل"
+page_nav:
+  other: "صفحة"
+switch:
+  other: "تبديل"
+refresh:
+  other: "تحديث"
+open:
+  other: "فتح"
+logs:
+  other: "سجلات"
+setup:
+  other: "اعدادات"
+help:
+  other: "مساعدة"
+quit_action:
+  other: "خروج"
+
+# App
+loading:
+  other: "جاري التحميل..."
+refreshing:
+  other: "جاري التحديث..."

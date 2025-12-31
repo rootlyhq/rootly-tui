@@ -242,7 +242,7 @@ func TestSetupModelView(t *testing.T) {
 	view := m.View()
 
 	// Should contain key elements (using i18n translations)
-	if !containsStr(view, "Welcome to Rootly TUI") {
+	if !containsStr(view, "Welcome to Rootly") {
 		t.Error("expected view to contain welcome message")
 	}
 	if !containsStr(view, "API Endpoint") {

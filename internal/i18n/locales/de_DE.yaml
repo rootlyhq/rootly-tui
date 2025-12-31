@@ -1,0 +1,189 @@
+# German (DE) translations
+
+# Setup screen
+welcome:
+  other: "Willkommen bei Rootly"
+enter_credentials:
+  other: "Geben Sie Ihre Rootly API-Anmeldedaten ein, um zu beginnen."
+api_endpoint:
+  other: "API-Endpunkt"
+api_key:
+  other: "API-Schluessel"
+timezone:
+  other: "Zeitzone"
+language:
+  other: "Sprache"
+use_arrows_to_change:
+  other: "(Pfeiltasten zum Aendern)"
+testing_connection:
+  other: "Verbindung wird getestet..."
+connection_success:
+  other: "Verbindung erfolgreich!"
+test_connection:
+  other: "Verbindung testen"
+save_and_continue:
+  other: "Speichern und fortfahren"
+setup_help:
+  other: "Tab/Pfeile navigieren, Enter auswaehlen, q beenden"
+error:
+  other: "Fehler"
+
+# Incidents view
+incidents:
+  other: "VORFAELLE"
+loading_page:
+  other: "Lade Seite {{.Page}}..."
+no_incidents:
+  other: "Keine Vorfaelle gefunden"
+select_incident:
+  other: "Vorfall auswaehlen fuer Details"
+description:
+  other: "Beschreibung"
+timeline:
+  other: "Zeitverlauf"
+created:
+  other: "Erstellt"
+started:
+  other: "Gestartet"
+detected:
+  other: "Erkannt"
+acknowledged:
+  other: "Bestaetigt"
+mitigated:
+  other: "Gemildert"
+resolved:
+  other: "Geloest"
+services:
+  other: "Dienste"
+environments:
+  other: "Umgebungen"
+teams:
+  other: "Teams"
+roles:
+  other: "Rollen"
+causes:
+  other: "Ursachen"
+types:
+  other: "Typen"
+functionalities:
+  other: "Funktionen"
+links:
+  other: "Links"
+press_enter_details:
+  other: "Enter fuer mehr Details"
+loading_details:
+  other: "Lade Details..."
+page:
+  other: "Seite"
+status:
+  other: "Status"
+severity:
+  other: "Schweregrad"
+created_by:
+  other: "Erstellt von"
+
+# Alerts view
+alerts:
+  other: "WARNUNGEN"
+no_alerts:
+  other: "Keine Warnungen gefunden"
+select_alert:
+  other: "Warnung auswaehlen fuer Details"
+source:
+  other: "Quelle"
+ended:
+  other: "Beendet"
+urgency:
+  other: "Dringlichkeit"
+responders:
+  other: "Bearbeiter"
+labels:
+  other: "Labels"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "Tastenkuerzel"
+navigation:
+  other: "Navigation"
+actions:
+  other: "Aktionen"
+general:
+  other: "Allgemein"
+move_down:
+  other: "Cursor nach unten"
+move_up:
+  other: "Cursor nach oben"
+go_to_first:
+  other: "Zum ersten Element"
+go_to_last:
+  other: "Zum letzten Element"
+previous_page:
+  other: "Vorherige Seite"
+next_page:
+  other: "Naechste Seite"
+switch_tabs:
+  other: "Tabs wechseln"
+refresh_data:
+  other: "Daten aktualisieren"
+view_details:
+  other: "Details anzeigen / Auswaehlen"
+open_url:
+  other: "URL im Browser oeffnen"
+view_logs:
+  other: "Debug-Logs anzeigen"
+open_setup:
+  other: "Einstellungen oeffnen"
+toggle_help:
+  other: "Hilfe ein-/ausblenden"
+quit:
+  other: "Beenden"
+press_to_close:
+  other: "? oder Esc zum Schliessen"
+
+# Logs view
+debug_logs:
+  other: "Debug-Logs"
+no_logs_yet:
+  other: "Noch keine Logs. Logs werden automatisch erfasst."
+showing_lines:
+  other: "Zeige Zeilen"
+of:
+  other: "von"
+copied:
+  other: "Kopiert!"
+clipboard_unavailable:
+  other: "Zwischenablage nicht verfuegbar (siehe Logs)"
+logs_help:
+  other: "j/k scrollen | g/G oben/unten | a alles auswaehlen | y kopieren | c leeren | l/Esc schliessen"
+
+# Help bar items
+navigate:
+  other: "navigieren"
+page_nav:
+  other: "Seite"
+switch:
+  other: "wechseln"
+refresh:
+  other: "aktualisieren"
+open:
+  other: "oeffnen"
+logs:
+  other: "Logs"
+setup:
+  other: "Einstellungen"
+help:
+  other: "Hilfe"
+quit_action:
+  other: "beenden"
+
+# App
+loading:
+  other: "Laden..."
+refreshing:
+  other: "Aktualisieren..."

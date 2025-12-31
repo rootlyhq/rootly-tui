@@ -1,0 +1,189 @@
+# Hindi (IN) translations
+
+# Setup screen
+welcome:
+  other: "Rootly में आपका स्वागत है"
+enter_credentials:
+  other: "शुरू करने के लिए अपने Rootly API क्रेडेंशियल दर्ज करें।"
+api_endpoint:
+  other: "API एंडपॉइंट"
+api_key:
+  other: "API कुंजी"
+timezone:
+  other: "समय क्षेत्र"
+language:
+  other: "भाषा"
+use_arrows_to_change:
+  other: "(बदलने के लिए तीर कुंजियों का उपयोग करें)"
+testing_connection:
+  other: "कनेक्शन परीक्षण हो रहा है..."
+connection_success:
+  other: "कनेक्शन सफल!"
+test_connection:
+  other: "कनेक्शन परीक्षण"
+save_and_continue:
+  other: "सहेजें और जारी रखें"
+setup_help:
+  other: "Tab/तीर नेविगेट करें, Enter चुनें, q बाहर निकलें"
+error:
+  other: "त्रुटि"
+
+# Incidents view
+incidents:
+  other: "घटनाएं"
+loading_page:
+  other: "पृष्ठ {{.Page}} लोड हो रहा है..."
+no_incidents:
+  other: "कोई घटना नहीं मिली"
+select_incident:
+  other: "विवरण देखने के लिए एक घटना चुनें"
+description:
+  other: "विवरण"
+timeline:
+  other: "समयरेखा"
+created:
+  other: "बनाया गया"
+started:
+  other: "शुरू हुआ"
+detected:
+  other: "पता चला"
+acknowledged:
+  other: "स्वीकृत"
+mitigated:
+  other: "कम किया गया"
+resolved:
+  other: "हल किया गया"
+services:
+  other: "सेवाएं"
+environments:
+  other: "वातावरण"
+teams:
+  other: "टीमें"
+roles:
+  other: "भूमिकाएं"
+causes:
+  other: "कारण"
+types:
+  other: "प्रकार"
+functionalities:
+  other: "कार्यक्षमताएं"
+links:
+  other: "लिंक"
+press_enter_details:
+  other: "अधिक विवरण के लिए Enter दबाएं"
+loading_details:
+  other: "विवरण लोड हो रहा है..."
+page:
+  other: "पृष्ठ"
+status:
+  other: "स्थिति"
+severity:
+  other: "गंभीरता"
+created_by:
+  other: "द्वारा बनाया गया"
+
+# Alerts view
+alerts:
+  other: "अलर्ट"
+no_alerts:
+  other: "कोई अलर्ट नहीं मिला"
+select_alert:
+  other: "विवरण देखने के लिए एक अलर्ट चुनें"
+source:
+  other: "स्रोत"
+ended:
+  other: "समाप्त"
+urgency:
+  other: "तात्कालिकता"
+responders:
+  other: "प्रतिसादकर्ता"
+labels:
+  other: "लेबल"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "कीबोर्ड शॉर्टकट"
+navigation:
+  other: "नेविगेशन"
+actions:
+  other: "क्रियाएं"
+general:
+  other: "सामान्य"
+move_down:
+  other: "कर्सर नीचे ले जाएं"
+move_up:
+  other: "कर्सर ऊपर ले जाएं"
+go_to_first:
+  other: "पहले आइटम पर जाएं"
+go_to_last:
+  other: "अंतिम आइटम पर जाएं"
+previous_page:
+  other: "पिछला पृष्ठ"
+next_page:
+  other: "अगला पृष्ठ"
+switch_tabs:
+  other: "टैब के बीच स्विच करें"
+refresh_data:
+  other: "डेटा रीफ्रेश करें"
+view_details:
+  other: "विवरण देखें / चुनें"
+open_url:
+  other: "ब्राउज़र में URL खोलें"
+view_logs:
+  other: "डीबग लॉग देखें"
+open_setup:
+  other: "सेटअप खोलें"
+toggle_help:
+  other: "सहायता टॉगल करें"
+quit:
+  other: "बाहर निकलें"
+press_to_close:
+  other: "बंद करने के लिए ? या Esc दबाएं"
+
+# Logs view
+debug_logs:
+  other: "डीबग लॉग"
+no_logs_yet:
+  other: "अभी तक कोई लॉग नहीं। लॉग स्वचालित रूप से कैप्चर होते हैं।"
+showing_lines:
+  other: "पंक्तियां दिखा रहा है"
+of:
+  other: "में से"
+copied:
+  other: "कॉपी हो गया!"
+clipboard_unavailable:
+  other: "क्लिपबोर्ड उपलब्ध नहीं (लॉग देखें)"
+logs_help:
+  other: "j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | y कॉपी | c साफ करें | l/Esc बंद"
+
+# Help bar items
+navigate:
+  other: "नेविगेट"
+page_nav:
+  other: "पृष्ठ"
+switch:
+  other: "स्विच"
+refresh:
+  other: "रीफ्रेश"
+open:
+  other: "खोलें"
+logs:
+  other: "लॉग"
+setup:
+  other: "सेटअप"
+help:
+  other: "सहायता"
+quit_action:
+  other: "बाहर"
+
+# App
+loading:
+  other: "लोड हो रहा है..."
+refreshing:
+  other: "रीफ्रेश हो रहा है..."

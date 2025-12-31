@@ -19,20 +19,63 @@ type Language string
 const (
 	// LangEnglish is US English
 	LangEnglish Language = "en_US"
+	// LangEnglishGB is British English
+	LangEnglishGB Language = "en_GB"
+	// LangSpanish is Spanish
+	LangSpanish Language = "es_ES"
 	// LangFrench is French
 	LangFrench Language = "fr_FR"
+	// LangGerman is German
+	LangGerman Language = "de_DE"
+	// LangChinese is Simplified Chinese
+	LangChinese Language = "zh_CN"
+	// LangHindi is Hindi
+	LangHindi Language = "hi_IN"
+	// LangArabic is Arabic
+	LangArabic Language = "ar_SA"
+	// LangBengali is Bengali
+	LangBengali Language = "bn_BD"
+	// LangPortuguese is Brazilian Portuguese
+	LangPortuguese Language = "pt_BR"
+	// LangRussian is Russian
+	LangRussian Language = "ru_RU"
+	// LangJapanese is Japanese
+	LangJapanese Language = "ja_JP"
 )
 
 // DefaultLanguage is the fallback language
 const DefaultLanguage = LangEnglish
 
 // SupportedLanguages returns all available languages
-var SupportedLanguages = []Language{LangEnglish, LangFrench}
+var SupportedLanguages = []Language{
+	LangEnglish,
+	LangEnglishGB,
+	LangSpanish,
+	LangFrench,
+	LangGerman,
+	LangChinese,
+	LangHindi,
+	LangArabic,
+	LangBengali,
+	LangPortuguese,
+	LangRussian,
+	LangJapanese,
+}
 
 // LanguageNames maps language codes to display names
 var LanguageNames = map[Language]string{
-	LangEnglish: "English (US)",
-	LangFrench:  "Francais (FR)",
+	LangEnglish:    "English (US)",
+	LangEnglishGB:  "English (UK)",
+	LangSpanish:    "Espanol",
+	LangFrench:     "Francais",
+	LangGerman:     "Deutsch",
+	LangChinese:    "中文",
+	LangHindi:      "हिन्दी",
+	LangArabic:     "العربية",
+	LangBengali:    "বাংলা",
+	LangPortuguese: "Portugues",
+	LangRussian:    "Русский",
+	LangJapanese:   "日本語",
 }
 
 var bundle *i18n.Bundle
@@ -45,7 +88,17 @@ func init() {
 
 	// Load embedded locale files
 	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/en_US.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/en_GB.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/es_ES.yaml")
 	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/fr_FR.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/de_DE.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/zh_CN.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/hi_IN.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/ar_SA.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/bn_BD.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/pt_BR.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/ru_RU.yaml")
+	_, _ = bundle.LoadMessageFileFS(localeFS, "locales/ja_JP.yaml")
 
 	// Default to English
 	localizer = i18n.NewLocalizer(bundle, string(LangEnglish))

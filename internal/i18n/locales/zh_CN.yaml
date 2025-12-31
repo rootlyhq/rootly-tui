@@ -1,0 +1,189 @@
+# Chinese Simplified (CN) translations
+
+# Setup screen
+welcome:
+  other: "欢迎使用 Rootly"
+enter_credentials:
+  other: "请输入您的 Rootly API 凭据以开始。"
+api_endpoint:
+  other: "API 端点"
+api_key:
+  other: "API 密钥"
+timezone:
+  other: "时区"
+language:
+  other: "语言"
+use_arrows_to_change:
+  other: "(使用方向键更改)"
+testing_connection:
+  other: "正在测试连接..."
+connection_success:
+  other: "连接成功!"
+test_connection:
+  other: "测试连接"
+save_and_continue:
+  other: "保存并继续"
+setup_help:
+  other: "Tab/方向键导航，Enter选择，q退出"
+error:
+  other: "错误"
+
+# Incidents view
+incidents:
+  other: "事件"
+loading_page:
+  other: "正在加载第 {{.Page}} 页..."
+no_incidents:
+  other: "未找到事件"
+select_incident:
+  other: "选择一个事件查看详情"
+description:
+  other: "描述"
+timeline:
+  other: "时间线"
+created:
+  other: "创建时间"
+started:
+  other: "开始时间"
+detected:
+  other: "检测时间"
+acknowledged:
+  other: "确认时间"
+mitigated:
+  other: "缓解时间"
+resolved:
+  other: "解决时间"
+services:
+  other: "服务"
+environments:
+  other: "环境"
+teams:
+  other: "团队"
+roles:
+  other: "角色"
+causes:
+  other: "原因"
+types:
+  other: "类型"
+functionalities:
+  other: "功能"
+links:
+  other: "链接"
+press_enter_details:
+  other: "按 Enter 查看更多详情"
+loading_details:
+  other: "正在加载详情..."
+page:
+  other: "页"
+status:
+  other: "状态"
+severity:
+  other: "严重程度"
+created_by:
+  other: "创建者"
+
+# Alerts view
+alerts:
+  other: "告警"
+no_alerts:
+  other: "未找到告警"
+select_alert:
+  other: "选择一个告警查看详情"
+source:
+  other: "来源"
+ended:
+  other: "结束时间"
+urgency:
+  other: "紧急程度"
+responders:
+  other: "响应者"
+labels:
+  other: "标签"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "键盘快捷键"
+navigation:
+  other: "导航"
+actions:
+  other: "操作"
+general:
+  other: "通用"
+move_down:
+  other: "向下移动光标"
+move_up:
+  other: "向上移动光标"
+go_to_first:
+  other: "跳转到第一项"
+go_to_last:
+  other: "跳转到最后一项"
+previous_page:
+  other: "上一页"
+next_page:
+  other: "下一页"
+switch_tabs:
+  other: "切换标签页"
+refresh_data:
+  other: "刷新数据"
+view_details:
+  other: "查看详情 / 选择"
+open_url:
+  other: "在浏览器中打开链接"
+view_logs:
+  other: "查看调试日志"
+open_setup:
+  other: "打开设置"
+toggle_help:
+  other: "显示/隐藏帮助"
+quit:
+  other: "退出"
+press_to_close:
+  other: "按 ? 或 Esc 关闭"
+
+# Logs view
+debug_logs:
+  other: "调试日志"
+no_logs_yet:
+  other: "暂无日志。日志会自动捕获。"
+showing_lines:
+  other: "显示行"
+of:
+  other: "共"
+copied:
+  other: "已复制!"
+clipboard_unavailable:
+  other: "剪贴板不可用 (查看日志)"
+logs_help:
+  other: "j/k 滚动 | g/G 顶部/底部 | a 全选 | y 复制 | c 清除 | l/Esc 关闭"
+
+# Help bar items
+navigate:
+  other: "导航"
+page_nav:
+  other: "翻页"
+switch:
+  other: "切换"
+refresh:
+  other: "刷新"
+open:
+  other: "打开"
+logs:
+  other: "日志"
+setup:
+  other: "设置"
+help:
+  other: "帮助"
+quit_action:
+  other: "退出"
+
+# App
+loading:
+  other: "加载中..."
+refreshing:
+  other: "刷新中..."

@@ -1,0 +1,189 @@
+# Russian (RU) translations
+
+# Setup screen
+welcome:
+  other: "Добро пожаловать в Rootly"
+enter_credentials:
+  other: "Введите учетные данные Rootly API для начала."
+api_endpoint:
+  other: "Конечная точка API"
+api_key:
+  other: "Ключ API"
+timezone:
+  other: "Часовой пояс"
+language:
+  other: "Язык"
+use_arrows_to_change:
+  other: "(используйте стрелки для изменения)"
+testing_connection:
+  other: "Проверка соединения..."
+connection_success:
+  other: "Соединение успешно!"
+test_connection:
+  other: "Проверить соединение"
+save_and_continue:
+  other: "Сохранить и продолжить"
+setup_help:
+  other: "Tab/Стрелки для навигации, Enter для выбора, q для выхода"
+error:
+  other: "Ошибка"
+
+# Incidents view
+incidents:
+  other: "ИНЦИДЕНТЫ"
+loading_page:
+  other: "Загрузка страницы {{.Page}}..."
+no_incidents:
+  other: "Инциденты не найдены"
+select_incident:
+  other: "Выберите инцидент для просмотра деталей"
+description:
+  other: "Описание"
+timeline:
+  other: "Хронология"
+created:
+  other: "Создан"
+started:
+  other: "Начат"
+detected:
+  other: "Обнаружен"
+acknowledged:
+  other: "Подтвержден"
+mitigated:
+  other: "Смягчен"
+resolved:
+  other: "Решен"
+services:
+  other: "Сервисы"
+environments:
+  other: "Среды"
+teams:
+  other: "Команды"
+roles:
+  other: "Роли"
+causes:
+  other: "Причины"
+types:
+  other: "Типы"
+functionalities:
+  other: "Функции"
+links:
+  other: "Ссылки"
+press_enter_details:
+  other: "Нажмите Enter для подробностей"
+loading_details:
+  other: "Загрузка деталей..."
+page:
+  other: "Страница"
+status:
+  other: "Статус"
+severity:
+  other: "Серьезность"
+created_by:
+  other: "Создал"
+
+# Alerts view
+alerts:
+  other: "ОПОВЕЩЕНИЯ"
+no_alerts:
+  other: "Оповещения не найдены"
+select_alert:
+  other: "Выберите оповещение для просмотра деталей"
+source:
+  other: "Источник"
+ended:
+  other: "Завершен"
+urgency:
+  other: "Срочность"
+responders:
+  other: "Ответственные"
+labels:
+  other: "Метки"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "Горячие клавиши"
+navigation:
+  other: "Навигация"
+actions:
+  other: "Действия"
+general:
+  other: "Общие"
+move_down:
+  other: "Переместить курсор вниз"
+move_up:
+  other: "Переместить курсор вверх"
+go_to_first:
+  other: "Перейти к первому элементу"
+go_to_last:
+  other: "Перейти к последнему элементу"
+previous_page:
+  other: "Предыдущая страница"
+next_page:
+  other: "Следующая страница"
+switch_tabs:
+  other: "Переключить вкладки"
+refresh_data:
+  other: "Обновить данные"
+view_details:
+  other: "Просмотр деталей / Выбор"
+open_url:
+  other: "Открыть URL в браузере"
+view_logs:
+  other: "Просмотр логов отладки"
+open_setup:
+  other: "Открыть настройки"
+toggle_help:
+  other: "Показать/скрыть справку"
+quit:
+  other: "Выход"
+press_to_close:
+  other: "Нажмите ? или Esc для закрытия"
+
+# Logs view
+debug_logs:
+  other: "Логи отладки"
+no_logs_yet:
+  other: "Логов пока нет. Логи захватываются автоматически."
+showing_lines:
+  other: "Показаны строки"
+of:
+  other: "из"
+copied:
+  other: "Скопировано!"
+clipboard_unavailable:
+  other: "Буфер обмена недоступен (см. логи)"
+logs_help:
+  other: "j/k прокрутка | g/G верх/низ | a выбрать все | y копировать | c очистить | l/Esc закрыть"
+
+# Help bar items
+navigate:
+  other: "навигация"
+page_nav:
+  other: "страница"
+switch:
+  other: "переключить"
+refresh:
+  other: "обновить"
+open:
+  other: "открыть"
+logs:
+  other: "логи"
+setup:
+  other: "настройки"
+help:
+  other: "справка"
+quit_action:
+  other: "выход"
+
+# App
+loading:
+  other: "Загрузка..."
+refreshing:
+  other: "Обновление..."

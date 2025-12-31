@@ -1,0 +1,189 @@
+# Spanish (ES) translations
+
+# Setup screen
+welcome:
+  other: "Bienvenido a Rootly"
+enter_credentials:
+  other: "Ingrese sus credenciales de API de Rootly para comenzar."
+api_endpoint:
+  other: "Punto de acceso API"
+api_key:
+  other: "Clave API"
+timezone:
+  other: "Zona horaria"
+language:
+  other: "Idioma"
+use_arrows_to_change:
+  other: "(use las flechas para cambiar)"
+testing_connection:
+  other: "Probando conexion..."
+connection_success:
+  other: "Conexion exitosa!"
+test_connection:
+  other: "Probar conexion"
+save_and_continue:
+  other: "Guardar y continuar"
+setup_help:
+  other: "Tab/Flechas para navegar, Enter para seleccionar, q para salir"
+error:
+  other: "Error"
+
+# Incidents view
+incidents:
+  other: "INCIDENTES"
+loading_page:
+  other: "Cargando pagina {{.Page}}..."
+no_incidents:
+  other: "No se encontraron incidentes"
+select_incident:
+  other: "Seleccione un incidente para ver detalles"
+description:
+  other: "Descripcion"
+timeline:
+  other: "Linea de tiempo"
+created:
+  other: "Creado"
+started:
+  other: "Iniciado"
+detected:
+  other: "Detectado"
+acknowledged:
+  other: "Reconocido"
+mitigated:
+  other: "Mitigado"
+resolved:
+  other: "Resuelto"
+services:
+  other: "Servicios"
+environments:
+  other: "Entornos"
+teams:
+  other: "Equipos"
+roles:
+  other: "Roles"
+causes:
+  other: "Causas"
+types:
+  other: "Tipos"
+functionalities:
+  other: "Funcionalidades"
+links:
+  other: "Enlaces"
+press_enter_details:
+  other: "Presione Enter para mas detalles"
+loading_details:
+  other: "Cargando detalles..."
+page:
+  other: "Pagina"
+status:
+  other: "Estado"
+severity:
+  other: "Severidad"
+created_by:
+  other: "Creado por"
+
+# Alerts view
+alerts:
+  other: "ALERTAS"
+no_alerts:
+  other: "No se encontraron alertas"
+select_alert:
+  other: "Seleccione una alerta para ver detalles"
+source:
+  other: "Fuente"
+ended:
+  other: "Terminado"
+urgency:
+  other: "Urgencia"
+responders:
+  other: "Respondedores"
+labels:
+  other: "Etiquetas"
+rootly:
+  other: "Rootly"
+slack:
+  other: "Slack"
+jira:
+  other: "Jira"
+
+# Help view
+keyboard_shortcuts:
+  other: "Atajos de teclado"
+navigation:
+  other: "Navegacion"
+actions:
+  other: "Acciones"
+general:
+  other: "General"
+move_down:
+  other: "Mover cursor hacia abajo"
+move_up:
+  other: "Mover cursor hacia arriba"
+go_to_first:
+  other: "Ir al primer elemento"
+go_to_last:
+  other: "Ir al ultimo elemento"
+previous_page:
+  other: "Pagina anterior"
+next_page:
+  other: "Pagina siguiente"
+switch_tabs:
+  other: "Cambiar entre pestanas"
+refresh_data:
+  other: "Actualizar datos"
+view_details:
+  other: "Ver detalles / Seleccionar"
+open_url:
+  other: "Abrir URL en navegador"
+view_logs:
+  other: "Ver registros de depuracion"
+open_setup:
+  other: "Abrir configuracion"
+toggle_help:
+  other: "Mostrar/ocultar esta ayuda"
+quit:
+  other: "Salir"
+press_to_close:
+  other: "Presione ? o Esc para cerrar"
+
+# Logs view
+debug_logs:
+  other: "Registros de depuracion"
+no_logs_yet:
+  other: "Sin registros aun. Los registros se capturan automaticamente."
+showing_lines:
+  other: "Mostrando lineas"
+of:
+  other: "de"
+copied:
+  other: "Copiado!"
+clipboard_unavailable:
+  other: "Portapapeles no disponible (ver registros)"
+logs_help:
+  other: "j/k desplazar | g/G arriba/abajo | a seleccionar todo | y copiar | c limpiar | l/Esc cerrar"
+
+# Help bar items
+navigate:
+  other: "navegar"
+page_nav:
+  other: "pagina"
+switch:
+  other: "cambiar"
+refresh:
+  other: "actualizar"
+open:
+  other: "abrir"
+logs:
+  other: "registros"
+setup:
+  other: "config"
+help:
+  other: "ayuda"
+quit_action:
+  other: "salir"
+
+# App
+loading:
+  other: "Cargando..."
+refreshing:
+  other: "Actualizando..."
