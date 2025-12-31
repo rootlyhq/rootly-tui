@@ -262,8 +262,8 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 					} `json:"data"`
 				} `json:"groups"`
 				Labels *[]struct {
-					Key   string `json:"key"`
-					Value string `json:"value"`
+					Key   string      `json:"key"`
+					Value interface{} `json:"value"`
 				} `json:"labels"`
 			} `json:"attributes"`
 		} `json:"data"`
@@ -313,7 +313,7 @@ func (c *Client) ListAlerts(ctx context.Context) ([]Alert, error) {
 		}
 		if d.Attributes.Labels != nil {
 			for _, l := range *d.Attributes.Labels {
-				alert.Labels[l.Key] = l.Value
+				alert.Labels[l.Key] = fmt.Sprintf("%v", l.Value)
 			}
 		}
 
