@@ -447,7 +447,7 @@ func (m Model) View() string {
 }
 
 func (m Model) renderHeader() string {
-	title := styles.Title.Render("Rootly TUI")
+	title := styles.Title.Render(i18n.T("app_title"))
 
 	// Tab indicators
 	var incidentsTab, alertsTab string

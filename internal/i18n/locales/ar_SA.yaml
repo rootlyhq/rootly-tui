@@ -183,6 +183,8 @@ quit_action:
   other: "خروج"
 
 # App
+app_title:
+  other: "Rootly"
 loading:
   other: "جاري التحميل..."
 refreshing:

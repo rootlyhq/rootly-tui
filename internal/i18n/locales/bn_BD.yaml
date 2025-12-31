@@ -183,6 +183,8 @@ quit_action:
   other: "প্রস্থান"
 
 # App
+app_title:
+  other: "Rootly"
 loading:
   other: "লোড হচ্ছে..."
 refreshing:

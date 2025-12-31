@@ -183,6 +183,8 @@ quit_action:
   other: "sair"
 
 # App
+app_title:
+  other: "Rootly"
 loading:
   other: "Carregando..."
 refreshing:

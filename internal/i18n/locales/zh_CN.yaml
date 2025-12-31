@@ -183,6 +183,8 @@ quit_action:
   other: "退出"
 
 # App
+app_title:
+  other: "Rootly"
 loading:
   other: "加载中..."
 refreshing:

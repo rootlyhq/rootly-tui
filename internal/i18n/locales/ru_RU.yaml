@@ -183,6 +183,8 @@ quit_action:
   other: "выход"
 
 # App
+app_title:
+  other: "Rootly"
 loading:
   other: "Загрузка..."
 refreshing:
