@@ -400,3 +400,69 @@ func TestSetupModelViewButtonStates(t *testing.T) {
 		t.Error("expected non-empty view")
 	}
 }
+
+func TestSetupModelSetDimensions(t *testing.T) {
+	m := NewSetupModel()
+
+	m.SetDimensions(120, 60)
+
+	if m.width != 120 {
+		t.Errorf("expected width 120, got %d", m.width)
+	}
+	if m.height != 60 {
+		t.Errorf("expected height 60, got %d", m.height)
+	}
+}
+
+func TestSetupModelTimezoneNavigation(t *testing.T) {
+	m := NewSetupModel()
+	m.focusIndex = FieldTimezone
+
+	// Save initial index
+	initialIndex := m.timezoneIndex
+
+	// Move right (if there are more timezones)
+	if initialIndex < len(m.timezones)-1 {
+		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+		if m.timezoneIndex != initialIndex+1 {
+			t.Errorf("expected timezone index %d after right, got %d", initialIndex+1, m.timezoneIndex)
+		}
+
+		// Move left
+		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+		if m.timezoneIndex != initialIndex {
+			t.Errorf("expected timezone index %d after left, got %d", initialIndex, m.timezoneIndex)
+		}
+	}
+
+	// Test 'h' and 'l' keys
+	m.timezoneIndex = 1
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}})
+	if m.timezoneIndex != 0 {
+		t.Errorf("expected timezone index 0 after 'h', got %d", m.timezoneIndex)
+	}
+
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	if m.timezoneIndex != 1 {
+		t.Errorf("expected timezone index 1 after 'l', got %d", m.timezoneIndex)
+	}
+}
+
+func TestSetupModelTimezoneAtBounds(t *testing.T) {
+	m := NewSetupModel()
+	m.focusIndex = FieldTimezone
+
+	// Move to start
+	m.timezoneIndex = 0
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	if m.timezoneIndex != 0 {
+		t.Error("expected timezone index to stay at 0 at left bound")
+	}
+
+	// Move to end
+	m.timezoneIndex = len(m.timezones) - 1
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	if m.timezoneIndex != len(m.timezones)-1 {
+		t.Error("expected timezone index to stay at end at right bound")
+	}
+}

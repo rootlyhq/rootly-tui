@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"os"
 	"testing"
 )
 
@@ -156,4 +157,75 @@ func TestEnableDisable(t *testing.T) {
 	if Enabled {
 		t.Error("expected Enabled to be false after Disable()")
 	}
+}
+
+func TestSetLogFile(t *testing.T) {
+	// Create temp file for test
+	tmpFile, err := os.CreateTemp("", "rootly-tui-debug-test-*.log")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+	defer os.Remove(tmpPath)
+
+	// Set log file
+	err = SetLogFile(tmpPath)
+	if err != nil {
+		t.Fatalf("SetLogFile failed: %v", err)
+	}
+
+	// Write a log entry
+	Logger.Info("test log to file")
+
+	// Verify file has content
+	content, err := os.ReadFile(tmpPath)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+
+	if len(content) == 0 {
+		t.Error("expected log file to have content")
+	}
+
+	// Reset to buffer only
+	Disable()
+}
+
+func TestSetLogFileInvalidPath(t *testing.T) {
+	// Try to set log file to invalid path
+	err := SetLogFile("/nonexistent/directory/file.log")
+	if err == nil {
+		t.Error("expected error for invalid path")
+	}
+}
+
+func TestEnableWithFileOutput(t *testing.T) {
+	// Create temp file
+	tmpFile, err := os.CreateTemp("", "rootly-tui-debug-test-*.log")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+	defer os.Remove(tmpPath)
+
+	// Set file first
+	err = SetLogFile(tmpPath)
+	if err != nil {
+		t.Fatalf("SetLogFile failed: %v", err)
+	}
+
+	// Now enable - should use file output
+	Enable()
+	if !Enabled {
+		t.Error("expected Enabled to be true")
+	}
+
+	// Write something
+	Logger.Info("test with file enabled")
+
+	// Cleanup
+	Disable()
+	fileOutput = nil
 }

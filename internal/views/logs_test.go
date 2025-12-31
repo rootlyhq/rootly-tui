@@ -590,3 +590,13 @@ func TestLogsModelViewWithStatus(t *testing.T) {
 		t.Error("expected view to contain status message")
 	}
 }
+
+func TestLogsModelInit(t *testing.T) {
+	m := NewLogsModel()
+	cmd := m.Init()
+
+	// Init should return nil for LogsModel
+	if cmd != nil {
+		t.Error("expected Init to return nil")
+	}
+}

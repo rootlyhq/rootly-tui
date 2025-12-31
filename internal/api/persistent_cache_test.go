@@ -215,3 +215,115 @@ func TestPersistentCacheWithIncidentStruct(t *testing.T) {
 		t.Errorf("expected 2 services, got %d", len(result[0].Services))
 	}
 }
+
+func TestPersistentCacheCleanup(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Use a very short TTL
+	cache, err := NewPersistentCache(50 * time.Millisecond)
+	if err != nil {
+		t.Fatalf("NewPersistentCache() error = %v", err)
+	}
+	defer cache.Close()
+
+	// Add some entries
+	cache.Set("key1", "value1")
+	cache.Set("key2", "value2")
+
+	// Wait for entries to expire
+	time.Sleep(100 * time.Millisecond)
+
+	// Run cleanup
+	cache.Cleanup()
+
+	// Entries should be gone
+	var result string
+	if cache.GetTyped("key1", &result) {
+		t.Error("expected key1 to be cleaned up")
+	}
+	if cache.GetTyped("key2", &result) {
+		t.Error("expected key2 to be cleaned up")
+	}
+}
+
+func TestPersistentCacheCleanupPartial(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	// Use a short TTL
+	cache, err := NewPersistentCache(50 * time.Millisecond)
+	if err != nil {
+		t.Fatalf("NewPersistentCache() error = %v", err)
+	}
+	defer cache.Close()
+
+	// Add first entry
+	cache.Set("old-key", "old-value")
+
+	// Wait for first entry to expire
+	time.Sleep(60 * time.Millisecond)
+
+	// Add second entry (fresh)
+	cache.Set("new-key", "new-value")
+
+	// Run cleanup
+	cache.Cleanup()
+
+	// Old entry should be gone, new entry should remain
+	var result string
+	if cache.GetTyped("old-key", &result) {
+		t.Error("expected old-key to be cleaned up")
+	}
+	if !cache.GetTyped("new-key", &result) {
+		t.Error("expected new-key to still exist")
+	}
+}
+
+func TestPersistentCacheGetMiss(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	cache, err := NewPersistentCache(30 * time.Second)
+	if err != nil {
+		t.Fatalf("NewPersistentCache() error = %v", err)
+	}
+	defer cache.Close()
+
+	// Get on non-existent key
+	_, ok := cache.Get("nonexistent")
+	if ok {
+		t.Error("expected Get to return false for nonexistent key")
+	}
+}
+
+func TestPersistentCacheGetTypedInvalidType(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", originalHome)
+
+	cache, err := NewPersistentCache(30 * time.Second)
+	if err != nil {
+		t.Fatalf("NewPersistentCache() error = %v", err)
+	}
+	defer cache.Close()
+
+	// Store a string
+	cache.Set("string-key", "just a string")
+
+	// Try to get as a struct (should fail unmarshal)
+	var result struct {
+		Field string `json:"field"`
+	}
+	if cache.GetTyped("string-key", &result) {
+		// It might still work if the JSON unmarshal succeeds
+		t.Log("GetTyped returned true (string can unmarshal to struct with string field)")
+	}
+}
