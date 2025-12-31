@@ -110,7 +110,7 @@ func NewIncidentsModel() IncidentsModel {
 		Focused(true).
 		Border(borderNoDividers()).
 		WithBaseStyle(lipgloss.NewStyle().Foreground(styles.ColorText)).
-		HighlightStyle(lipgloss.NewStyle().Background(styles.ColorHighlight).Bold(true)).
+		HighlightStyle(lipgloss.NewStyle()). // No background highlight, arrow shows selection
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
 
 	return IncidentsModel{
