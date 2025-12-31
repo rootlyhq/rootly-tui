@@ -2,17 +2,12 @@ package api
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
 
 func TestNewPersistentCache(t *testing.T) {
-	// Use a unique temp directory for this test
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -20,18 +15,16 @@ func TestNewPersistentCache(t *testing.T) {
 	}
 	defer cache.Close()
 
-	// Check that the database file was created
-	dbPath := filepath.Join(tmpDir, ".rootly-tui", "cache.db")
+	// Check that the database file was created in the temp home dir
+	homeDir, _ := os.UserHomeDir()
+	dbPath := homeDir + "/.rootly-tui/cache.db"
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		t.Error("expected cache.db to exist")
 	}
 }
 
 func TestPersistentCacheSetGet(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -57,10 +50,7 @@ func TestPersistentCacheSetGet(t *testing.T) {
 }
 
 func TestPersistentCacheExpiry(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	// Use a very short TTL
 	cache, err := NewPersistentCache(50 * time.Millisecond)
@@ -87,10 +77,7 @@ func TestPersistentCacheExpiry(t *testing.T) {
 }
 
 func TestPersistentCacheDelete(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -113,10 +100,7 @@ func TestPersistentCacheDelete(t *testing.T) {
 }
 
 func TestPersistentCacheClear(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -139,10 +123,7 @@ func TestPersistentCacheClear(t *testing.T) {
 }
 
 func TestPersistentCachePersistence(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	// Create cache and set a value
 	cache1, err := NewPersistentCache(30 * time.Second)
@@ -169,10 +150,7 @@ func TestPersistentCachePersistence(t *testing.T) {
 }
 
 func TestPersistentCacheWithIncidentStruct(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -217,10 +195,7 @@ func TestPersistentCacheWithIncidentStruct(t *testing.T) {
 }
 
 func TestPersistentCacheCleanup(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	// Use a very short TTL
 	cache, err := NewPersistentCache(50 * time.Millisecond)
@@ -250,10 +225,7 @@ func TestPersistentCacheCleanup(t *testing.T) {
 }
 
 func TestPersistentCacheCleanupPartial(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	// Use a short TTL
 	cache, err := NewPersistentCache(50 * time.Millisecond)
@@ -285,10 +257,7 @@ func TestPersistentCacheCleanupPartial(t *testing.T) {
 }
 
 func TestPersistentCacheGetMiss(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {
@@ -304,10 +273,7 @@ func TestPersistentCacheGetMiss(t *testing.T) {
 }
 
 func TestPersistentCacheGetTypedInvalidType(t *testing.T) {
-	tmpDir := t.TempDir()
-	originalHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", originalHome)
+	defer setupTestEnv(t)()
 
 	cache, err := NewPersistentCache(30 * time.Second)
 	if err != nil {

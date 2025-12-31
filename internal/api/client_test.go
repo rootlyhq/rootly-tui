@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -13,11 +14,21 @@ import (
 	"github.com/rootlyhq/rootly-tui/internal/config"
 )
 
-// setupTestEnv sets up a temporary HOME directory for test isolation.
+// setupTestEnv sets up a temporary home directory for test isolation.
+// On Unix, sets HOME; on Windows, sets USERPROFILE (used by os.UserHomeDir).
 // Returns a cleanup function that should be deferred.
 func setupTestEnv(t *testing.T) func() {
 	t.Helper()
 	tmpDir := t.TempDir()
+
+	if runtime.GOOS == "windows" {
+		originalUserProfile := os.Getenv("USERPROFILE")
+		os.Setenv("USERPROFILE", tmpDir)
+		return func() {
+			os.Setenv("USERPROFILE", originalUserProfile)
+		}
+	}
+
 	originalHome := os.Getenv("HOME")
 	os.Setenv("HOME", tmpDir)
 	return func() {
