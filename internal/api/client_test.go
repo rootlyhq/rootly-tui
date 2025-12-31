@@ -37,6 +37,7 @@ func TestNewClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	if client == nil {
 		t.Fatal("expected client to be non-nil")
@@ -66,6 +67,7 @@ func TestNewClientWithHTTPS(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to create client: %v", err)
 			}
+			defer client.Close()
 
 			if client == nil {
 				t.Fatal("expected client to be non-nil")
@@ -115,6 +117,7 @@ func TestValidateAPIKey(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to create client: %v", err)
 			}
+			defer client.Close()
 
 			err = client.ValidateAPIKey(context.Background())
 			if (err != nil) != tt.wantErr {
@@ -175,6 +178,7 @@ func TestListIncidents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	result, err := client.ListIncidents(context.Background(), 1)
 	if err != nil {
@@ -248,6 +252,7 @@ func TestListAlerts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	result, err := client.ListAlerts(context.Background(), 1)
 	if err != nil {
@@ -293,6 +298,7 @@ func TestListIncidentsError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	_, err = client.ListIncidents(context.Background(), 1)
 	if err == nil {
@@ -517,6 +523,7 @@ func TestListAlertsWithLabels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	result, err := client.ListAlerts(context.Background(), 1)
 	if err != nil {
@@ -602,6 +609,7 @@ func TestListIncidentsWithTimestamps(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	result, err := client.ListIncidents(context.Background(), 1)
 	if err != nil {
@@ -660,6 +668,7 @@ func TestListAlertsError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	_, err = client.ListAlerts(context.Background(), 1)
 	if err == nil {
@@ -789,6 +798,7 @@ func TestGetIncident(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	// Use a fixed time for cache key - matches updated_at in test fixture
 	updatedAt, _ := time.Parse(time.RFC3339, "2025-01-01T12:00:00Z")
@@ -939,6 +949,7 @@ func TestGetAlert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	// Use a fixed time for cache key - matches updated_at in test fixture
 	updatedAt, _ := time.Parse(time.RFC3339, "2025-01-01T10:30:00Z")
@@ -1005,6 +1016,7 @@ func TestGetIncidentError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	_, err = client.GetIncident(context.Background(), "nonexistent", time.Now())
 	if err == nil {
@@ -1029,6 +1041,7 @@ func TestGetAlertError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
+	defer client.Close()
 
 	_, err = client.GetAlert(context.Background(), "nonexistent", time.Now())
 	if err == nil {
