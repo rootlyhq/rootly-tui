@@ -239,12 +239,12 @@ func (m IncidentsModel) renderList(height int) string {
 			title = title[:titleMaxLen-3] + "..."
 		}
 
-		// Format: "▁▃▅▇ INC-123  started      Title here"
-		line := fmt.Sprintf("%s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
-
+		// Format: "▶ ▁▃▅▇ INC-123  started      Title here" (▶ for selected)
 		if i == m.cursor {
+			line := fmt.Sprintf("▶ %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
 		} else {
+			line := fmt.Sprintf("  %s %-8s %s %s", sev, seqID, styles.RenderStatus(statusPadded), title)
 			b.WriteString(styles.ListItem.Width(m.listWidth - 4).Render(line))
 		}
 		b.WriteString("\n")

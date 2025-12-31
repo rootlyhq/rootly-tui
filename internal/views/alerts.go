@@ -229,12 +229,12 @@ func (m AlertsModel) renderList(height int) string {
 			summary = summary[:titleMaxLen-3] + "..."
 		}
 
-		// Format: "[source] ABC123  triggered   Summary here"
-		line := fmt.Sprintf("%s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
-
+		// Format: "▶ [source] ABC123  triggered   Summary here" (▶ for selected)
 		if i == m.cursor {
+			line := fmt.Sprintf("▶ %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
 			b.WriteString(styles.ListItemSelected.Width(m.listWidth - 4).Render(line))
 		} else {
+			line := fmt.Sprintf("  %s %-8s %s %s", source, shortID, styles.RenderStatus(statusPadded), summary)
 			b.WriteString(styles.ListItem.Width(m.listWidth - 4).Render(line))
 		}
 		b.WriteString("\n")
