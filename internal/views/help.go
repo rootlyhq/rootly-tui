@@ -54,10 +54,11 @@ func (m HelpModel) View() string {
 	b.WriteString("\n")
 
 	// Sorting section
-	b.WriteString(styles.TextBold.Render(i18n.T("sorting")))
+	b.WriteString(styles.TextBold.Render(i18n.T("sorting.title")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("S", i18n.T("open_sort_menu")))
-	b.WriteString("\n")
+	b.WriteString(renderHelpLine("S", i18n.T("sorting.open_sort_menu")))
+	b.WriteString(styles.TextDim.Render("    Press same key again to toggle newest ⇄ oldest"))
+	b.WriteString("\n\n")
 
 	// General section
 	b.WriteString(styles.TextBold.Render(i18n.T("help.section.general")))
@@ -97,7 +98,7 @@ func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) stri
 	}
 	// Show sorting hint only on incidents tab
 	if isIncidentsTab {
-		items = append(items, styles.RenderHelpItem("S", i18n.T("sort")))
+		items = append(items, styles.RenderHelpItem("S", i18n.T("sorting.sort_by_date")))
 	}
 	items = append(items,
 		styles.RenderHelpItem("l", i18n.T("helpbar.logs")),

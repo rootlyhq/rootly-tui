@@ -28,20 +28,20 @@ func NewSortState() *SortState {
 }
 
 func (s *SortState) Toggle(newField interface{}) bool {
-	fieldChanged := false
 	if s.Field == newField && s.enabled {
+		// Toggling direction on same field
 		if s.Direction == SortAsc {
 			s.Direction = SortDesc
 		} else {
 			s.Direction = SortAsc
 		}
-	} else {
-		s.Field = newField
-		s.Direction = SortDesc
-		s.enabled = true
-		fieldChanged = true
+		return true // Direction changed, need to reload
 	}
-	return fieldChanged
+	// New field selected
+	s.Field = newField
+	s.Direction = SortDesc
+	s.enabled = true
+	return true // Field changed, need to reload
 }
 
 func (s *SortState) IsEnabled() bool {
