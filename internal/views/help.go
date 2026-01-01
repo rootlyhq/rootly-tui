@@ -30,27 +30,27 @@ func (m *HelpModel) Hide() {
 func (m HelpModel) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.DialogTitle.Render(i18n.T("keyboard_shortcuts")))
+	b.WriteString(styles.DialogTitle.Render(i18n.T("help.title")))
 	b.WriteString("\n\n")
 
 	// Navigation section
-	b.WriteString(styles.TextBold.Render(i18n.T("navigation")))
+	b.WriteString(styles.TextBold.Render(i18n.T("help.section.navigation")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("j / Down", i18n.T("move_down")))
-	b.WriteString(renderHelpLine("k / Up", i18n.T("move_up")))
-	b.WriteString(renderHelpLine("g", i18n.T("go_to_first")))
-	b.WriteString(renderHelpLine("G", i18n.T("go_to_last")))
-	b.WriteString(renderHelpLine("[", i18n.T("previous_page")))
-	b.WriteString(renderHelpLine("]", i18n.T("next_page")))
-	b.WriteString(renderHelpLine("Tab", i18n.T("switch_tabs")))
+	b.WriteString(renderHelpLine("j / Down", i18n.T("help.nav.move_down")))
+	b.WriteString(renderHelpLine("k / Up", i18n.T("help.nav.move_up")))
+	b.WriteString(renderHelpLine("g", i18n.T("help.nav.first")))
+	b.WriteString(renderHelpLine("G", i18n.T("help.nav.last")))
+	b.WriteString(renderHelpLine("[", i18n.T("help.nav.prev_page")))
+	b.WriteString(renderHelpLine("]", i18n.T("help.nav.next_page")))
+	b.WriteString(renderHelpLine("Tab", i18n.T("help.nav.switch_tabs")))
 	b.WriteString("\n")
 
 	// Actions section
-	b.WriteString(styles.TextBold.Render(i18n.T("actions")))
+	b.WriteString(styles.TextBold.Render(i18n.T("help.section.actions")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("r", i18n.T("refresh_data")))
-	b.WriteString(renderHelpLine("Enter", i18n.T("view_details")))
-	b.WriteString(renderHelpLine("o", i18n.T("open_url")))
+	b.WriteString(renderHelpLine("r", i18n.T("help.action.refresh")))
+	b.WriteString(renderHelpLine("Enter", i18n.T("help.action.details")))
+	b.WriteString(renderHelpLine("o", i18n.T("help.action.open_url")))
 	b.WriteString("\n")
 
 	// Sorting section
@@ -60,16 +60,16 @@ func (m HelpModel) View() string {
 	b.WriteString("\n")
 
 	// General section
-	b.WriteString(styles.TextBold.Render(i18n.T("general")))
+	b.WriteString(styles.TextBold.Render(i18n.T("help.section.general")))
 	b.WriteString("\n")
-	b.WriteString(renderHelpLine("l", i18n.T("view_logs")))
-	b.WriteString(renderHelpLine("s", i18n.T("open_setup")))
-	b.WriteString(renderHelpLine("A", i18n.T("view_about")))
-	b.WriteString(renderHelpLine("?", i18n.T("toggle_help")))
-	b.WriteString(renderHelpLine("q / Ctrl+C", i18n.T("quit")))
+	b.WriteString(renderHelpLine("l", i18n.T("help.action.logs")))
+	b.WriteString(renderHelpLine("s", i18n.T("help.action.setup")))
+	b.WriteString(renderHelpLine("A", i18n.T("help.action.about")))
+	b.WriteString(renderHelpLine("?", i18n.T("help.action.help")))
+	b.WriteString(renderHelpLine("q / Ctrl+C", i18n.T("help.action.quit")))
 	b.WriteString("\n\n")
 
-	b.WriteString(styles.TextDim.Render(i18n.T("press_to_close")))
+	b.WriteString(styles.TextDim.Render(i18n.T("help.press_to_close")))
 
 	return styles.Dialog.Render(b.String())
 }
@@ -85,14 +85,14 @@ func renderHelpLine(key, desc string) string {
 // isIncidentsTab indicates whether we're on the incidents tab (for sorting hints)
 func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) string {
 	items := []string{
-		styles.RenderHelpItem("j/k", i18n.T("navigate")),
-		styles.RenderHelpItem("[/]", i18n.T("page_nav")),
-		styles.RenderHelpItem("Tab", i18n.T("switch")),
+		styles.RenderHelpItem("j/k", i18n.T("helpbar.navigate")),
+		styles.RenderHelpItem("[/]", i18n.T("helpbar.page")),
+		styles.RenderHelpItem("Tab", i18n.T("helpbar.switch")),
 	}
 	if !isLoading {
-		items = append(items, styles.RenderHelpItem("r", i18n.T("refresh")))
+		items = append(items, styles.RenderHelpItem("r", i18n.T("helpbar.refresh")))
 		if hasSelection {
-			items = append(items, styles.RenderHelpItem("o", i18n.T("open")))
+			items = append(items, styles.RenderHelpItem("o", i18n.T("helpbar.open")))
 		}
 	}
 	// Show sorting hint only on incidents tab
@@ -100,11 +100,11 @@ func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) stri
 		items = append(items, styles.RenderHelpItem("S", i18n.T("sort")))
 	}
 	items = append(items,
-		styles.RenderHelpItem("l", i18n.T("logs")),
-		styles.RenderHelpItem("s", i18n.T("setup")),
-		styles.RenderHelpItem("A", i18n.T("about")),
-		styles.RenderHelpItem("?", i18n.T("help")),
-		styles.RenderHelpItem("q", i18n.T("quit_action")),
+		styles.RenderHelpItem("l", i18n.T("helpbar.logs")),
+		styles.RenderHelpItem("s", i18n.T("helpbar.setup")),
+		styles.RenderHelpItem("A", i18n.T("helpbar.about")),
+		styles.RenderHelpItem("?", i18n.T("helpbar.help")),
+		styles.RenderHelpItem("q", i18n.T("helpbar.quit")),
 	)
 
 	return styles.HelpBar.Width(width).Render(strings.Join(items, "  "))

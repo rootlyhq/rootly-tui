@@ -116,10 +116,10 @@ func NewIncidentsModel() IncidentsModel {
 	// Define table columns with i18n headers using evertras/bubble-table
 	columns := []table.Column{
 		table.NewColumn(colKeyIndicator, "", 2), // Selection indicator column
-		table.NewColumn(colKeySev, i18n.T("col_sev"), 4),
-		table.NewColumn(colKeyID, i18n.T("col_id"), 10),
-		table.NewColumn(colKeyStatus, i18n.T("status"), 12),
-		table.NewFlexColumn(colKeyTitle, i18n.T("col_title"), 1), // Flex to fill remaining space
+		table.NewColumn(colKeySev, i18n.T("incidents.col.severity"), 4),
+		table.NewColumn(colKeyID, i18n.T("incidents.col.id"), 10),
+		table.NewColumn(colKeyStatus, i18n.T("incidents.detail.status"), 12),
+		table.NewFlexColumn(colKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 
 	t := table.New(columns).
@@ -522,19 +522,19 @@ func (m IncidentsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]any{"Page": m.currentPage}))
-		listContent := styles.TextBold.Render(i18n.T("incidents")) + "\n\n" + styles.TextDim.Render(loadingMsg)
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("incidents.loading_page", map[string]any{"Page": m.currentPage}))
+		listContent := styles.TextBold.Render(i18n.T("incidents.title")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
 		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 	}
 
 	if m.error != "" {
-		return styles.Error.Render(i18n.T("error") + ": " + m.error)
+		return styles.Error.Render(i18n.T("common.error") + ": " + m.error)
 	}
 
 	if len(m.incidents) == 0 {
-		return styles.TextDim.Render(i18n.T("no_incidents"))
+		return styles.TextDim.Render(i18n.T("incidents.none_found"))
 	}
 
 	// Build list view
@@ -551,7 +551,7 @@ func (m IncidentsModel) renderList(height int) string {
 	var b strings.Builder
 
 	// Title
-	title := styles.TextBold.Render(i18n.T("incidents"))
+	title := styles.TextBold.Render(i18n.T("incidents.title"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
@@ -566,7 +566,7 @@ func (m IncidentsModel) renderList(height int) string {
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	fmt.Fprintf(&footer, " %s %d ", i18n.T("page"), m.currentPage)
+	fmt.Fprintf(&footer, " %s %d ", i18n.T("common.page"), m.currentPage)
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
@@ -591,7 +591,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 	inc := m.SelectedIncident()
 	if inc == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
-			styles.TextDim.Render(i18n.T("select_incident")),
+			styles.TextDim.Render(i18n.T("incidents.select_prompt")),
 		)
 	}
 
@@ -647,12 +647,12 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	statusBadge := styles.RenderStatus(inc.Status)
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
-	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s", i18n.T("status"), statusBadge, i18n.T("severity"), sevSignal, sevBadge))
+	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s", i18n.T("incidents.detail.status"), statusBadge, i18n.T("incidents.detail.severity"), sevSignal, sevBadge))
 
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
 		creatorInfo := styles.RenderNameWithEmail(inc.CreatedByName, inc.CreatedByEmail)
-		fmt.Fprintf(&b, "  %s: %s", i18n.T("created_by"), creatorInfo)
+		fmt.Fprintf(&b, "  %s: %s", i18n.T("incidents.detail.created_by"), creatorInfo)
 	}
 	b.WriteString("\n\n")
 
@@ -665,16 +665,16 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
 	}
 	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("links")))
+		b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
+			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.rootly"), rootlyURL))
 		}
 		if inc.SlackChannelURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("slack"), inc.SlackChannelURL))
+			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.slack"), inc.SlackChannelURL))
 		}
 		if inc.JiraIssueURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("jira"), inc.JiraIssueURL))
+			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.jira"), inc.JiraIssueURL))
 		}
 		b.WriteString("\n")
 	}
@@ -684,7 +684,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	titleClean := strings.ReplaceAll(title, "\n", " ")
 	titleClean = strings.ReplaceAll(titleClean, "\r", "")
 	if summaryClean != "" && strings.TrimSpace(summaryClean) != strings.TrimSpace(titleClean) {
-		b.WriteString(styles.TextBold.Render(i18n.T("description")))
+		b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.description")))
 		b.WriteString("\n")
 		// Render as markdown, use detail width minus padding
 		descWidth := m.detailWidth - 4
@@ -696,39 +696,39 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	}
 
 	// Timeline
-	b.WriteString(styles.TextBold.Render(i18n.T("timeline")))
+	b.WriteString(styles.TextBold.Render(i18n.T("incidents.timeline.title")))
 	b.WriteString("\n")
 
 	if !inc.CreatedAt.IsZero() {
-		b.WriteString(m.renderDetailRow(i18n.T("created"), formatTime(inc.CreatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.created"), formatTime(inc.CreatedAt)))
 	}
 	if inc.StartedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("started"), formatTime(*inc.StartedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.started"), formatTime(*inc.StartedAt)))
 	}
 	if inc.DetectedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("detected"), formatTime(*inc.DetectedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.detected"), formatTime(*inc.DetectedAt)))
 	}
 	if inc.AcknowledgedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("acknowledged"), formatTime(*inc.AcknowledgedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.acknowledged"), formatTime(*inc.AcknowledgedAt)))
 	}
 	if inc.MitigatedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("mitigated"), formatTime(*inc.MitigatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.mitigated"), formatTime(*inc.MitigatedAt)))
 	}
 	if inc.ResolvedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("resolved"), formatTime(*inc.ResolvedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.resolved"), formatTime(*inc.ResolvedAt)))
 	}
 	b.WriteString("\n")
 
 	// Services, Environments, Teams
-	b.WriteString(renderBulletList(i18n.T("services"), inc.Services))
-	b.WriteString(renderBulletList(i18n.T("environments"), inc.Environments))
-	b.WriteString(renderBulletList(i18n.T("teams"), inc.Teams))
+	b.WriteString(renderBulletList(i18n.T("incidents.detail.services"), inc.Services))
+	b.WriteString(renderBulletList(i18n.T("incidents.detail.environments"), inc.Environments))
+	b.WriteString(renderBulletList(i18n.T("incidents.detail.teams"), inc.Teams))
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
 		// Roles (Commander, Communicator, etc.)
 		if len(inc.Roles) > 0 {
-			b.WriteString(styles.TextBold.Render(i18n.T("roles")))
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.roles")))
 			b.WriteString("\n")
 			for _, role := range inc.Roles {
 				userName := strings.TrimSpace(role.UserName)
@@ -746,18 +746,18 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		}
 
 		// Causes, Types, Functionalities
-		b.WriteString(renderBulletList(i18n.T("causes"), inc.Causes))
-		b.WriteString(renderBulletList(i18n.T("types"), inc.IncidentTypes))
-		b.WriteString(renderBulletList(i18n.T("functionalities"), inc.Functionalities))
+		b.WriteString(renderBulletList(i18n.T("incidents.detail.causes"), inc.Causes))
+		b.WriteString(renderBulletList(i18n.T("incidents.detail.types"), inc.IncidentTypes))
+		b.WriteString(renderBulletList(i18n.T("incidents.detail.functionalities"), inc.Functionalities))
 	}
 
 	// Show loading spinner or hint if detail not loaded
 	if m.IsLoadingIncident(inc.ID) {
 		b.WriteString("\n")
-		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
+		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("incidents.loading_details"))
 	} else if !inc.DetailLoaded {
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
+		b.WriteString(styles.TextDim.Render(i18n.T("incidents.press_enter")))
 	}
 
 	return b.String()

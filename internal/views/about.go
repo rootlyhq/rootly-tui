@@ -35,7 +35,7 @@ func (m *AboutModel) Hide() {
 func (m AboutModel) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.DialogTitle.Render(i18n.T("about_title")))
+	b.WriteString(styles.DialogTitle.Render(i18n.T("about.title")))
 	b.WriteString("\n\n")
 
 	// App name and version
@@ -45,20 +45,20 @@ func (m AboutModel) View() string {
 	b.WriteString("\n\n")
 
 	// Description
-	b.WriteString(styles.Text.Render(i18n.T("about_description")))
+	b.WriteString(styles.Text.Render(i18n.T("about.description")))
 	b.WriteString("\n\n")
 
 	// System info
-	b.WriteString(styles.TextBold.Render(i18n.T("system_info")))
+	b.WriteString(styles.TextBold.Render(i18n.T("about.system")))
 	b.WriteString("\n")
-	b.WriteString(renderAboutLine(i18n.T("go_version"), runtime.Version()))
-	b.WriteString(renderAboutLine(i18n.T("platform"), runtime.GOOS+"/"+runtime.GOARCH))
+	b.WriteString(renderAboutLine(i18n.T("about.go_version"), runtime.Version()))
+	b.WriteString(renderAboutLine(i18n.T("about.platform"), runtime.GOOS+"/"+runtime.GOARCH))
 	b.WriteString("\n")
 
 	// Links
 	b.WriteString(styles.TextBold.Render(i18n.T("links")))
 	b.WriteString("\n")
-	b.WriteString(renderAboutLine(i18n.T("documentation"), "https://docs.rootly.com/integrations/tui"))
+	b.WriteString(renderAboutLine(i18n.T("about.docs"), "https://docs.rootly.com/integrations/tui"))
 	b.WriteString(renderAboutLine("GitHub", "https://github.com/rootlyhq/rootly-tui"))
 	b.WriteString("\n")
 
@@ -69,7 +69,7 @@ func (m AboutModel) View() string {
 	b.WriteString("\n\n")
 
 	// Close hint
-	b.WriteString(styles.TextDim.Render(i18n.T("press_a_to_close")))
+	b.WriteString(styles.TextDim.Render(i18n.T("about.press_to_close")))
 
 	return styles.Dialog.Render(b.String())
 }

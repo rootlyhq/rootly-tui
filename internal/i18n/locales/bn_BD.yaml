@@ -1,219 +1,231 @@
 # Bengali (BD) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Rootly-তে স্বাগতম"
-enter_credentials:
-  other: "শুরু করতে আপনার Rootly API শংসাপত্র লিখুন।"
-api_endpoint:
-  other: "API এন্ডপয়েন্ট"
-api_key:
-  other: "API কী"
-timezone:
-  other: "সময় অঞ্চল"
-language:
-  other: "ভাষা"
-use_arrows_to_change:
-  other: "(পরিবর্তন করতে তীর চিহ্ন ব্যবহার করুন)"
-testing_connection:
-  other: "সংযোগ পরীক্ষা করা হচ্ছে..."
-connection_success:
-  other: "সংযোগ সফল!"
-test_connection:
-  other: "সংযোগ পরীক্ষা"
-save_and_continue:
-  other: "সংরক্ষণ করুন এবং চালিয়ে যান"
-setup_help:
-  other: "Tab/তীর নেভিগেট, Enter নির্বাচন, q/Esc প্রস্থান"
-error:
-  other: "ত্রুটি"
+common:
+    error:
+        other: ত্রুটি
+    loading:
+        other: লোড হচ্ছে...
+    of:
+        other: এর মধ্যে
+    page:
+        other: পৃষ্ঠা
+    refreshing:
+        other: রিফ্রেশ হচ্ছে...
 
-# Incidents view
-incidents:
-  other: "ঘটনাসমূহ"
-loading_page:
-  other: "পৃষ্ঠা {{.Page}} লোড হচ্ছে..."
-no_incidents:
-  other: "কোন ঘটনা পাওয়া যায়নি"
-select_incident:
-  other: "বিস্তারিত দেখতে একটি ঘটনা নির্বাচন করুন"
-description:
-  other: "বিবরণ"
-timeline:
-  other: "সময়রেখা"
-created:
-  other: "তৈরি হয়েছে"
-started:
-  other: "শুরু হয়েছে"
-detected:
-  other: "সনাক্ত হয়েছে"
-acknowledged:
-  other: "স্বীকৃত"
-mitigated:
-  other: "প্রশমিত"
-resolved:
-  other: "সমাধান হয়েছে"
-services:
-  other: "সেবাসমূহ"
-environments:
-  other: "পরিবেশসমূহ"
-teams:
-  other: "দলসমূহ"
-roles:
-  other: "ভূমিকাসমূহ"
-causes:
-  other: "কারণসমূহ"
-types:
-  other: "প্রকারসমূহ"
-functionalities:
-  other: "কার্যকারিতাসমূহ"
-links:
-  other: "লিংকসমূহ"
-press_enter_details:
-  other: "আরও বিস্তারিত জানতে Enter চাপুন"
-loading_details:
-  other: "বিস্তারিত লোড হচ্ছে..."
-page:
-  other: "পৃষ্ঠা"
-status:
-  other: "অবস্থা"
-severity:
-  other: "তীব্রতা"
-col_sev:
-  other: "তীব্র"
-col_id:
-  other: "ID"
-col_title:
-  other: "শিরোনাম"
-created_by:
-  other: "তৈরি করেছেন"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "সতর্কতাসমূহ"
-no_alerts:
-  other: "কোন সতর্কতা পাওয়া যায়নি"
-select_alert:
-  other: "বিস্তারিত দেখতে একটি সতর্কতা নির্বাচন করুন"
-source:
-  other: "উৎস"
-ended:
-  other: "শেষ হয়েছে"
-urgency:
-  other: "জরুরিতা"
-responders:
-  other: "প্রতিক্রিয়াকারীরা"
-labels:
-  other: "লেবেলসমূহ"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "কীবোর্ড শর্টকাট"
-navigation:
-  other: "নেভিগেশন"
-actions:
-  other: "ক্রিয়াকলাপ"
-general:
-  other: "সাধারণ"
-move_down:
-  other: "কার্সার নিচে নামান"
-move_up:
-  other: "কার্সার উপরে তুলুন"
-go_to_first:
-  other: "প্রথম আইটেমে যান"
-go_to_last:
-  other: "শেষ আইটেমে যান"
-previous_page:
-  other: "আগের পৃষ্ঠা"
-next_page:
-  other: "পরের পৃষ্ঠা"
-switch_tabs:
-  other: "ট্যাবের মধ্যে পরিবর্তন"
-refresh_data:
-  other: "ডেটা রিফ্রেশ করুন"
-view_details:
-  other: "বিস্তারিত দেখুন / নির্বাচন"
-open_url:
-  other: "ব্রাউজারে URL খুলুন"
-view_logs:
-  other: "ডিবাগ লগ দেখুন"
-open_setup:
-  other: "সেটআপ খুলুন"
-toggle_help:
-  other: "সাহায্য টগল করুন"
-quit:
-  other: "প্রস্থান"
-press_to_close:
-  other: "বন্ধ করতে ? বা Esc চাপুন"
-
-# Logs view
-debug_logs:
-  other: "ডিবাগ লগ"
-no_logs_yet:
-  other: "এখনো কোন লগ নেই। লগ স্বয়ংক্রিয়ভাবে ক্যাপচার হয়।"
-showing_lines:
-  other: "লাইন দেখাচ্ছে"
-of:
-  other: "এর মধ্যে"
-copied:
-  other: "কপি হয়েছে!"
-clipboard_unavailable:
-  other: "ক্লিপবোর্ড উপলব্ধ নয় (লগ দেখুন)"
-logs_help:
-  other: "j/k স্ক্রোল | g/G উপর/নিচ | a সব নির্বাচন | y কপি | c মুছুন | l/Esc বন্ধ"
-logs_help_no_clipboard:
-  other: "j/k স্ক্রোল | g/G উপর/নিচ | a সব নির্বাচন | c মুছুন | l/Esc বন্ধ"
-
-# Help bar items
-navigate:
-  other: "নেভিগেট"
-page_nav:
-  other: "পৃষ্ঠা"
-switch:
-  other: "পরিবর্তন"
-refresh:
-  other: "রিফ্রেশ"
-open:
-  other: "খুলুন"
-logs:
-  other: "লগ"
 setup:
-  other: "সেটআপ"
+    api_endpoint:
+        other: API এন্ডপয়েন্ট
+    api_key:
+        other: API কী
+    connection_success:
+        other: সংযোগ সফল!
+    enter_credentials:
+        other: শুরু করতে আপনার Rootly API শংসাপত্র লিখুন।
+    help:
+        other: Tab/তীর নেভিগেট, Enter নির্বাচন, q/Esc প্রস্থান
+    language:
+        other: ভাষা
+    save_and_continue:
+        other: সংরক্ষণ করুন এবং চালিয়ে যান
+    test_connection:
+        other: সংযোগ পরীক্ষা
+    testing_connection:
+        other: সংযোগ পরীক্ষা করা হচ্ছে...
+    timezone:
+        other: সময় অঞ্চল
+    use_arrows:
+        other: (পরিবর্তন করতে তীর চিহ্ন ব্যবহার করুন)
+    welcome:
+        other: Rootly-তে স্বাগতম
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: তীব্র
+        title:
+            other: শিরোনাম
+    detail:
+        causes:
+            other: কারণসমূহ
+        created_by:
+            other: তৈরি করেছেন
+        description:
+            other: বিবরণ
+        environments:
+            other: পরিবেশসমূহ
+        functionalities:
+            other: কার্যকারিতাসমূহ
+        links:
+            other: লিংকসমূহ
+        roles:
+            other: ভূমিকাসমূহ
+        services:
+            other: সেবাসমূহ
+        severity:
+            other: তীব্রতা
+        status:
+            other: অবস্থা
+        teams:
+            other: দলসমূহ
+        types:
+            other: প্রকারসমূহ
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: বিস্তারিত লোড হচ্ছে...
+    loading_page:
+        other: পৃষ্ঠা {{.Page}} লোড হচ্ছে...
+    none_found:
+        other: কোন ঘটনা পাওয়া যায়নি
+    press_enter:
+        other: আরও বিস্তারিত জানতে Enter চাপুন
+    select_prompt:
+        other: বিস্তারিত দেখতে একটি ঘটনা নির্বাচন করুন
+    timeline:
+        acknowledged:
+            other: স্বীকৃত
+        created:
+            other: তৈরি হয়েছে
+        detected:
+            other: সনাক্ত হয়েছে
+        mitigated:
+            other: প্রশমিত
+        resolved:
+            other: সমাধান হয়েছে
+        started:
+            other: শুরু হয়েছে
+        title:
+            other: সময়রেখা
+    title:
+        other: ঘটনাসমূহ
+
+alerts:
+    detail:
+        ended:
+            other: শেষ হয়েছে
+        labels:
+            other: লেবেলসমূহ
+        responders:
+            other: প্রতিক্রিয়াকারীরা
+        source:
+            other: উৎস
+        urgency:
+            other: জরুরিতা
+    none_found:
+        other: কোন সতর্কতা পাওয়া যায়নি
+    select_prompt:
+        other: বিস্তারিত দেখতে একটি সতর্কতা নির্বাচন করুন
+    title:
+        other: সতর্কতাসমূহ
+
 help:
-  other: "সাহায্য"
+    action:
+        about:
+            other: সম্পর্কে
+        details:
+            other: বিস্তারিত দেখুন / নির্বাচন
+        help:
+            other: সাহায্য টগল করুন
+        logs:
+            other: ডিবাগ লগ দেখুন
+        open_url:
+            other: ব্রাউজারে URL খুলুন
+        quit:
+            other: প্রস্থান
+        refresh:
+            other: ডেটা রিফ্রেশ করুন
+        setup:
+            other: সেটআপ খুলুন
+    nav:
+        first:
+            other: প্রথম আইটেমে যান
+        last:
+            other: শেষ আইটেমে যান
+        move_down:
+            other: কার্সার নিচে নামান
+        move_up:
+            other: কার্সার উপরে তুলুন
+        next_page:
+            other: পরের পৃষ্ঠা
+        prev_page:
+            other: আগের পৃষ্ঠা
+        switch_tabs:
+            other: ট্যাবের মধ্যে পরিবর্তন
+    press_to_close:
+        other: বন্ধ করতে ? বা Esc চাপুন
+    section:
+        actions:
+            other: ক্রিয়াকলাপ
+        general:
+            other: সাধারণ
+        navigation:
+            other: নেভিগেশন
+    title:
+        other: কীবোর্ড শর্টকাট
+
+helpbar:
+    about:
+        other: সম্পর্কে
+    help:
+        other: সাহায্য
+    logs:
+        other: লগ
+    navigate:
+        other: নেভিগেট
+    open:
+        other: খুলুন
+    page:
+        other: পৃষ্ঠা
+    quit:
+        other: প্রস্থান
+    refresh:
+        other: রিফ্রেশ
+    setup:
+        other: সেটআপ
+    switch:
+        other: পরিবর্তন
+
+logs:
+    clipboard_unavailable:
+        other: ক্লিপবোর্ড উপলব্ধ নয় (লগ দেখুন)
+    copied:
+        other: কপি হয়েছে!
+    empty:
+        other: এখনো কোন লগ নেই। লগ স্বয়ংক্রিয়ভাবে ক্যাপচার হয়।
+    help:
+        other: j/k স্ক্রোল | g/G উপর/নিচ | a সব নির্বাচন | y কপি | c মুছুন | l/Esc বন্ধ
+    help_no_clipboard:
+        other: j/k স্ক্রোল | g/G উপর/নিচ | a সব নির্বাচন | c মুছুন | l/Esc বন্ধ
+    showing_lines:
+        other: লাইন দেখাচ্ছে
+    title:
+        other: ডিবাগ লগ
+
 about:
-  other: "সম্পর্কে"
-quit_action:
-  other: "প্রস্থান"
+    description:
+        other: Rootly ইনসিডেন্ট এবং অ্যালার্ট দেখার জন্য টার্মিনাল ইন্টারফেস।
+    docs:
+        other: ডকুমেন্টেশন
+    go_version:
+        other: Go
+    platform:
+        other: প্ল্যাটফর্ম
+    press_to_close:
+        other: বন্ধ করতে A বা Esc চাপুন
+    system:
+        other: সিস্টেম
+    title:
+        other: সম্পর্কে
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "লোড হচ্ছে..."
-refreshing:
-  other: "রিফ্রেশ হচ্ছে..."
-
-# About view
-about_title:
-  other: "সম্পর্কে"
-about_description:
-  other: "Rootly ইনসিডেন্ট এবং অ্যালার্ট দেখার জন্য টার্মিনাল ইন্টারফেস।"
-system_info:
-  other: "সিস্টেম"
-go_version:
-  other: "Go"
-platform:
-  other: "প্ল্যাটফর্ম"
-documentation:
-  other: "ডকুমেন্টেশন"
-press_a_to_close:
-  other: "বন্ধ করতে A বা Esc চাপুন"
-view_about:
-  other: "সম্পর্কে"

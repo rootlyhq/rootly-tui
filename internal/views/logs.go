@@ -245,12 +245,12 @@ func (m *LogsModel) copyToClipboard() {
 
 	if err := clipboard.Init(); err != nil {
 		debug.Logger.Error("Failed to initialize clipboard", "error", err)
-		m.statusMsg = i18n.T("clipboard_unavailable")
+		m.statusMsg = i18n.T("logs.clipboard_unavailable")
 		return
 	}
 
 	clipboard.Write(clipboard.FmtText, []byte(text))
-	m.statusMsg = i18n.T("copied")
+	m.statusMsg = i18n.T("logs.copied")
 }
 
 func (m *LogsModel) Toggle() {
@@ -305,15 +305,15 @@ func (m LogsModel) View() string {
 	if debug.HasLogFile() {
 		titleSuffix = " (" + debug.LogFilePath + ")"
 	} else {
-		titleSuffix = " (" + i18n.T("memory") + ")"
+		titleSuffix = " (" + i18n.T("logs.memory") + ")"
 	}
-	title := styles.DialogTitle.Render(i18n.T("debug_logs") + titleSuffix)
+	title := styles.DialogTitle.Render(i18n.T("logs.title") + titleSuffix)
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
 	// Viewport content
 	if m.lineCount == 0 {
-		b.WriteString(styles.TextDim.Render(i18n.T("no_logs_yet")))
+		b.WriteString(styles.TextDim.Render(i18n.T("logs.empty")))
 		b.WriteString("\n")
 	} else {
 		b.WriteString(m.viewport.View())
@@ -322,12 +322,12 @@ func (m LogsModel) View() string {
 	// Scroll indicator and tail status
 	b.WriteString("\n")
 	var statusParts []string
-	statusParts = append(statusParts, i18n.Tf("line_count", map[string]interface{}{"Count": m.lineCount}))
+	statusParts = append(statusParts, i18n.Tf("logs.line_count", map[string]interface{}{"Count": m.lineCount}))
 	if m.autoTail {
-		statusParts = append(statusParts, "["+i18n.T("following")+"]")
+		statusParts = append(statusParts, "["+i18n.T("logs.following")+"]")
 	}
 	if m.viewport.ScrollPercent() < 1.0 {
-		statusParts = append(statusParts, i18n.Tf("scroll_percent", map[string]interface{}{"Percent": int(m.viewport.ScrollPercent() * 100)}))
+		statusParts = append(statusParts, i18n.Tf("logs.scroll_percent", map[string]interface{}{"Percent": int(m.viewport.ScrollPercent() * 100)}))
 	}
 	b.WriteString(styles.TextDim.Render(strings.Join(statusParts, " • ")))
 
