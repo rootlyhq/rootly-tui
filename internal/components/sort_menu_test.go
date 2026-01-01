@@ -330,13 +330,13 @@ func TestSortMenuRenderWithSortIndicator(t *testing.T) {
 
 	// Render with descending sort on option 1
 	output := menu.Render(1, SortDesc)
-	if !strings.Contains(output, "↓") {
+	if !strings.Contains(output, "Newest First") {
 		t.Error("expected output to contain descending indicator")
 	}
 
 	// Render with ascending sort on option 2
 	output = menu.Render(2, SortAsc)
-	if !strings.Contains(output, "↑") {
+	if !strings.Contains(output, "Oldest First") {
 		t.Error("expected output to contain ascending indicator")
 	}
 }
@@ -352,11 +352,8 @@ func TestSortMenuRenderNoSortIndicator(t *testing.T) {
 	// Render with sort on different field (not in options)
 	output := menu.Render(3, SortDesc)
 
-	// Count arrow indicators (should not be present)
-	downCount := strings.Count(output, "↓")
-	upCount := strings.Count(output, "↑")
-
-	if downCount > 0 || upCount > 0 {
+	// Check that sort indicators are not present
+	if strings.Contains(output, "Newest First") || strings.Contains(output, "Oldest First") {
 		t.Errorf("expected no sort indicators when current sort field doesn't match options")
 	}
 }

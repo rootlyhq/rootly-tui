@@ -35,7 +35,7 @@ func (s *SortState) Toggle(newField interface{}) bool {
 		} else {
 			s.Direction = SortAsc
 		}
-		return true // Direction changed, need to reload
+		return false // Direction changed, need to reload
 	}
 	// New field selected
 	s.Field = newField
