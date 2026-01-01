@@ -169,6 +169,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
+		// Handle sort menu
+		if m.activeTab == TabIncidents && m.incidents.IsSortMenuVisible() {
+			m.incidents.HandleSortMenuKey(msg.String())
+			return m, nil
+		}
+
 		// Handle setup screen
 		if m.screen == ScreenSetup {
 			var cmd tea.Cmd
@@ -300,6 +306,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if url != "" && m.urlOpener != nil {
 				_ = m.urlOpener(url)
+			}
+			return m, nil
+
+		case key.Matches(msg, m.keys.Sort):
+			// Toggle sort menu for incidents tab
+			if m.activeTab == TabIncidents {
+				m.incidents.ToggleSortMenu()
 			}
 			return m, nil
 
@@ -490,7 +503,8 @@ func (m Model) View() string {
 	} else {
 		hasSelection = m.alerts.SelectedAlert() != nil
 	}
-	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading))
+	isIncidentsTab := m.activeTab == TabIncidents
+	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading, isIncidentsTab))
 
 	// Wrap content
 	content := styles.App.Render(b.String())
@@ -511,6 +525,12 @@ func (m Model) View() string {
 	if m.about.Visible {
 		aboutDialog := m.about.View()
 		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, aboutDialog)
+	}
+
+	// Sort menu overlay (incidents tab only)
+	if m.activeTab == TabIncidents && m.incidents.IsSortMenuVisible() {
+		sortMenu := m.incidents.RenderSortMenu()
+		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, sortMenu)
 	}
 
 	return content
