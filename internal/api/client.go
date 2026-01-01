@@ -558,7 +558,12 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 
 	debug.Logger.Debug("Fetching incident detail", "id", id, "cache", "miss")
 
-	// Build URL - endpoint may already have scheme
+	// NOTE: Cannot use SDK's GetIncidentWithResponse due to oapi-codegen v2 bug
+	// Rootly's OpenAPI spec defines ID as anyOf[uuid, slug] which is valid (allows UUID or slug)
+	// But oapi-codegen generates: `struct { union json.RawMessage }` with unexported field
+	// This type cannot be instantiated from outside the SDK package
+	// See: https://github.com/deepmap/oapi-codegen/issues/970
+	// Using direct HTTP call as workaround until SDK is regenerated with fixed codegen
 	baseURL := c.endpoint
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
@@ -860,45 +865,35 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 
 	debug.Logger.Debug("Fetching alert detail", "id", id, "cache", "miss")
 
-	// Build URL - endpoint may already have scheme
-	baseURL := c.endpoint
-	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
-		baseURL = "https://" + baseURL
+	// Use SDK - alert endpoints work correctly (ID is plain string)
+	includeStr := "services,environments,groups,responders,alert_urgency"
+	include := rootly.GetAlertParamsInclude(includeStr)
+	params := &rootly.GetAlertParams{
+		Include: &include,
 	}
-	url := fmt.Sprintf("%s/v1/alerts/%s?include=services,environments,groups,responders,alert_urgency", baseURL, id)
-	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
 
-	httpResp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.GetAlertWithResponse(ctx, id, params)
 	if err != nil {
 		debug.Logger.Error("Failed to fetch alert", "error", err)
 		return nil, fmt.Errorf("failed to fetch alert: %w", err)
 	}
-	defer func() { _ = httpResp.Body.Close() }()
-
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
 
 	debug.Logger.Debug("Alert detail response",
-		"status", httpResp.StatusCode,
-		"bodyLength", len(body),
+		"status", resp.StatusCode(),
+		"bodyLength", len(resp.Body),
 	)
-	debug.Logger.Debug("Alert detail response body", "json", debug.PrettyJSON(body))
+	debug.Logger.Debug("Alert detail response body", "json", debug.PrettyJSON(resp.Body))
 
-	if httpResp.StatusCode == 403 {
-		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
+	if resp.StatusCode() == 403 {
+		debug.Logger.Error("API forbidden", "status", resp.StatusCode())
 		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
 	}
-	if httpResp.StatusCode != 200 {
-		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
-		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
+	if resp.StatusCode() != 200 {
+		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
+		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
+
+	body := resp.Body
 
 	var result struct {
 		Data struct {
