@@ -1,219 +1,231 @@
 # German (DE) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Willkommen bei Rootly"
-enter_credentials:
-  other: "Geben Sie Ihre Rootly API-Anmeldedaten ein, um zu beginnen."
-api_endpoint:
-  other: "API-Endpunkt"
-api_key:
-  other: "API-Schluessel"
-timezone:
-  other: "Zeitzone"
-language:
-  other: "Sprache"
-use_arrows_to_change:
-  other: "(Pfeiltasten zum Aendern)"
-testing_connection:
-  other: "Verbindung wird getestet..."
-connection_success:
-  other: "Verbindung erfolgreich!"
-test_connection:
-  other: "Verbindung testen"
-save_and_continue:
-  other: "Speichern und fortfahren"
-setup_help:
-  other: "Tab/Pfeile navigieren, Enter auswaehlen, q/Esc beenden"
-error:
-  other: "Fehler"
+common:
+    error:
+        other: Fehler
+    loading:
+        other: Laden...
+    of:
+        other: von
+    page:
+        other: Seite
+    refreshing:
+        other: Aktualisieren...
 
-# Incidents view
-incidents:
-  other: "VORFAELLE"
-loading_page:
-  other: "Lade Seite {{.Page}}..."
-no_incidents:
-  other: "Keine Vorfaelle gefunden"
-select_incident:
-  other: "Vorfall auswaehlen fuer Details"
-description:
-  other: "Beschreibung"
-timeline:
-  other: "Zeitverlauf"
-created:
-  other: "Erstellt"
-started:
-  other: "Gestartet"
-detected:
-  other: "Erkannt"
-acknowledged:
-  other: "Bestaetigt"
-mitigated:
-  other: "Gemildert"
-resolved:
-  other: "Geloest"
-services:
-  other: "Dienste"
-environments:
-  other: "Umgebungen"
-teams:
-  other: "Teams"
-roles:
-  other: "Rollen"
-causes:
-  other: "Ursachen"
-types:
-  other: "Typen"
-functionalities:
-  other: "Funktionen"
-links:
-  other: "Links"
-press_enter_details:
-  other: "Enter fuer mehr Details"
-loading_details:
-  other: "Lade Details..."
-page:
-  other: "Seite"
-status:
-  other: "Status"
-severity:
-  other: "Schweregrad"
-col_sev:
-  other: "Schw"
-col_id:
-  other: "ID"
-col_title:
-  other: "Titel"
-created_by:
-  other: "Erstellt von"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "WARNUNGEN"
-no_alerts:
-  other: "Keine Warnungen gefunden"
-select_alert:
-  other: "Warnung auswaehlen fuer Details"
-source:
-  other: "Quelle"
-ended:
-  other: "Beendet"
-urgency:
-  other: "Dringlichkeit"
-responders:
-  other: "Bearbeiter"
-labels:
-  other: "Labels"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "Tastenkuerzel"
-navigation:
-  other: "Navigation"
-actions:
-  other: "Aktionen"
-general:
-  other: "Allgemein"
-move_down:
-  other: "Cursor nach unten"
-move_up:
-  other: "Cursor nach oben"
-go_to_first:
-  other: "Zum ersten Element"
-go_to_last:
-  other: "Zum letzten Element"
-previous_page:
-  other: "Vorherige Seite"
-next_page:
-  other: "Naechste Seite"
-switch_tabs:
-  other: "Tabs wechseln"
-refresh_data:
-  other: "Daten aktualisieren"
-view_details:
-  other: "Details anzeigen / Auswaehlen"
-open_url:
-  other: "URL im Browser oeffnen"
-view_logs:
-  other: "Debug-Logs anzeigen"
-open_setup:
-  other: "Einstellungen oeffnen"
-toggle_help:
-  other: "Hilfe ein-/ausblenden"
-quit:
-  other: "Beenden"
-press_to_close:
-  other: "? oder Esc zum Schliessen"
-
-# Logs view
-debug_logs:
-  other: "Debug-Logs"
-no_logs_yet:
-  other: "Noch keine Logs. Logs werden automatisch erfasst."
-showing_lines:
-  other: "Zeige Zeilen"
-of:
-  other: "von"
-copied:
-  other: "Kopiert!"
-clipboard_unavailable:
-  other: "Zwischenablage nicht verfuegbar (siehe Logs)"
-logs_help:
-  other: "j/k scrollen | g/G oben/unten | a alles auswaehlen | y kopieren | c leeren | l/Esc schliessen"
-logs_help_no_clipboard:
-  other: "j/k scrollen | g/G oben/unten | a alles auswaehlen | c leeren | l/Esc schliessen"
-
-# Help bar items
-navigate:
-  other: "navigieren"
-page_nav:
-  other: "Seite"
-switch:
-  other: "wechseln"
-refresh:
-  other: "aktualisieren"
-open:
-  other: "oeffnen"
-logs:
-  other: "Logs"
 setup:
-  other: "Einstellungen"
+    api_endpoint:
+        other: API-Endpunkt
+    api_key:
+        other: API-Schluessel
+    connection_success:
+        other: Verbindung erfolgreich!
+    enter_credentials:
+        other: Geben Sie Ihre Rootly API-Anmeldedaten ein, um zu beginnen.
+    help:
+        other: Tab/Pfeile navigieren, Enter auswaehlen, q/Esc beenden
+    language:
+        other: Sprache
+    save_and_continue:
+        other: Speichern und fortfahren
+    test_connection:
+        other: Verbindung testen
+    testing_connection:
+        other: Verbindung wird getestet...
+    timezone:
+        other: Zeitzone
+    use_arrows:
+        other: (Pfeiltasten zum Aendern)
+    welcome:
+        other: Willkommen bei Rootly
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: Schw
+        title:
+            other: Titel
+    detail:
+        causes:
+            other: Ursachen
+        created_by:
+            other: Erstellt von
+        description:
+            other: Beschreibung
+        environments:
+            other: Umgebungen
+        functionalities:
+            other: Funktionen
+        links:
+            other: Links
+        roles:
+            other: Rollen
+        services:
+            other: Dienste
+        severity:
+            other: Schweregrad
+        status:
+            other: Status
+        teams:
+            other: Teams
+        types:
+            other: Typen
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: Lade Details...
+    loading_page:
+        other: Lade Seite {{.Page}}...
+    none_found:
+        other: Keine Vorfaelle gefunden
+    press_enter:
+        other: Enter fuer mehr Details
+    select_prompt:
+        other: Vorfall auswaehlen fuer Details
+    timeline:
+        acknowledged:
+            other: Bestaetigt
+        created:
+            other: Erstellt
+        detected:
+            other: Erkannt
+        mitigated:
+            other: Gemildert
+        resolved:
+            other: Geloest
+        started:
+            other: Gestartet
+        title:
+            other: Zeitverlauf
+    title:
+        other: VORFAELLE
+
+alerts:
+    detail:
+        ended:
+            other: Beendet
+        labels:
+            other: Labels
+        responders:
+            other: Bearbeiter
+        source:
+            other: Quelle
+        urgency:
+            other: Dringlichkeit
+    none_found:
+        other: Keine Warnungen gefunden
+    select_prompt:
+        other: Warnung auswaehlen fuer Details
+    title:
+        other: WARNUNGEN
+
 help:
-  other: "Hilfe"
+    action:
+        about:
+            other: Info
+        details:
+            other: Details anzeigen / Auswaehlen
+        help:
+            other: Hilfe ein-/ausblenden
+        logs:
+            other: Debug-Logs anzeigen
+        open_url:
+            other: URL im Browser oeffnen
+        quit:
+            other: Beenden
+        refresh:
+            other: Daten aktualisieren
+        setup:
+            other: Einstellungen oeffnen
+    nav:
+        first:
+            other: Zum ersten Element
+        last:
+            other: Zum letzten Element
+        move_down:
+            other: Cursor nach unten
+        move_up:
+            other: Cursor nach oben
+        next_page:
+            other: Naechste Seite
+        prev_page:
+            other: Vorherige Seite
+        switch_tabs:
+            other: Tabs wechseln
+    press_to_close:
+        other: '? oder Esc zum Schliessen'
+    section:
+        actions:
+            other: Aktionen
+        general:
+            other: Allgemein
+        navigation:
+            other: Navigation
+    title:
+        other: Tastenkuerzel
+
+helpbar:
+    about:
+        other: Info
+    help:
+        other: Hilfe
+    logs:
+        other: Logs
+    navigate:
+        other: navigieren
+    open:
+        other: oeffnen
+    page:
+        other: Seite
+    quit:
+        other: beenden
+    refresh:
+        other: aktualisieren
+    setup:
+        other: Einstellungen
+    switch:
+        other: wechseln
+
+logs:
+    clipboard_unavailable:
+        other: Zwischenablage nicht verfuegbar (siehe Logs)
+    copied:
+        other: Kopiert!
+    empty:
+        other: Noch keine Logs. Logs werden automatisch erfasst.
+    help:
+        other: j/k scrollen | g/G oben/unten | a alles auswaehlen | y kopieren | c leeren | l/Esc schliessen
+    help_no_clipboard:
+        other: j/k scrollen | g/G oben/unten | a alles auswaehlen | c leeren | l/Esc schliessen
+    showing_lines:
+        other: Zeige Zeilen
+    title:
+        other: Debug-Logs
+
 about:
-  other: "Info"
-quit_action:
-  other: "beenden"
+    description:
+        other: Eine Terminal-Oberflaeche zur Anzeige von Rootly Vorfaellen und Warnungen.
+    docs:
+        other: Dokumentation
+    go_version:
+        other: Go
+    platform:
+        other: Plattform
+    press_to_close:
+        other: A oder Esc zum Schliessen
+    system:
+        other: System
+    title:
+        other: Info
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "Laden..."
-refreshing:
-  other: "Aktualisieren..."
-
-# About view
-about_title:
-  other: "Info"
-about_description:
-  other: "Eine Terminal-Oberflaeche zur Anzeige von Rootly Vorfaellen und Warnungen."
-system_info:
-  other: "System"
-go_version:
-  other: "Go"
-platform:
-  other: "Plattform"
-documentation:
-  other: "Dokumentation"
-press_a_to_close:
-  other: "A oder Esc zum Schliessen"
-view_about:
-  other: "Info"

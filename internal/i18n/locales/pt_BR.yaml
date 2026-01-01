@@ -1,219 +1,231 @@
 # Portuguese (BR) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Bem-vindo ao Rootly"
-enter_credentials:
-  other: "Digite suas credenciais da API Rootly para comecar."
-api_endpoint:
-  other: "Endpoint da API"
-api_key:
-  other: "Chave da API"
-timezone:
-  other: "Fuso horario"
-language:
-  other: "Idioma"
-use_arrows_to_change:
-  other: "(use as setas para alterar)"
-testing_connection:
-  other: "Testando conexao..."
-connection_success:
-  other: "Conexao bem-sucedida!"
-test_connection:
-  other: "Testar conexao"
-save_and_continue:
-  other: "Salvar e continuar"
-setup_help:
-  other: "Tab/Setas para navegar, Enter para selecionar, q/Esc para sair"
-error:
-  other: "Erro"
+common:
+    error:
+        other: Erro
+    loading:
+        other: Carregando...
+    of:
+        other: de
+    page:
+        other: Pagina
+    refreshing:
+        other: Atualizando...
 
-# Incidents view
-incidents:
-  other: "INCIDENTES"
-loading_page:
-  other: "Carregando pagina {{.Page}}..."
-no_incidents:
-  other: "Nenhum incidente encontrado"
-select_incident:
-  other: "Selecione um incidente para ver detalhes"
-description:
-  other: "Descricao"
-timeline:
-  other: "Linha do tempo"
-created:
-  other: "Criado"
-started:
-  other: "Iniciado"
-detected:
-  other: "Detectado"
-acknowledged:
-  other: "Reconhecido"
-mitigated:
-  other: "Mitigado"
-resolved:
-  other: "Resolvido"
-services:
-  other: "Servicos"
-environments:
-  other: "Ambientes"
-teams:
-  other: "Equipes"
-roles:
-  other: "Funcoes"
-causes:
-  other: "Causas"
-types:
-  other: "Tipos"
-functionalities:
-  other: "Funcionalidades"
-links:
-  other: "Links"
-press_enter_details:
-  other: "Pressione Enter para mais detalhes"
-loading_details:
-  other: "Carregando detalhes..."
-page:
-  other: "Pagina"
-status:
-  other: "Status"
-severity:
-  other: "Severidade"
-col_sev:
-  other: "Sev"
-col_id:
-  other: "ID"
-col_title:
-  other: "Título"
-created_by:
-  other: "Criado por"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "ALERTAS"
-no_alerts:
-  other: "Nenhum alerta encontrado"
-select_alert:
-  other: "Selecione um alerta para ver detalhes"
-source:
-  other: "Fonte"
-ended:
-  other: "Encerrado"
-urgency:
-  other: "Urgencia"
-responders:
-  other: "Responsaveis"
-labels:
-  other: "Rotulos"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "Atalhos de teclado"
-navigation:
-  other: "Navegacao"
-actions:
-  other: "Acoes"
-general:
-  other: "Geral"
-move_down:
-  other: "Mover cursor para baixo"
-move_up:
-  other: "Mover cursor para cima"
-go_to_first:
-  other: "Ir para o primeiro item"
-go_to_last:
-  other: "Ir para o ultimo item"
-previous_page:
-  other: "Pagina anterior"
-next_page:
-  other: "Proxima pagina"
-switch_tabs:
-  other: "Alternar entre abas"
-refresh_data:
-  other: "Atualizar dados"
-view_details:
-  other: "Ver detalhes / Selecionar"
-open_url:
-  other: "Abrir URL no navegador"
-view_logs:
-  other: "Ver logs de depuracao"
-open_setup:
-  other: "Abrir configuracao"
-toggle_help:
-  other: "Alternar ajuda"
-quit:
-  other: "Sair"
-press_to_close:
-  other: "Pressione ? ou Esc para fechar"
-
-# Logs view
-debug_logs:
-  other: "Logs de depuracao"
-no_logs_yet:
-  other: "Sem logs ainda. Os logs sao capturados automaticamente."
-showing_lines:
-  other: "Mostrando linhas"
-of:
-  other: "de"
-copied:
-  other: "Copiado!"
-clipboard_unavailable:
-  other: "Area de transferencia indisponivel (ver logs)"
-logs_help:
-  other: "j/k rolar | g/G topo/fim | a selecionar tudo | y copiar | c limpar | l/Esc fechar"
-logs_help_no_clipboard:
-  other: "j/k rolar | g/G topo/fim | a selecionar tudo | c limpar | l/Esc fechar"
-
-# Help bar items
-navigate:
-  other: "navegar"
-page_nav:
-  other: "pagina"
-switch:
-  other: "alternar"
-refresh:
-  other: "atualizar"
-open:
-  other: "abrir"
-logs:
-  other: "logs"
 setup:
-  other: "config"
+    api_endpoint:
+        other: Endpoint da API
+    api_key:
+        other: Chave da API
+    connection_success:
+        other: Conexao bem-sucedida!
+    enter_credentials:
+        other: Digite suas credenciais da API Rootly para comecar.
+    help:
+        other: Tab/Setas para navegar, Enter para selecionar, q/Esc para sair
+    language:
+        other: Idioma
+    save_and_continue:
+        other: Salvar e continuar
+    test_connection:
+        other: Testar conexao
+    testing_connection:
+        other: Testando conexao...
+    timezone:
+        other: Fuso horario
+    use_arrows:
+        other: (use as setas para alterar)
+    welcome:
+        other: Bem-vindo ao Rootly
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: Sev
+        title:
+            other: Título
+    detail:
+        causes:
+            other: Causas
+        created_by:
+            other: Criado por
+        description:
+            other: Descricao
+        environments:
+            other: Ambientes
+        functionalities:
+            other: Funcionalidades
+        links:
+            other: Links
+        roles:
+            other: Funcoes
+        services:
+            other: Servicos
+        severity:
+            other: Severidade
+        status:
+            other: Status
+        teams:
+            other: Equipes
+        types:
+            other: Tipos
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: Carregando detalhes...
+    loading_page:
+        other: Carregando pagina {{.Page}}...
+    none_found:
+        other: Nenhum incidente encontrado
+    press_enter:
+        other: Pressione Enter para mais detalhes
+    select_prompt:
+        other: Selecione um incidente para ver detalhes
+    timeline:
+        acknowledged:
+            other: Reconhecido
+        created:
+            other: Criado
+        detected:
+            other: Detectado
+        mitigated:
+            other: Mitigado
+        resolved:
+            other: Resolvido
+        started:
+            other: Iniciado
+        title:
+            other: Linha do tempo
+    title:
+        other: INCIDENTES
+
+alerts:
+    detail:
+        ended:
+            other: Encerrado
+        labels:
+            other: Rotulos
+        responders:
+            other: Responsaveis
+        source:
+            other: Fonte
+        urgency:
+            other: Urgencia
+    none_found:
+        other: Nenhum alerta encontrado
+    select_prompt:
+        other: Selecione um alerta para ver detalhes
+    title:
+        other: ALERTAS
+
 help:
-  other: "ajuda"
+    action:
+        about:
+            other: Sobre
+        details:
+            other: Ver detalhes / Selecionar
+        help:
+            other: Alternar ajuda
+        logs:
+            other: Ver logs de depuracao
+        open_url:
+            other: Abrir URL no navegador
+        quit:
+            other: Sair
+        refresh:
+            other: Atualizar dados
+        setup:
+            other: Abrir configuracao
+    nav:
+        first:
+            other: Ir para o primeiro item
+        last:
+            other: Ir para o ultimo item
+        move_down:
+            other: Mover cursor para baixo
+        move_up:
+            other: Mover cursor para cima
+        next_page:
+            other: Proxima pagina
+        prev_page:
+            other: Pagina anterior
+        switch_tabs:
+            other: Alternar entre abas
+    press_to_close:
+        other: Pressione ? ou Esc para fechar
+    section:
+        actions:
+            other: Acoes
+        general:
+            other: Geral
+        navigation:
+            other: Navegacao
+    title:
+        other: Atalhos de teclado
+
+helpbar:
+    about:
+        other: sobre
+    help:
+        other: ajuda
+    logs:
+        other: logs
+    navigate:
+        other: navegar
+    open:
+        other: abrir
+    page:
+        other: pagina
+    quit:
+        other: sair
+    refresh:
+        other: atualizar
+    setup:
+        other: config
+    switch:
+        other: alternar
+
+logs:
+    clipboard_unavailable:
+        other: Area de transferencia indisponivel (ver logs)
+    copied:
+        other: Copiado!
+    empty:
+        other: Sem logs ainda. Os logs sao capturados automaticamente.
+    help:
+        other: j/k rolar | g/G topo/fim | a selecionar tudo | y copiar | c limpar | l/Esc fechar
+    help_no_clipboard:
+        other: j/k rolar | g/G topo/fim | a selecionar tudo | c limpar | l/Esc fechar
+    showing_lines:
+        other: Mostrando linhas
+    title:
+        other: Logs de depuracao
+
 about:
-  other: "sobre"
-quit_action:
-  other: "sair"
+    description:
+        other: Uma interface de terminal para visualizar incidentes e alertas do Rootly.
+    docs:
+        other: Documentacao
+    go_version:
+        other: Go
+    platform:
+        other: Plataforma
+    press_to_close:
+        other: Pressione A ou Esc para fechar
+    system:
+        other: Sistema
+    title:
+        other: Sobre
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "Carregando..."
-refreshing:
-  other: "Atualizando..."
-
-# About view
-about_title:
-  other: "Sobre"
-about_description:
-  other: "Uma interface de terminal para visualizar incidentes e alertas do Rootly."
-system_info:
-  other: "Sistema"
-go_version:
-  other: "Go"
-platform:
-  other: "Plataforma"
-documentation:
-  other: "Documentacao"
-press_a_to_close:
-  other: "Pressione A ou Esc para fechar"
-view_about:
-  other: "Sobre"

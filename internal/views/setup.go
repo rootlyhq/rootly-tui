@@ -329,17 +329,17 @@ func (m SetupModel) View() string {
 	var b strings.Builder
 
 	// Title
-	title := styles.DialogTitle.Render(i18n.T("welcome"))
+	title := styles.DialogTitle.Render(i18n.T("setup.welcome"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
 	// Description
-	desc := styles.TextDim.Render(i18n.T("enter_credentials"))
+	desc := styles.TextDim.Render(i18n.T("setup.enter_credentials"))
 	b.WriteString(desc)
 	b.WriteString("\n\n")
 
 	// Endpoint field
-	endpointLabel := styles.InputLabel.Render(i18n.T("api_endpoint"))
+	endpointLabel := styles.InputLabel.Render(i18n.T("setup.api_endpoint"))
 	b.WriteString(endpointLabel)
 	b.WriteString("\n")
 	if m.focusIndex == FieldEndpoint {
@@ -350,7 +350,7 @@ func (m SetupModel) View() string {
 	b.WriteString("\n\n")
 
 	// API Key field
-	apiKeyLabel := styles.InputLabel.Render(i18n.T("api_key"))
+	apiKeyLabel := styles.InputLabel.Render(i18n.T("setup.api_key"))
 	b.WriteString(apiKeyLabel)
 	b.WriteString("\n")
 	if m.focusIndex == FieldAPIKey {
@@ -361,10 +361,10 @@ func (m SetupModel) View() string {
 	b.WriteString("\n\n")
 
 	// Timezone selector
-	timezoneLabel := styles.InputLabel.Render(i18n.T("timezone"))
+	timezoneLabel := styles.InputLabel.Render(i18n.T("setup.timezone"))
 	b.WriteString(timezoneLabel)
 	b.WriteString(" ")
-	b.WriteString(styles.TextDim.Render(i18n.T("use_arrows_to_change")))
+	b.WriteString(styles.TextDim.Render(i18n.T("setup.use_arrows")))
 	b.WriteString("\n")
 
 	// Show the selected timezone with navigation hints
@@ -381,10 +381,10 @@ func (m SetupModel) View() string {
 	b.WriteString("\n\n")
 
 	// Language selector
-	languageLabel := styles.InputLabel.Render(i18n.T("language"))
+	languageLabel := styles.InputLabel.Render(i18n.T("setup.language"))
 	b.WriteString(languageLabel)
 	b.WriteString(" ")
-	b.WriteString(styles.TextDim.Render(i18n.T("use_arrows_to_change")))
+	b.WriteString(styles.TextDim.Render(i18n.T("setup.use_arrows")))
 	b.WriteString("\n")
 
 	// Show the selected language with navigation hints
@@ -402,39 +402,39 @@ func (m SetupModel) View() string {
 
 	// Test result
 	if m.testing {
-		b.WriteString(m.spinner.View() + " " + i18n.T("testing_connection"))
+		b.WriteString(m.spinner.View() + " " + i18n.T("setup.testing_connection"))
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultSuccess {
-		b.WriteString(styles.SuccessMsg.Render(i18n.T("connection_success")))
+		b.WriteString(styles.SuccessMsg.Render(i18n.T("setup.connection_success")))
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultError {
-		b.WriteString(styles.Error.Render(i18n.T("error") + ": " + m.testError))
+		b.WriteString(styles.Error.Render(i18n.T("common.error") + ": " + m.testError))
 		b.WriteString("\n\n")
 	}
 
 	// Buttons
 	var testBtn, saveBtn string
 	if m.focusIndex == FieldButtons && m.buttonIndex == 0 {
-		testBtn = styles.ButtonFocused.Render(i18n.T("test_connection"))
+		testBtn = styles.ButtonFocused.Render(i18n.T("setup.test_connection"))
 	} else {
-		testBtn = styles.Button.Render(i18n.T("test_connection"))
+		testBtn = styles.Button.Render(i18n.T("setup.test_connection"))
 	}
 
 	if m.focusIndex == FieldButtons && m.buttonIndex == 1 {
 		if m.testResult == testResultSuccess {
-			saveBtn = styles.ButtonFocused.Render(i18n.T("save_and_continue"))
+			saveBtn = styles.ButtonFocused.Render(i18n.T("setup.save_and_continue"))
 		} else {
-			saveBtn = styles.Button.Render(i18n.T("save_and_continue"))
+			saveBtn = styles.Button.Render(i18n.T("setup.save_and_continue"))
 		}
 	} else {
-		saveBtn = styles.Button.Render(i18n.T("save_and_continue"))
+		saveBtn = styles.Button.Render(i18n.T("setup.save_and_continue"))
 	}
 
 	b.WriteString(testBtn + "  " + saveBtn)
 	b.WriteString("\n\n")
 
 	// Help
-	help := styles.HelpBar.Render(i18n.T("setup_help"))
+	help := styles.HelpBar.Render(i18n.T("setup.help"))
 	b.WriteString(help)
 
 	// Wrap in dialog

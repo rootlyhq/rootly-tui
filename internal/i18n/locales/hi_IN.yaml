@@ -1,219 +1,231 @@
 # Hindi (IN) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Rootly में आपका स्वागत है"
-enter_credentials:
-  other: "शुरू करने के लिए अपने Rootly API क्रेडेंशियल दर्ज करें।"
-api_endpoint:
-  other: "API एंडपॉइंट"
-api_key:
-  other: "API कुंजी"
-timezone:
-  other: "समय क्षेत्र"
-language:
-  other: "भाषा"
-use_arrows_to_change:
-  other: "(बदलने के लिए तीर कुंजियों का उपयोग करें)"
-testing_connection:
-  other: "कनेक्शन परीक्षण हो रहा है..."
-connection_success:
-  other: "कनेक्शन सफल!"
-test_connection:
-  other: "कनेक्शन परीक्षण"
-save_and_continue:
-  other: "सहेजें और जारी रखें"
-setup_help:
-  other: "Tab/तीर नेविगेट करें, Enter चुनें, q/Esc बाहर निकलें"
-error:
-  other: "त्रुटि"
+common:
+    error:
+        other: त्रुटि
+    loading:
+        other: लोड हो रहा है...
+    of:
+        other: में से
+    page:
+        other: पृष्ठ
+    refreshing:
+        other: रीफ्रेश हो रहा है...
 
-# Incidents view
-incidents:
-  other: "घटनाएं"
-loading_page:
-  other: "पृष्ठ {{.Page}} लोड हो रहा है..."
-no_incidents:
-  other: "कोई घटना नहीं मिली"
-select_incident:
-  other: "विवरण देखने के लिए एक घटना चुनें"
-description:
-  other: "विवरण"
-timeline:
-  other: "समयरेखा"
-created:
-  other: "बनाया गया"
-started:
-  other: "शुरू हुआ"
-detected:
-  other: "पता चला"
-acknowledged:
-  other: "स्वीकृत"
-mitigated:
-  other: "कम किया गया"
-resolved:
-  other: "हल किया गया"
-services:
-  other: "सेवाएं"
-environments:
-  other: "वातावरण"
-teams:
-  other: "टीमें"
-roles:
-  other: "भूमिकाएं"
-causes:
-  other: "कारण"
-types:
-  other: "प्रकार"
-functionalities:
-  other: "कार्यक्षमताएं"
-links:
-  other: "लिंक"
-press_enter_details:
-  other: "अधिक विवरण के लिए Enter दबाएं"
-loading_details:
-  other: "विवरण लोड हो रहा है..."
-page:
-  other: "पृष्ठ"
-status:
-  other: "स्थिति"
-severity:
-  other: "गंभीरता"
-col_sev:
-  other: "गंभी"
-col_id:
-  other: "ID"
-col_title:
-  other: "शीर्षक"
-created_by:
-  other: "द्वारा बनाया गया"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "अलर्ट"
-no_alerts:
-  other: "कोई अलर्ट नहीं मिला"
-select_alert:
-  other: "विवरण देखने के लिए एक अलर्ट चुनें"
-source:
-  other: "स्रोत"
-ended:
-  other: "समाप्त"
-urgency:
-  other: "तात्कालिकता"
-responders:
-  other: "प्रतिसादकर्ता"
-labels:
-  other: "लेबल"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "कीबोर्ड शॉर्टकट"
-navigation:
-  other: "नेविगेशन"
-actions:
-  other: "क्रियाएं"
-general:
-  other: "सामान्य"
-move_down:
-  other: "कर्सर नीचे ले जाएं"
-move_up:
-  other: "कर्सर ऊपर ले जाएं"
-go_to_first:
-  other: "पहले आइटम पर जाएं"
-go_to_last:
-  other: "अंतिम आइटम पर जाएं"
-previous_page:
-  other: "पिछला पृष्ठ"
-next_page:
-  other: "अगला पृष्ठ"
-switch_tabs:
-  other: "टैब के बीच स्विच करें"
-refresh_data:
-  other: "डेटा रीफ्रेश करें"
-view_details:
-  other: "विवरण देखें / चुनें"
-open_url:
-  other: "ब्राउज़र में URL खोलें"
-view_logs:
-  other: "डीबग लॉग देखें"
-open_setup:
-  other: "सेटअप खोलें"
-toggle_help:
-  other: "सहायता टॉगल करें"
-quit:
-  other: "बाहर निकलें"
-press_to_close:
-  other: "बंद करने के लिए ? या Esc दबाएं"
-
-# Logs view
-debug_logs:
-  other: "डीबग लॉग"
-no_logs_yet:
-  other: "अभी तक कोई लॉग नहीं। लॉग स्वचालित रूप से कैप्चर होते हैं।"
-showing_lines:
-  other: "पंक्तियां दिखा रहा है"
-of:
-  other: "में से"
-copied:
-  other: "कॉपी हो गया!"
-clipboard_unavailable:
-  other: "क्लिपबोर्ड उपलब्ध नहीं (लॉग देखें)"
-logs_help:
-  other: "j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | y कॉपी | c साफ करें | l/Esc बंद"
-logs_help_no_clipboard:
-  other: "j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | c साफ करें | l/Esc बंद"
-
-# Help bar items
-navigate:
-  other: "नेविगेट"
-page_nav:
-  other: "पृष्ठ"
-switch:
-  other: "स्विच"
-refresh:
-  other: "रीफ्रेश"
-open:
-  other: "खोलें"
-logs:
-  other: "लॉग"
 setup:
-  other: "सेटअप"
+    api_endpoint:
+        other: API एंडपॉइंट
+    api_key:
+        other: API कुंजी
+    connection_success:
+        other: कनेक्शन सफल!
+    enter_credentials:
+        other: शुरू करने के लिए अपने Rootly API क्रेडेंशियल दर्ज करें।
+    help:
+        other: Tab/तीर नेविगेट करें, Enter चुनें, q/Esc बाहर निकलें
+    language:
+        other: भाषा
+    save_and_continue:
+        other: सहेजें और जारी रखें
+    test_connection:
+        other: कनेक्शन परीक्षण
+    testing_connection:
+        other: कनेक्शन परीक्षण हो रहा है...
+    timezone:
+        other: समय क्षेत्र
+    use_arrows:
+        other: (बदलने के लिए तीर कुंजियों का उपयोग करें)
+    welcome:
+        other: Rootly में आपका स्वागत है
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: गंभी
+        title:
+            other: शीर्षक
+    detail:
+        causes:
+            other: कारण
+        created_by:
+            other: द्वारा बनाया गया
+        description:
+            other: विवरण
+        environments:
+            other: वातावरण
+        functionalities:
+            other: कार्यक्षमताएं
+        links:
+            other: लिंक
+        roles:
+            other: भूमिकाएं
+        services:
+            other: सेवाएं
+        severity:
+            other: गंभीरता
+        status:
+            other: स्थिति
+        teams:
+            other: टीमें
+        types:
+            other: प्रकार
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: विवरण लोड हो रहा है...
+    loading_page:
+        other: पृष्ठ {{.Page}} लोड हो रहा है...
+    none_found:
+        other: कोई घटना नहीं मिली
+    press_enter:
+        other: अधिक विवरण के लिए Enter दबाएं
+    select_prompt:
+        other: विवरण देखने के लिए एक घटना चुनें
+    timeline:
+        acknowledged:
+            other: स्वीकृत
+        created:
+            other: बनाया गया
+        detected:
+            other: पता चला
+        mitigated:
+            other: कम किया गया
+        resolved:
+            other: हल किया गया
+        started:
+            other: शुरू हुआ
+        title:
+            other: समयरेखा
+    title:
+        other: घटनाएं
+
+alerts:
+    detail:
+        ended:
+            other: समाप्त
+        labels:
+            other: लेबल
+        responders:
+            other: प्रतिसादकर्ता
+        source:
+            other: स्रोत
+        urgency:
+            other: तात्कालिकता
+    none_found:
+        other: कोई अलर्ट नहीं मिला
+    select_prompt:
+        other: विवरण देखने के लिए एक अलर्ट चुनें
+    title:
+        other: अलर्ट
+
 help:
-  other: "सहायता"
+    action:
+        about:
+            other: परिचय
+        details:
+            other: विवरण देखें / चुनें
+        help:
+            other: सहायता टॉगल करें
+        logs:
+            other: डीबग लॉग देखें
+        open_url:
+            other: ब्राउज़र में URL खोलें
+        quit:
+            other: बाहर निकलें
+        refresh:
+            other: डेटा रीफ्रेश करें
+        setup:
+            other: सेटअप खोलें
+    nav:
+        first:
+            other: पहले आइटम पर जाएं
+        last:
+            other: अंतिम आइटम पर जाएं
+        move_down:
+            other: कर्सर नीचे ले जाएं
+        move_up:
+            other: कर्सर ऊपर ले जाएं
+        next_page:
+            other: अगला पृष्ठ
+        prev_page:
+            other: पिछला पृष्ठ
+        switch_tabs:
+            other: टैब के बीच स्विच करें
+    press_to_close:
+        other: बंद करने के लिए ? या Esc दबाएं
+    section:
+        actions:
+            other: क्रियाएं
+        general:
+            other: सामान्य
+        navigation:
+            other: नेविगेशन
+    title:
+        other: कीबोर्ड शॉर्टकट
+
+helpbar:
+    about:
+        other: परिचय
+    help:
+        other: सहायता
+    logs:
+        other: लॉग
+    navigate:
+        other: नेविगेट
+    open:
+        other: खोलें
+    page:
+        other: पृष्ठ
+    quit:
+        other: बाहर
+    refresh:
+        other: रीफ्रेश
+    setup:
+        other: सेटअप
+    switch:
+        other: स्विच
+
+logs:
+    clipboard_unavailable:
+        other: क्लिपबोर्ड उपलब्ध नहीं (लॉग देखें)
+    copied:
+        other: कॉपी हो गया!
+    empty:
+        other: अभी तक कोई लॉग नहीं। लॉग स्वचालित रूप से कैप्चर होते हैं।
+    help:
+        other: j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | y कॉपी | c साफ करें | l/Esc बंद
+    help_no_clipboard:
+        other: j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | c साफ करें | l/Esc बंद
+    showing_lines:
+        other: पंक्तियां दिखा रहा है
+    title:
+        other: डीबग लॉग
+
 about:
-  other: "परिचय"
-quit_action:
-  other: "बाहर"
+    description:
+        other: Rootly घटनाओं और अलर्ट देखने के लिए टर्मिनल इंटरफ़ेस।
+    docs:
+        other: दस्तावेज़
+    go_version:
+        other: Go
+    platform:
+        other: प्लेटफ़ॉर्म
+    press_to_close:
+        other: बंद करने के लिए A या Esc दबाएं
+    system:
+        other: सिस्टम
+    title:
+        other: परिचय
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "लोड हो रहा है..."
-refreshing:
-  other: "रीफ्रेश हो रहा है..."
-
-# About view
-about_title:
-  other: "परिचय"
-about_description:
-  other: "Rootly घटनाओं और अलर्ट देखने के लिए टर्मिनल इंटरफ़ेस।"
-system_info:
-  other: "सिस्टम"
-go_version:
-  other: "Go"
-platform:
-  other: "प्लेटफ़ॉर्म"
-documentation:
-  other: "दस्तावेज़"
-press_a_to_close:
-  other: "बंद करने के लिए A या Esc दबाएं"
-view_about:
-  other: "परिचय"

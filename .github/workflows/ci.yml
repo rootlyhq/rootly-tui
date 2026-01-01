@@ -75,9 +75,22 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.out
+          files: ./coverage.out
           flags: unittests
           fail_ci_if_error: false
+
+  # Summary job for matrix test runs. GitHub requires a single check for branch protection,
+  # but matrix jobs create multiple checks. This job provides a single "Check Tests Passed"
+  # status that succeeds only if all matrix test jobs succeed.
+  validate-tests-passed:
+    name: Check Tests Passed
+    runs-on: ubuntu-slim
+    needs: test
+    if: always()
+    steps:
+      - name: Check test matrix status
+        if: needs.test.result != 'success'
+        run: exit 1
 
   build:
     name: Build

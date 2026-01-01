@@ -52,8 +52,8 @@ func TestPersistentCacheSetGet(t *testing.T) {
 func TestPersistentCacheExpiry(t *testing.T) {
 	defer setupTestEnv(t)()
 
-	// Use a very short TTL
-	cache, err := NewPersistentCache(50 * time.Millisecond)
+	// Use a longer TTL for Windows compatibility (Windows timer resolution is ~15ms)
+	cache, err := NewPersistentCache(150 * time.Millisecond)
 	if err != nil {
 		t.Fatalf("NewPersistentCache() error = %v", err)
 	}
@@ -68,7 +68,7 @@ func TestPersistentCacheExpiry(t *testing.T) {
 	}
 
 	// Wait for expiry
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Should be expired now
 	if cache.GetTyped("expiring-key", &result) {
@@ -197,8 +197,8 @@ func TestPersistentCacheWithIncidentStruct(t *testing.T) {
 func TestPersistentCacheCleanup(t *testing.T) {
 	defer setupTestEnv(t)()
 
-	// Use a very short TTL
-	cache, err := NewPersistentCache(50 * time.Millisecond)
+	// Use a longer TTL for Windows compatibility (Windows timer resolution is ~15ms)
+	cache, err := NewPersistentCache(150 * time.Millisecond)
 	if err != nil {
 		t.Fatalf("NewPersistentCache() error = %v", err)
 	}
@@ -209,7 +209,7 @@ func TestPersistentCacheCleanup(t *testing.T) {
 	cache.Set("key2", "value2")
 
 	// Wait for entries to expire
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Run cleanup
 	cache.Cleanup()
@@ -227,8 +227,8 @@ func TestPersistentCacheCleanup(t *testing.T) {
 func TestPersistentCacheCleanupPartial(t *testing.T) {
 	defer setupTestEnv(t)()
 
-	// Use a short TTL
-	cache, err := NewPersistentCache(50 * time.Millisecond)
+	// Use a longer TTL for Windows compatibility (Windows timer resolution is ~15ms)
+	cache, err := NewPersistentCache(200 * time.Millisecond)
 	if err != nil {
 		t.Fatalf("NewPersistentCache() error = %v", err)
 	}
@@ -238,7 +238,7 @@ func TestPersistentCacheCleanupPartial(t *testing.T) {
 	cache.Set("old-key", "old-value")
 
 	// Wait for first entry to expire
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(250 * time.Millisecond)
 
 	// Add second entry (fresh)
 	cache.Set("new-key", "new-value")

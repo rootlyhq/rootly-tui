@@ -1,219 +1,231 @@
 # English (GB) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Welcome to Rootly"
-enter_credentials:
-  other: "Enter your Rootly API credentials to get started."
-api_endpoint:
-  other: "API Endpoint"
-api_key:
-  other: "API Key"
-timezone:
-  other: "Timezone"
-language:
-  other: "Language"
-use_arrows_to_change:
-  other: "(use arrows to change)"
-testing_connection:
-  other: "Testing connection..."
-connection_success:
-  other: "Connection successful!"
-test_connection:
-  other: "Test Connection"
-save_and_continue:
-  other: "Save & Continue"
-setup_help:
-  other: "Tab/Arrow keys to navigate, Enter to select, q/Esc to quit"
-error:
-  other: "Error"
+common:
+    error:
+        other: Error
+    loading:
+        other: Loading...
+    of:
+        other: of
+    page:
+        other: Page
+    refreshing:
+        other: Refreshing...
 
-# Incidents view
-incidents:
-  other: "INCIDENTS"
-loading_page:
-  other: "Loading page {{.Page}}..."
-no_incidents:
-  other: "No incidents found"
-select_incident:
-  other: "Select an incident to view details"
-description:
-  other: "Description"
-timeline:
-  other: "Timeline"
-created:
-  other: "Created"
-started:
-  other: "Started"
-detected:
-  other: "Detected"
-acknowledged:
-  other: "Acknowledged"
-mitigated:
-  other: "Mitigated"
-resolved:
-  other: "Resolved"
-services:
-  other: "Services"
-environments:
-  other: "Environments"
-teams:
-  other: "Teams"
-roles:
-  other: "Roles"
-causes:
-  other: "Causes"
-types:
-  other: "Types"
-functionalities:
-  other: "Functionalities"
-links:
-  other: "Links"
-press_enter_details:
-  other: "Press Enter for more details"
-loading_details:
-  other: "Loading details..."
-page:
-  other: "Page"
-status:
-  other: "Status"
-severity:
-  other: "Severity"
-col_sev:
-  other: "Sev"
-col_id:
-  other: "ID"
-col_title:
-  other: "Title"
-created_by:
-  other: "Created by"
+app:
+    title:
+        other: Rootly
 
-# Alerts view
-alerts:
-  other: "ALERTS"
-no_alerts:
-  other: "No alerts found"
-select_alert:
-  other: "Select an alert to view details"
-source:
-  other: "Source"
-ended:
-  other: "Ended"
-urgency:
-  other: "Urgency"
-responders:
-  other: "Responders"
-labels:
-  other: "Labels"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
-
-# Help view
-keyboard_shortcuts:
-  other: "Keyboard Shortcuts"
-navigation:
-  other: "Navigation"
-actions:
-  other: "Actions"
-general:
-  other: "General"
-move_down:
-  other: "Move cursor down"
-move_up:
-  other: "Move cursor up"
-go_to_first:
-  other: "Go to first item"
-go_to_last:
-  other: "Go to last item"
-previous_page:
-  other: "Previous page"
-next_page:
-  other: "Next page"
-switch_tabs:
-  other: "Switch between tabs"
-refresh_data:
-  other: "Refresh data"
-view_details:
-  other: "View details / Select"
-open_url:
-  other: "Open URL in browser"
-view_logs:
-  other: "View debug logs"
-open_setup:
-  other: "Open setup / settings"
-toggle_help:
-  other: "Toggle this help"
-quit:
-  other: "Quit"
-press_to_close:
-  other: "Press ? or Esc to close"
-
-# Logs view
-debug_logs:
-  other: "Debug Logs"
-no_logs_yet:
-  other: "No logs yet. Logs are captured automatically."
-showing_lines:
-  other: "Showing lines"
-of:
-  other: "of"
-copied:
-  other: "Copied!"
-clipboard_unavailable:
-  other: "Clipboard unavailable (see logs)"
-logs_help:
-  other: "j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close"
-logs_help_no_clipboard:
-  other: "j/k scroll | g/G top/bottom | a select all | c clear | l/Esc close"
-
-# Help bar items
-navigate:
-  other: "navigate"
-page_nav:
-  other: "page"
-switch:
-  other: "switch"
-refresh:
-  other: "refresh"
-open:
-  other: "open"
-logs:
-  other: "logs"
 setup:
-  other: "setup"
+    api_endpoint:
+        other: API Endpoint
+    api_key:
+        other: API Key
+    connection_success:
+        other: Connection successful!
+    enter_credentials:
+        other: Enter your Rootly API credentials to get started.
+    help:
+        other: Tab/Arrow keys to navigate, Enter to select, q/Esc to quit
+    language:
+        other: Language
+    save_and_continue:
+        other: Save & Continue
+    test_connection:
+        other: Test Connection
+    testing_connection:
+        other: Testing connection...
+    timezone:
+        other: Timezone
+    use_arrows:
+        other: (use arrows to change)
+    welcome:
+        other: Welcome to Rootly
+
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: Sev
+        title:
+            other: Title
+    detail:
+        causes:
+            other: Causes
+        created_by:
+            other: Created by
+        description:
+            other: Description
+        environments:
+            other: Environments
+        functionalities:
+            other: Functionalities
+        links:
+            other: Links
+        roles:
+            other: Roles
+        services:
+            other: Services
+        severity:
+            other: Severity
+        status:
+            other: Status
+        teams:
+            other: Teams
+        types:
+            other: Types
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: Loading details...
+    loading_page:
+        other: Loading page {{.Page}}...
+    none_found:
+        other: No incidents found
+    press_enter:
+        other: Press Enter for more details
+    select_prompt:
+        other: Select an incident to view details
+    timeline:
+        acknowledged:
+            other: Acknowledged
+        created:
+            other: Created
+        detected:
+            other: Detected
+        mitigated:
+            other: Mitigated
+        resolved:
+            other: Resolved
+        started:
+            other: Started
+        title:
+            other: Timeline
+    title:
+        other: INCIDENTS
+
+alerts:
+    detail:
+        ended:
+            other: Ended
+        labels:
+            other: Labels
+        responders:
+            other: Responders
+        source:
+            other: Source
+        urgency:
+            other: Urgency
+    none_found:
+        other: No alerts found
+    select_prompt:
+        other: Select an alert to view details
+    title:
+        other: ALERTS
+
 help:
-  other: "help"
+    action:
+        about:
+            other: About
+        details:
+            other: View details / Select
+        help:
+            other: Toggle this help
+        logs:
+            other: View debug logs
+        open_url:
+            other: Open URL in browser
+        quit:
+            other: Quit
+        refresh:
+            other: Refresh data
+        setup:
+            other: Open setup / settings
+    nav:
+        first:
+            other: Go to first item
+        last:
+            other: Go to last item
+        move_down:
+            other: Move cursor down
+        move_up:
+            other: Move cursor up
+        next_page:
+            other: Next page
+        prev_page:
+            other: Previous page
+        switch_tabs:
+            other: Switch between tabs
+    press_to_close:
+        other: Press ? or Esc to close
+    section:
+        actions:
+            other: Actions
+        general:
+            other: General
+        navigation:
+            other: Navigation
+    title:
+        other: Keyboard Shortcuts
+
+helpbar:
+    about:
+        other: about
+    help:
+        other: help
+    logs:
+        other: logs
+    navigate:
+        other: navigate
+    open:
+        other: open
+    page:
+        other: page
+    quit:
+        other: quit
+    refresh:
+        other: refresh
+    setup:
+        other: setup
+    switch:
+        other: switch
+
+logs:
+    clipboard_unavailable:
+        other: Clipboard unavailable (see logs)
+    copied:
+        other: Copied!
+    empty:
+        other: No logs yet. Logs are captured automatically.
+    help:
+        other: j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close
+    help_no_clipboard:
+        other: j/k scroll | g/G top/bottom | a select all | c clear | l/Esc close
+    showing_lines:
+        other: Showing lines
+    title:
+        other: Debug Logs
+
 about:
-  other: "about"
-quit_action:
-  other: "quit"
+    description:
+        other: A terminal UI for viewing Rootly incidents and alerts.
+    docs:
+        other: Docs
+    go_version:
+        other: Go
+    platform:
+        other: Platform
+    press_to_close:
+        other: Press A or Esc to close
+    system:
+        other: System
+    title:
+        other: About
 
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "Loading..."
-refreshing:
-  other: "Refreshing..."
-
-# About view
-about_title:
-  other: "About"
-about_description:
-  other: "A terminal UI for viewing Rootly incidents and alerts."
-system_info:
-  other: "System"
-go_version:
-  other: "Go"
-platform:
-  other: "Platform"
-documentation:
-  other: "Docs"
-press_a_to_close:
-  other: "Press A or Esc to close"
-view_about:
-  other: "About"

@@ -27,6 +27,11 @@ builds:
     goarm:
       - "6"
       - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
     ldflags:
       - -s -w
       - -extldflags "-static"
@@ -42,7 +47,7 @@ archives:
       - goos: windows
         formats:
           - zip
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
     files:
       - README.md
       - LICENSE
@@ -74,19 +79,16 @@ changelog:
     - title: Other
       order: 999
 
-brews:
+homebrew_casks:
   - repository:
       owner: rootlyhq
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
+    directory: Casks
     homepage: "https://rootly.com"
     description: "Terminal UI for Rootly incidents and alerts"
-    license: "MIT"
-    install: |
-      bin.install "rootly-tui"
-    test: |
-      system "#{bin}/rootly-tui", "--version"
+    binaries:
+      - rootly-tui
 
 release:
   github:

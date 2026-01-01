@@ -1,34 +1,48 @@
 # English (US) translations
+# Organized in nested Rails-style format
 
-# Setup screen
-welcome:
-  other: "Welcome to Rootly"
-enter_credentials:
-  other: "Enter your Rootly API credentials to get started."
-api_endpoint:
-  other: "API Endpoint"
-api_key:
-  other: "API Key"
-timezone:
-  other: "Timezone"
-language:
-  other: "Language"
-use_arrows_to_change:
-  other: "(use arrows to change)"
-testing_connection:
-  other: "Testing connection..."
-connection_success:
-  other: "Connection successful!"
-test_connection:
-  other: "Test Connection"
-save_and_continue:
-  other: "Save & Continue"
-setup_help:
-  other: "Tab/Arrow keys to navigate, Enter to select, q/Esc to quit"
-error:
-  other: "Error"
+common:
+  error:
+    other: "Error"
+  loading:
+    other: "Loading..."
+  refreshing:
+    other: "Refreshing..."
+  page:
+    other: "Page"
+  of:
+    other: "of"
 
-# Incidents view
+app:
+  title:
+    other: "Rootly"
+
+setup:
+  welcome:
+    other: "Welcome to Rootly"
+  enter_credentials:
+    other: "Enter your Rootly API credentials to get started."
+  api_endpoint:
+    other: "API Endpoint"
+  api_key:
+    other: "API Key"
+  timezone:
+    other: "Timezone"
+  language:
+    other: "Language"
+  use_arrows:
+    other: "(use arrows to change)"
+  testing_connection:
+    other: "Testing connection..."
+  connection_success:
+    other: "Connection successful!"
+  test_connection:
+    other: "Test Connection"
+  save_and_continue:
+    other: "Save & Continue"
+  help:
+    other: "Tab/Arrow keys to navigate, Enter to select, q/Esc to quit"
+
 incidents:
   other: "INCIDENTS"
 loading_page:
@@ -90,29 +104,34 @@ col_title:
 created_by:
   other: "Created by"
 
-# Alerts view
 alerts:
-  other: "ALERTS"
-no_alerts:
-  other: "No alerts found"
-select_alert:
-  other: "Select an alert to view details"
-source:
-  other: "Source"
-ended:
-  other: "Ended"
-urgency:
-  other: "Urgency"
-responders:
-  other: "Responders"
-labels:
-  other: "Labels"
-rootly:
-  other: "Rootly"
-slack:
-  other: "Slack"
-jira:
-  other: "Jira"
+  title:
+    other: "ALERTS"
+  none_found:
+    other: "No alerts found"
+  select_prompt:
+    other: "Select an alert to view details"
+  detail:
+    source:
+      other: "Source"
+    created:
+      other: "Created"
+    ended:
+      other: "Ended"
+    urgency:
+      other: "Urgency"
+    services:
+      other: "Services"
+    environments:
+      other: "Environments"
+    teams:
+      other: "Teams"
+    responders:
+      other: "Responders"
+    labels:
+      other: "Labels"
+    links:
+      other: "Links"
 
 # Help view
 keyboard_shortcuts:
@@ -180,31 +199,27 @@ sort_source_desc:
 sort_menu_help:
   other: "j/k navigate | Enter select | Esc close"
 
-# Logs view
-debug_logs:
-  other: "Debug Logs"
-no_logs_yet:
-  other: "No logs yet. Logs are captured automatically."
-showing_lines:
-  other: "Showing lines"
-of:
-  other: "of"
-copied:
-  other: "Copied!"
-clipboard_unavailable:
-  other: "Clipboard unavailable (see logs)"
-logs_help:
-  other: "j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close"
-logs_help_no_clipboard:
-  other: "j/k scroll | g/G top/bottom | a select all | c clear | l/Esc close"
-memory:
-  other: "memory"
-following:
-  other: "following"
-line_count:
-  other: "{{.Count}} lines"
-scroll_percent:
-  other: "{{.Percent}}%"
+helpbar:
+  navigate:
+    other: "navigate"
+  page:
+    other: "page"
+  switch:
+    other: "switch"
+  refresh:
+    other: "refresh"
+  open:
+    other: "open"
+  logs:
+    other: "logs"
+  setup:
+    other: "setup"
+  help:
+    other: "help"
+  about:
+    other: "about"
+  quit:
+    other: "quit"
 
 # Help bar items
 navigate:
@@ -220,38 +235,41 @@ open:
 sort:
   other: "sort"
 logs:
-  other: "logs"
-setup:
-  other: "setup"
-help:
-  other: "help"
+  title:
+    other: "Debug Logs"
+  empty:
+    other: "No logs yet. Logs are captured automatically."
+  showing_lines:
+    other: "Showing lines"
+  copied:
+    other: "Copied!"
+  clipboard_unavailable:
+    other: "Clipboard unavailable (see logs)"
+  help:
+    other: "j/k scroll | g/G top/bottom | a select all | y copy | c clear | l/Esc close"
+  help_no_clipboard:
+    other: "j/k scroll | g/G top/bottom | a select all | c clear | l/Esc close"
+  memory:
+    other: "memory"
+  following:
+    other: "following"
+  line_count:
+    other: "{{.Count}} lines"
+  scroll_percent:
+    other: "{{.Percent}}%"
+
 about:
-  other: "about"
-quit_action:
-  other: "quit"
-
-# App
-app_title:
-  other: "Rootly"
-loading:
-  other: "Loading..."
-refreshing:
-  other: "Refreshing..."
-
-# About view
-about_title:
-  other: "About"
-about_description:
-  other: "A terminal UI for viewing Rootly incidents and alerts."
-system_info:
-  other: "System"
-go_version:
-  other: "Go"
-platform:
-  other: "Platform"
-documentation:
-  other: "Docs"
-press_a_to_close:
-  other: "Press A or Esc to close"
-view_about:
-  other: "About"
+  title:
+    other: "About"
+  description:
+    other: "A terminal UI for viewing Rootly incidents and alerts."
+  system:
+    other: "System"
+  go_version:
+    other: "Go"
+  platform:
+    other: "Platform"
+  docs:
+    other: "Docs"
+  press_to_close:
+    other: "Press A or Esc to close"

@@ -92,7 +92,7 @@ func NewAlertsModel() AlertsModel {
 	// Define table columns with i18n headers using evertras/bubble-table
 	columns := []table.Column{
 		table.NewColumn(alertColKeyIndicator, "", 2), // Selection indicator column
-		table.NewColumn(alertColKeySource, i18n.T("source"), 4),
+		table.NewColumn(alertColKeySource, i18n.T("alerts.detail.source"), 4),
 		table.NewColumn(alertColKeyID, i18n.T("col_id"), 8),
 		table.NewColumn(alertColKeyStatus, i18n.T("status"), 10),
 		table.NewFlexColumn(alertColKeyTitle, i18n.T("col_title"), 1), // Flex to fill remaining space
@@ -486,8 +486,8 @@ func (m AlertsModel) View() string {
 
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
-		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("loading_page", map[string]any{"Page": m.currentPage}))
-		listContent := styles.TextBold.Render(i18n.T("alerts")) + "\n\n" + styles.TextDim.Render(loadingMsg)
+		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("incidents.loading_page", map[string]any{"Page": m.currentPage}))
+		listContent := styles.TextBold.Render(i18n.T("alerts.title")) + "\n\n" + styles.TextDim.Render(loadingMsg)
 		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
 		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
 		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
@@ -498,7 +498,7 @@ func (m AlertsModel) View() string {
 	}
 
 	if len(m.alerts) == 0 {
-		return styles.TextDim.Render(i18n.T("no_alerts"))
+		return styles.TextDim.Render(i18n.T("alerts.none_found"))
 	}
 
 	listView := m.renderList(contentHeight)
@@ -511,7 +511,7 @@ func (m AlertsModel) renderList(height int) string {
 	var b strings.Builder
 
 	// Title
-	title := styles.TextBold.Render(i18n.T("alerts"))
+	title := styles.TextBold.Render(i18n.T("alerts.title"))
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
@@ -551,7 +551,7 @@ func (m AlertsModel) renderDetail(height int) string {
 	alert := m.SelectedAlert()
 	if alert == nil {
 		return styles.DetailContainer.Width(m.detailWidth).Height(height).Render(
-			styles.TextDim.Render(i18n.T("select_alert")),
+			styles.TextDim.Render(i18n.T("alerts.select_prompt")),
 		)
 	}
 
@@ -603,7 +603,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("source"), sourceIcon, sourceName)
+	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
 
 	// Links section (high up for quick access)
 	rootlyURL := ""
@@ -617,7 +617,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
 		}
 		if alert.ExternalURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("source"), alert.ExternalURL))
+			b.WriteString(m.renderLinkRow(i18n.T("alerts.detail.source"), alert.ExternalURL))
 		}
 		b.WriteString("\n")
 	}
@@ -646,7 +646,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		b.WriteString(m.renderDetailRow(i18n.T("started"), formatAlertTime(*alert.StartedAt)))
 	}
 	if alert.EndedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("ended"), formatAlertTime(*alert.EndedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.ended"), formatAlertTime(*alert.EndedAt)))
 	}
 	b.WriteString("\n")
 
@@ -659,13 +659,13 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	if alert.DetailLoaded {
 		// Urgency
 		if alert.Urgency != "" {
-			b.WriteString(m.renderDetailRow(i18n.T("urgency"), alert.Urgency))
+			b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.urgency"), alert.Urgency))
 		}
 
 		// Responders
 		if len(alert.Responders) > 0 {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render(i18n.T("responders")))
+			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.responders")))
 			b.WriteString("\n")
 			for _, responder := range alert.Responders {
 				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
@@ -675,7 +675,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
-		b.WriteString(styles.TextBold.Render(i18n.T("labels")))
+		b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.labels")))
 		b.WriteString("\n")
 		keys := make([]string, 0, len(alert.Labels))
 		for k := range alert.Labels {
@@ -693,7 +693,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
 	} else if !alert.DetailLoaded {
 		b.WriteString("\n")
-		b.WriteString(styles.TextDim.Render(i18n.T("press_enter_details")))
+		b.WriteString(styles.TextDim.Render(i18n.T("incidents.press_enter")))
 	}
 
 	return b.String()
