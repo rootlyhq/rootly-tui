@@ -11,6 +11,7 @@ require (
 	github.com/evertras/bubble-table v0.19.2
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/rootlyhq/rootly-go v0.2.0
+	github.com/sahilm/fuzzy v0.1.1
 	go.etcd.io/bbolt v1.4.3
 	golang.design/x/clipboard v0.7.1
 	golang.org/x/text v0.32.0
