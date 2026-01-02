@@ -209,6 +209,33 @@ helpbar:
   quit:
     other: "quit"
 
+sorting:
+  title:
+    other: "Sorting"
+  open_sort_menu:
+    other: "Open sort menu (press again to toggle)"
+  sort_by_date:
+    other: "sort by date"
+  created:
+    other: "Created"
+  updated:
+    other: "Updated"
+  newest_first:
+    other: "Newest First"
+  oldest_first:
+    other: "Oldest First"
+  desc:
+    created:
+      other: "Sort by creation date (press again to toggle)"
+    updated:
+      other: "Sort by last updated date (press again to toggle)"
+
+sort_by:
+  other: "Sort By"
+
+sort_menu_help:
+  other: "↑/↓ navigate • Enter select • Esc close"
+
 logs:
   title:
     other: "Debug Logs"

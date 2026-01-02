@@ -171,7 +171,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Handle sort menu
 		if m.activeTab == TabIncidents && m.incidents.IsSortMenuVisible() {
-			m.incidents.HandleSortMenuKey(msg.String())
+			if m.incidents.HandleSortMenuKey(msg.String()) {
+				// Sort field changed, reload incidents from API
+				m.incidents.SetLoading(true)
+				return m, m.loadIncidents()
+			}
 			return m, nil
 		}
 
@@ -589,16 +593,17 @@ func (m Model) loadData() tea.Cmd {
 }
 
 func (m Model) loadIncidents() tea.Cmd {
-	// Capture the client and page - it should already be initialized in New()
+	// Capture the client, page, and sort - it should already be initialized in New()
 	client := m.apiClient
 	page := m.incidents.CurrentPage()
+	sort := m.incidents.GetSortParam()
 	return func() tea.Msg {
 		if client == nil {
 			return IncidentsLoadedMsg{Err: fmt.Errorf("API client not initialized")}
 		}
 
 		ctx := context.Background()
-		result, err := client.ListIncidents(ctx, page)
+		result, err := client.ListIncidents(ctx, page, sort)
 		if err != nil {
 			return IncidentsLoadedMsg{Err: err}
 		}

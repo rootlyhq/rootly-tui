@@ -181,14 +181,17 @@ func (c *Client) ValidateAPIKey(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult, error) {
+func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*IncidentsResult, error) {
 	pageSize := 25
 
-	// Build cache key with parameters
-	cacheKey := NewCacheKey(CacheKeyPrefixIncidents).
+	// Build cache key with parameters including sort
+	cacheKeyBuilder := NewCacheKey(CacheKeyPrefixIncidents).
 		With("page", page).
-		With("pageSize", pageSize).
-		Build()
+		With("pageSize", pageSize)
+	if sort != "" {
+		cacheKeyBuilder = cacheKeyBuilder.With("sort", sort)
+	}
+	cacheKey := cacheKeyBuilder.Build()
 
 	// Check cache first
 	if c.cache != nil {
@@ -199,32 +202,51 @@ func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult,
 		}
 	}
 
-	params := &rootly.ListIncidentsParams{
-		PageNumber: &page,
-		PageSize:   &pageSize,
+	// Build URL with query parameters
+	baseURL := c.endpoint
+	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
+		baseURL = "https://" + baseURL
 	}
 
-	debug.Logger.Debug("Fetching incidents", "page", page, "pageSize", pageSize, "cache", "miss", "key", cacheKey)
+	url := fmt.Sprintf("%s/v1/incidents?page[number]=%d&page[size]=%d", baseURL, page, pageSize)
+	if sort != "" {
+		url += fmt.Sprintf("&sort=%s", sort)
+	}
 
-	resp, err := c.client.ListIncidentsWithResponse(ctx, params)
+	debug.Logger.Debug("Fetching incidents", "page", page, "pageSize", pageSize, "sort", sort, "cache", "miss", "key", cacheKey)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	httpResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		debug.Logger.Error("Failed to list incidents", "error", err)
 		return nil, fmt.Errorf("failed to list incidents: %w", err)
 	}
+	defer func() { _ = httpResp.Body.Close() }()
+
+	body, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
 
 	debug.Logger.Debug("Incidents response",
-		"status", resp.StatusCode(),
-		"bodyLength", len(resp.Body),
+		"status", httpResp.StatusCode,
+		"bodyLength", len(body),
 	)
-	debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(resp.Body))
+	debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(body))
 
-	if resp.StatusCode() == 403 {
-		debug.Logger.Error("API forbidden", "status", resp.StatusCode())
+	if httpResp.StatusCode == 403 {
+		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
 		return nil, fmt.Errorf("access denied: API key lacks 'read incidents' permission")
 	}
-	if resp.StatusCode() != 200 {
-		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
-		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
+	if httpResp.StatusCode != 200 {
+		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
+		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
 	}
 
 	var result struct {
@@ -280,10 +302,10 @@ func (c *Client) ListIncidents(ctx context.Context, page int) (*IncidentsResult,
 		} `json:"links"`
 	}
 
-	if err := json.Unmarshal(resp.Body, &result); err != nil {
+	if err := json.Unmarshal(body, &result); err != nil {
 		debug.Logger.Error("Failed to parse incidents response",
 			"error", err,
-			"body", debug.PrettyJSON(resp.Body),
+			"body", debug.PrettyJSON(body),
 		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}

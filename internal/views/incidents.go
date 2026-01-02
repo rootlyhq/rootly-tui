@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -56,8 +55,6 @@ type SortField int
 
 const (
 	SortByNone SortField = iota
-	SortBySeverity
-	SortByStatus
 	SortByCreated
 	SortByUpdated
 )
@@ -129,12 +126,10 @@ func NewIncidentsModel() IncidentsModel {
 		HighlightStyle(lipgloss.NewStyle()). // No background highlight, arrow shows selection
 		HeaderStyle(lipgloss.NewStyle().Bold(true).Foreground(styles.ColorText))
 
-	// Initialize sort menu with incident-specific options
+	// Initialize sort menu with incident-specific options (only API-supported sorts)
 	sortOptions := []components.SortOption{
-		{Label: i18n.T("severity"), Description: i18n.T("sort_severity_desc"), Value: SortBySeverity},
-		{Label: i18n.T("status"), Description: i18n.T("sort_status_desc"), Value: SortByStatus},
-		{Label: i18n.T("created"), Description: i18n.T("sort_created_desc"), Value: SortByCreated},
-		{Label: i18n.T("updated"), Description: i18n.T("sort_updated_desc"), Value: SortByUpdated},
+		{Label: i18n.T("sorting.created"), Description: i18n.T("sorting.desc.created"), Value: SortByCreated},
+		{Label: i18n.T("sorting.updated"), Description: i18n.T("sorting.desc.updated"), Value: SortByUpdated},
 	}
 
 	return IncidentsModel{
@@ -367,9 +362,6 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 	m.currentPage = pagination.CurrentPage
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
-
-	// Apply sorting if enabled
-	m.sortIncidents()
 
 	// Build table rows from incidents with styled cells
 	rows := make([]table.Row, len(m.incidents))
@@ -831,49 +823,34 @@ func statusStyle(status string) lipgloss.Style {
 }
 
 // SetSort sets the sort field and direction
-func (m *IncidentsModel) SetSort(field SortField) {
-	m.sortState.Toggle(field)
-	m.sortIncidents()
-	m.updateRowIndicators()
-	m.updateViewportContent()
+// Returns true if the field changed (requiring a reload from API)
+func (m *IncidentsModel) SetSort(field SortField) bool {
+	fieldChanged := m.sortState.Toggle(field)
+	return fieldChanged
 }
 
-// sortIncidents sorts the incidents slice based on current sort settings
-func (m *IncidentsModel) sortIncidents() {
+// GetSortParam returns the API sort parameter string based on current sort state
+// Returns empty string if sorting is disabled
+func (m IncidentsModel) GetSortParam() string {
 	if !m.sortState.IsEnabled() {
-		return
+		return ""
 	}
 
-	sort.SliceStable(m.incidents, func(i, j int) bool {
-		var less bool
-		switch m.sortState.Field {
-		case SortBySeverity:
-			// Define severity order: critical > high > medium > low > unknown
-			sevOrder := map[string]int{
-				"critical": 4, "Critical": 4, "CRITICAL": 4, "sev0": 4, "SEV0": 4,
-				"high": 3, "High": 3, "HIGH": 3, "sev1": 3, "SEV1": 3,
-				"medium": 2, "Medium": 2, "MEDIUM": 2, "sev2": 2, "SEV2": 2,
-				"low": 1, "Low": 1, "LOW": 1, "sev3": 1, "SEV3": 1,
-			}
-			iSev := sevOrder[m.incidents[i].Severity]
-			jSev := sevOrder[m.incidents[j].Severity]
-			less = iSev < jSev
+	var fieldName string
+	switch m.sortState.Field {
+	case SortByCreated:
+		fieldName = "created_at"
+	case SortByUpdated:
+		fieldName = "updated_at"
+	default:
+		return ""
+	}
 
-		case SortByStatus:
-			less = strings.ToLower(m.incidents[i].Status) < strings.ToLower(m.incidents[j].Status)
-
-		case SortByCreated:
-			less = m.incidents[i].CreatedAt.Before(m.incidents[j].CreatedAt)
-
-		case SortByUpdated:
-			less = m.incidents[i].UpdatedAt.Before(m.incidents[j].UpdatedAt)
-
-		default:
-			return false
-		}
-
-		return m.sortState.ApplyDirection(less)
-	})
+	// Add minus prefix for descending order
+	if m.sortState.Direction == components.SortDesc {
+		return "-" + fieldName
+	}
+	return fieldName
 }
 
 // GetSortInfo returns a string describing the current sort
@@ -884,19 +861,23 @@ func (m IncidentsModel) GetSortInfo() string {
 
 	var fieldName string
 	switch m.sortState.Field {
-	case SortBySeverity:
-		fieldName = i18n.T("severity")
-	case SortByStatus:
-		fieldName = i18n.T("status")
 	case SortByCreated:
-		fieldName = i18n.T("created")
+		fieldName = i18n.T("sorting.created")
 	case SortByUpdated:
-		fieldName = i18n.T("updated")
+		fieldName = i18n.T("sorting.updated")
 	default:
 		return ""
 	}
 
-	return m.sortState.GetInfo(fieldName)
+	// Show direction as "Newest First" or "Oldest First"
+	var directionLabel string
+	if m.sortState.Direction == components.SortDesc {
+		directionLabel = i18n.T("sorting.newest_first")
+	} else {
+		directionLabel = i18n.T("sorting.oldest_first")
+	}
+
+	return fmt.Sprintf("%s (%s)", fieldName, directionLabel)
 }
 
 // ToggleSortMenu toggles the visibility of the sort menu
@@ -910,12 +891,14 @@ func (m IncidentsModel) IsSortMenuVisible() bool {
 }
 
 // HandleSortMenuKey handles keyboard input for the sort menu
-func (m *IncidentsModel) HandleSortMenuKey(key string) {
+// Returns true if sorting changed and a reload is needed
+func (m *IncidentsModel) HandleSortMenuKey(key string) bool {
 	if selected, shouldApply := m.sortMenu.HandleKey(key); shouldApply {
 		if field, ok := selected.(SortField); ok {
-			m.SetSort(field)
+			return m.SetSort(field)
 		}
 	}
+	return false
 }
 
 // RenderSortMenu renders the sort menu overlay

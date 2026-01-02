@@ -85,9 +85,9 @@ func (m *SortMenuModel) Render(currentSortField interface{}, sortDirection SortD
 		sortIndicator := ""
 		if currentSortField == opt.Value {
 			if sortDirection == SortDesc {
-				sortIndicator = " ↓"
+				sortIndicator = " (" + i18n.T("sorting.newest_first") + ")"
 			} else {
-				sortIndicator = " ↑"
+				sortIndicator = " (" + i18n.T("sorting.oldest_first") + ")"
 			}
 		}
 

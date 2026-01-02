@@ -204,7 +204,7 @@ func TestListIncidents(t *testing.T) {
 	}
 	defer client.Close()
 
-	result, err := client.ListIncidents(context.Background(), 1)
+	result, err := client.ListIncidents(context.Background(), 1, "")
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
@@ -324,7 +324,7 @@ func TestListIncidentsError(t *testing.T) {
 	}
 	defer client.Close()
 
-	_, err = client.ListIncidents(context.Background(), 1)
+	_, err = client.ListIncidents(context.Background(), 1, "")
 	if err == nil {
 		t.Error("expected error for 500 response")
 	}
@@ -483,13 +483,13 @@ func TestListIncidentsWithCache(t *testing.T) {
 	}
 
 	// First call
-	_, err = client.ListIncidents(context.Background(), 1)
+	_, err = client.ListIncidents(context.Background(), 1, "")
 	if err != nil {
 		t.Fatalf("first ListIncidents() error = %v", err)
 	}
 
 	// Second call should hit cache
-	_, err = client.ListIncidents(context.Background(), 1)
+	_, err = client.ListIncidents(context.Background(), 1, "")
 	if err != nil {
 		t.Fatalf("second ListIncidents() error = %v", err)
 	}
@@ -635,7 +635,7 @@ func TestListIncidentsWithTimestamps(t *testing.T) {
 	}
 	defer client.Close()
 
-	result, err := client.ListIncidents(context.Background(), 1)
+	result, err := client.ListIncidents(context.Background(), 1, "")
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
@@ -1094,7 +1094,7 @@ func TestListIncidentsInvalidJSON(t *testing.T) {
 	}
 	defer client.Close()
 
-	_, err = client.ListIncidents(context.Background(), 1)
+	_, err = client.ListIncidents(context.Background(), 1, "")
 	if err == nil {
 		t.Error("expected error for invalid JSON response")
 	}
@@ -1215,7 +1215,7 @@ func TestListIncidentsHTTPError(t *testing.T) {
 	}
 	defer client.Close()
 
-	_, err = client.ListIncidents(context.Background(), 1)
+	_, err = client.ListIncidents(context.Background(), 1, "")
 	if err == nil {
 		t.Error("expected error for unreachable host")
 	}
@@ -1316,7 +1316,7 @@ func TestListIncidentsWithPagination(t *testing.T) {
 	}
 	defer client.Close()
 
-	result, err := client.ListIncidents(context.Background(), 2)
+	result, err := client.ListIncidents(context.Background(), 2, "")
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
@@ -1401,7 +1401,7 @@ func TestIncidentsWithEmptyData(t *testing.T) {
 	}
 	defer client.Close()
 
-	result, err := client.ListIncidents(context.Background(), 1)
+	result, err := client.ListIncidents(context.Background(), 1, "")
 	if err != nil {
 		t.Fatalf("ListIncidents() error = %v", err)
 	}
