@@ -706,7 +706,10 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			b.WriteString(m.renderDetailRow(k, alert.Labels[k]))
+			b.WriteString(styles.DetailLabel.Render(k + ":"))
+			b.WriteString(" ")
+			b.WriteString(m.renderLabelValue(alert.Labels[k]))
+			b.WriteString("\n")
 		}
 	}
 
@@ -754,6 +757,28 @@ func formatAlertTime(t time.Time) string {
 		return localStr + " (" + utcStr + ")"
 	}
 	return localStr
+}
+
+// isURL checks if a string looks like a URL
+func isURL(s string) bool {
+	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
+}
+
+// renderLabelValue renders a label value, making URLs clickable
+func (m AlertsModel) renderLabelValue(value string) string {
+	if isURL(value) {
+		// Truncate long URLs for display
+		displayURL := value
+		maxLen := m.detailWidth - 30
+		if maxLen < 30 {
+			maxLen = 30
+		}
+		if len(displayURL) > maxLen {
+			displayURL = displayURL[:maxLen-3] + "..."
+		}
+		return styles.RenderLink(value, displayURL)
+	}
+	return styles.DetailValue.Render(value)
 }
 
 // formatNoiseStatus formats the noise classification for display

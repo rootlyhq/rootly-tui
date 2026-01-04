@@ -815,7 +815,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 			for _, k := range keys {
 				b.WriteString(styles.DetailLabel.Render(k + ":"))
 				b.WriteString(" ")
-				b.WriteString(styles.DetailValue.Render(inc.Labels[k]))
+				b.WriteString(m.renderLabelValue(inc.Labels[k]))
 				b.WriteString("\n")
 			}
 			b.WriteString("\n")
@@ -1021,6 +1021,28 @@ func formatTime(t time.Time) string {
 		return localStr + " (" + utcStr + ")"
 	}
 	return localStr
+}
+
+// isIncidentURL checks if a string looks like a URL
+func isIncidentURL(s string) bool {
+	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
+}
+
+// renderLabelValue renders a label value, making URLs clickable
+func (m IncidentsModel) renderLabelValue(value string) string {
+	if isIncidentURL(value) {
+		// Truncate long URLs for display
+		displayURL := value
+		maxLen := m.detailWidth - 30
+		if maxLen < 30 {
+			maxLen = 30
+		}
+		if len(displayURL) > maxLen {
+			displayURL = displayURL[:maxLen-3] + "..."
+		}
+		return styles.RenderLink(value, displayURL)
+	}
+	return styles.DetailValue.Render(value)
 }
 
 // integrationLink represents a labeled URL for display
