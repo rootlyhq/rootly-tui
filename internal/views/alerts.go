@@ -697,6 +697,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
+		b.WriteString("\n")
 		b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.labels")))
 		b.WriteString("\n")
 		keys := make([]string, 0, len(alert.Labels))
