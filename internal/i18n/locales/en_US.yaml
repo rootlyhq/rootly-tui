@@ -90,6 +90,32 @@ incidents:
       other: "Functionalities"
     links:
       other: "Links"
+    mitigation_message:
+      other: "Mitigation"
+    resolution_message:
+      other: "Resolution"
+    responders:
+      other: "Responders"
+    started_by:
+      other: "Started by"
+    mitigated_by:
+      other: "Mitigated by"
+    resolved_by:
+      other: "Resolved by"
+    integrations:
+      other: "Integrations"
+    labels:
+      other: "Labels"
+    metadata:
+      other: "Metadata"
+    source:
+      other: "Source"
+    private:
+      other: "Private"
+    retrospective:
+      other: "Retrospective"
+    slack_channel:
+      other: "Slack Channel"
   timeline:
     title:
       other: "Timeline"
@@ -112,6 +138,40 @@ incidents:
       other: "Slack"
     jira:
       other: "Jira"
+  integrations:
+    google_meet:
+      other: "Google Meet"
+    zoom:
+      other: "Zoom"
+    linear:
+      other: "Linear"
+    github:
+      other: "GitHub"
+    gitlab:
+      other: "GitLab"
+    pagerduty:
+      other: "PagerDuty"
+    opsgenie:
+      other: "OpsGenie"
+    asana:
+      other: "Asana"
+    trello:
+      other: "Trello"
+    confluence:
+      other: "Confluence"
+    datadog:
+      other: "Datadog"
+    servicenow:
+      other: "ServiceNow"
+    freshservice:
+      other: "Freshservice"
+  retro:
+    not_started:
+      other: "Not Started"
+    in_progress:
+      other: "In Progress"
+    completed:
+      other: "Completed"
 
 alerts:
   title:
@@ -141,6 +201,29 @@ alerts:
       other: "Labels"
     links:
       other: "Links"
+    notified_users:
+      other: "Notified Users"
+    related_incidents:
+      other: "Related Incidents"
+    metadata:
+      other: "Metadata"
+    external_id:
+      other: "External ID"
+    noise:
+      other: "Noise Classification"
+    group_leader:
+      other: "Group Leader"
+    dedup_key:
+      other: "Dedup Key"
+    yes:
+      other: "Yes"
+  noise:
+    not_noise:
+      other: "Not Noise"
+    noise:
+      other: "Noise"
+    possible_noise:
+      other: "Possible Noise"
 
 help:
   title:

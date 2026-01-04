@@ -555,6 +555,7 @@ func (m AlertsModel) renderDetail(height int) string {
 	return containerStyle.Width(m.detailWidth).Height(height).Render(viewportContent)
 }
 
+//nolint:gocyclo // View rendering function with many optional fields to display
 func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	var b strings.Builder
 
@@ -575,15 +576,15 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
 
 	// Links section (high up for quick access)
-	rootlyURL := ""
-	if alert.ShortID != "" {
+	rootlyURL := alert.URL // Use URL from API if available
+	if rootlyURL == "" && alert.ShortID != "" {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
 	}
 	if rootlyURL != "" || alert.ExternalURL != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("links")))
+		b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("rootly"), rootlyURL))
+			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.rootly"), rootlyURL))
 		}
 		if alert.ExternalURL != "" {
 			b.WriteString(m.renderLinkRow(i18n.T("alerts.detail.source"), alert.ExternalURL))
@@ -638,6 +639,58 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 			b.WriteString("\n")
 			for _, responder := range alert.Responders {
 				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
+			}
+		}
+
+		// Notified users
+		if len(alert.NotifiedUsers) > 0 {
+			b.WriteString("\n")
+			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.notified_users")))
+			b.WriteString("\n")
+			for _, user := range alert.NotifiedUsers {
+				b.WriteString(styles.Text.Render("  • "))
+				b.WriteString(styles.RenderNameWithEmail(user.Name, user.Email))
+				b.WriteString("\n")
+			}
+		}
+
+		// Related incidents
+		if len(alert.RelatedIncidents) > 0 {
+			b.WriteString("\n")
+			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.related_incidents")))
+			b.WriteString("\n")
+			for _, inc := range alert.RelatedIncidents {
+				incLabel := inc.SequentialID
+				if incLabel == "" {
+					incLabel = inc.ID[:8]
+				}
+				incInfo := fmt.Sprintf("%s - %s (%s)", incLabel, inc.Title, inc.Status)
+				b.WriteString(styles.Text.Render("  • " + incInfo + "\n"))
+			}
+		}
+
+		// Metadata section
+		hasMetadata := alert.ExternalID != "" || alert.Noise != "" || alert.DeduplicationKey != "" || alert.IsGroupLeaderAlert
+		if hasMetadata {
+			b.WriteString("\n")
+			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.metadata")))
+			b.WriteString("\n")
+			if alert.ExternalID != "" {
+				b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.external_id"), alert.ExternalID))
+			}
+			if alert.Noise != "" {
+				b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.noise"), formatNoiseStatus(alert.Noise)))
+			}
+			if alert.IsGroupLeaderAlert {
+				b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.group_leader"), i18n.T("alerts.detail.yes")))
+			}
+			if alert.DeduplicationKey != "" {
+				// Truncate long dedup keys
+				dedupKey := alert.DeduplicationKey
+				if len(dedupKey) > 40 {
+					dedupKey = dedupKey[:40] + "..."
+				}
+				b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.dedup_key"), dedupKey))
 			}
 		}
 	}
@@ -700,4 +753,18 @@ func formatAlertTime(t time.Time) string {
 		return localStr + " (" + utcStr + ")"
 	}
 	return localStr
+}
+
+// formatNoiseStatus formats the noise classification for display
+func formatNoiseStatus(noise string) string {
+	switch noise {
+	case "not_noise":
+		return i18n.T("alerts.noise.not_noise")
+	case "noise":
+		return i18n.T("alerts.noise.noise")
+	case "possible_noise":
+		return i18n.T("alerts.noise.possible_noise")
+	default:
+		return noise
+	}
 }

@@ -618,6 +618,7 @@ func (m IncidentsModel) renderDetail(height int) string {
 	return containerStyle.Width(m.detailWidth).Height(height).Render(viewportContent)
 }
 
+//nolint:gocyclo // View rendering function with many optional fields to display
 func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	var b strings.Builder
 
@@ -718,6 +719,55 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
+		// Mitigation message
+		if inc.MitigationMessage != "" {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.mitigation_message")))
+			b.WriteString("\n")
+			descWidth := m.detailWidth - 4
+			if descWidth < 40 {
+				descWidth = 40
+			}
+			b.WriteString(styles.RenderMarkdown(inc.MitigationMessage, descWidth))
+			b.WriteString("\n\n")
+		}
+
+		// Resolution message
+		if inc.ResolutionMessage != "" {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.resolution_message")))
+			b.WriteString("\n")
+			descWidth := m.detailWidth - 4
+			if descWidth < 40 {
+				descWidth = 40
+			}
+			b.WriteString(styles.RenderMarkdown(inc.ResolutionMessage, descWidth))
+			b.WriteString("\n\n")
+		}
+
+		// Who performed actions
+		if inc.StartedByName != "" || inc.MitigatedByName != "" || inc.ResolvedByName != "" {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.responders")))
+			b.WriteString("\n")
+			if inc.StartedByName != "" {
+				b.WriteString(styles.DetailLabel.Render(i18n.T("incidents.detail.started_by") + ":"))
+				b.WriteString(" ")
+				b.WriteString(styles.RenderNameWithEmail(inc.StartedByName, inc.StartedByEmail))
+				b.WriteString("\n")
+			}
+			if inc.MitigatedByName != "" {
+				b.WriteString(styles.DetailLabel.Render(i18n.T("incidents.detail.mitigated_by") + ":"))
+				b.WriteString(" ")
+				b.WriteString(styles.RenderNameWithEmail(inc.MitigatedByName, inc.MitigatedByEmail))
+				b.WriteString("\n")
+			}
+			if inc.ResolvedByName != "" {
+				b.WriteString(styles.DetailLabel.Render(i18n.T("incidents.detail.resolved_by") + ":"))
+				b.WriteString(" ")
+				b.WriteString(styles.RenderNameWithEmail(inc.ResolvedByName, inc.ResolvedByEmail))
+				b.WriteString("\n")
+			}
+			b.WriteString("\n")
+		}
+
 		// Roles (Commander, Communicator, etc.)
 		if len(inc.Roles) > 0 {
 			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.roles")))
@@ -741,6 +791,59 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		b.WriteString(renderBulletList(i18n.T("incidents.detail.causes"), inc.Causes))
 		b.WriteString(renderBulletList(i18n.T("incidents.detail.types"), inc.IncidentTypes))
 		b.WriteString(renderBulletList(i18n.T("incidents.detail.functionalities"), inc.Functionalities))
+
+		// Integration links
+		integrationLinks := m.collectIntegrationLinks(inc)
+		if len(integrationLinks) > 0 {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.integrations")))
+			b.WriteString("\n")
+			for _, link := range integrationLinks {
+				b.WriteString(m.renderLinkRow(link.label, link.url))
+			}
+			b.WriteString("\n")
+		}
+
+		// Labels
+		if len(inc.Labels) > 0 {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.labels")))
+			b.WriteString("\n")
+			// Sort keys for consistent display
+			keys := make([]string, 0, len(inc.Labels))
+			for k := range inc.Labels {
+				keys = append(keys, k)
+			}
+			for _, k := range keys {
+				b.WriteString(styles.DetailLabel.Render(k + ":"))
+				b.WriteString(" ")
+				b.WriteString(styles.DetailValue.Render(inc.Labels[k]))
+				b.WriteString("\n")
+			}
+			b.WriteString("\n")
+		}
+
+		// Metadata (source, private, retrospective status)
+		hasMetadata := inc.Source != "" || inc.Private || inc.RetrospectiveProgressStatus != ""
+		if hasMetadata {
+			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.metadata")))
+			b.WriteString("\n")
+			if inc.Source != "" {
+				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.source"), inc.Source))
+			}
+			if inc.Private {
+				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.private"), "Yes"))
+			}
+			if inc.RetrospectiveProgressStatus != "" {
+				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.retrospective"), formatRetroStatus(inc.RetrospectiveProgressStatus)))
+			}
+			if inc.SlackChannelName != "" {
+				channelName := inc.SlackChannelName
+				if inc.SlackChannelArchived {
+					channelName += " (archived)"
+				}
+				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.slack_channel"), channelName))
+			}
+			b.WriteString("\n")
+		}
 	}
 
 	// Show loading spinner or hint if detail not loaded
@@ -918,4 +1021,71 @@ func formatTime(t time.Time) string {
 		return localStr + " (" + utcStr + ")"
 	}
 	return localStr
+}
+
+// integrationLink represents a labeled URL for display
+type integrationLink struct {
+	label string
+	url   string
+}
+
+// collectIntegrationLinks gathers all non-empty integration URLs
+func (m IncidentsModel) collectIntegrationLinks(inc *api.Incident) []integrationLink {
+	var links []integrationLink
+
+	if inc.GoogleMeetingURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.google_meet"), inc.GoogleMeetingURL})
+	}
+	if inc.ZoomMeetingJoinURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.zoom"), inc.ZoomMeetingJoinURL})
+	}
+	if inc.LinearIssueURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.linear"), inc.LinearIssueURL})
+	}
+	if inc.GithubIssueURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.github"), inc.GithubIssueURL})
+	}
+	if inc.GitlabIssueURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.gitlab"), inc.GitlabIssueURL})
+	}
+	if inc.PagerdutyIncidentURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.pagerduty"), inc.PagerdutyIncidentURL})
+	}
+	if inc.OpsgenieIncidentURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.opsgenie"), inc.OpsgenieIncidentURL})
+	}
+	if inc.AsanaTaskURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.asana"), inc.AsanaTaskURL})
+	}
+	if inc.TrelloCardURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.trello"), inc.TrelloCardURL})
+	}
+	if inc.ConfluencePageURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.confluence"), inc.ConfluencePageURL})
+	}
+	if inc.DatadogNotebookURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.datadog"), inc.DatadogNotebookURL})
+	}
+	if inc.ServiceNowIncidentURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.servicenow"), inc.ServiceNowIncidentURL})
+	}
+	if inc.FreshserviceTicketURL != "" {
+		links = append(links, integrationLink{i18n.T("incidents.integrations.freshservice"), inc.FreshserviceTicketURL})
+	}
+
+	return links
+}
+
+// formatRetroStatus formats the retrospective progress status for display
+func formatRetroStatus(status string) string {
+	switch status {
+	case "not_started":
+		return i18n.T("incidents.retro.not_started")
+	case "in_progress":
+		return i18n.T("incidents.retro.in_progress")
+	case "completed":
+		return i18n.T("incidents.retro.completed")
+	default:
+		return status
+	}
 }

@@ -64,20 +64,73 @@ incidents:
             other: Environnements
         functionalities:
             other: Fonctionnalités
+        integrations:
+            other: Intégrations
+        labels:
+            other: Étiquettes
         links:
             other: Liens
+        metadata:
+            other: Métadonnées
+        mitigated_by:
+            other: Atténué par
+        mitigation_message:
+            other: Atténuation
+        private:
+            other: Privé
+        resolution_message:
+            other: Résolution
+        resolved_by:
+            other: Résolu par
+        responders:
+            other: Intervenants
+        retrospective:
+            other: Rétrospective
         roles:
             other: Rôles
         services:
             other: Services
         severity:
             other: Sévérité
+        slack_channel:
+            other: Canal Slack
+        source:
+            other: Source
+        started_by:
+            other: Démarré par
         status:
             other: Statut
         teams:
             other: Équipes
         types:
             other: Types
+    integrations:
+        asana:
+            other: Asana
+        confluence:
+            other: Confluence
+        datadog:
+            other: Datadog
+        freshservice:
+            other: Freshservice
+        github:
+            other: GitHub
+        gitlab:
+            other: GitLab
+        google_meet:
+            other: Google Meet
+        linear:
+            other: Linear
+        opsgenie:
+            other: OpsGenie
+        pagerduty:
+            other: PagerDuty
+        servicenow:
+            other: ServiceNow
+        trello:
+            other: Trello
+        zoom:
+            other: Zoom
     links:
         jira:
             other: Jira
@@ -85,6 +138,13 @@ incidents:
             other: Rootly
         slack:
             other: Slack
+    retro:
+        completed:
+            other: Terminée
+        in_progress:
+            other: En cours
+        not_started:
+            other: Non démarrée
     loading_details:
         other: Chargement des détails...
     loading_page:
@@ -117,14 +177,28 @@ alerts:
     detail:
         created:
             other: Créé
+        dedup_key:
+            other: Clé de dédup
         ended:
             other: Terminé
         environments:
             other: Environnements
+        external_id:
+            other: ID externe
+        group_leader:
+            other: Chef de groupe
         labels:
             other: Étiquettes
         links:
             other: Liens
+        metadata:
+            other: Métadonnées
+        noise:
+            other: Classification du bruit
+        notified_users:
+            other: Utilisateurs notifiés
+        related_incidents:
+            other: Incidents liés
         responders:
             other: Intervenants
         services:
@@ -135,6 +209,15 @@ alerts:
             other: Équipes
         urgency:
             other: Urgence
+        yes:
+            other: Oui
+    noise:
+        noise:
+            other: Bruit
+        not_noise:
+            other: Pas de bruit
+        possible_noise:
+            other: Bruit possible
     none_found:
         other: Aucune alerte trouvée
     select_prompt:

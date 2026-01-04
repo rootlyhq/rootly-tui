@@ -57,6 +57,35 @@ type Incident struct {
 	CreatedByName    string
 	CreatedByEmail   string
 	DetailLoaded     bool
+	// Additional detail fields
+	Source                      string
+	Private                     bool
+	MitigationMessage           string
+	ResolutionMessage           string
+	RetrospectiveProgressStatus string
+	SlackChannelName            string
+	SlackChannelArchived        bool
+	Labels                      map[string]string
+	StartedByName               string
+	StartedByEmail              string
+	MitigatedByName             string
+	MitigatedByEmail            string
+	ResolvedByName              string
+	ResolvedByEmail             string
+	// Integration links
+	GoogleMeetingURL      string
+	LinearIssueURL        string
+	ZoomMeetingJoinURL    string
+	GithubIssueURL        string
+	GitlabIssueURL        string
+	PagerdutyIncidentURL  string
+	OpsgenieIncidentURL   string
+	AsanaTaskURL          string
+	TrelloCardURL         string
+	ConfluencePageURL     string
+	DatadogNotebookURL    string
+	ServiceNowIncidentURL string
+	FreshserviceTicketURL string
 }
 
 type IncidentRole struct {
@@ -85,6 +114,29 @@ type Alert struct {
 	Responders   []string
 	Urgency      string
 	DetailLoaded bool
+	// Additional detail fields
+	URL                string // Rootly URL
+	ExternalID         string // External system ID (e.g., Sentry issue ID)
+	Noise              string // "not_noise", "noise", etc.
+	IsGroupLeaderAlert bool
+	GroupLeaderAlertID string
+	NotifiedUsers      []AlertUser     // Users who were notified
+	RelatedIncidents   []AlertIncident // Related incidents
+	DeduplicationKey   string
+}
+
+// AlertUser represents a user who was notified about an alert
+type AlertUser struct {
+	Name  string
+	Email string
+}
+
+// AlertIncident represents an incident related to an alert
+type AlertIncident struct {
+	ID           string
+	SequentialID string
+	Title        string
+	Status       string
 }
 
 // PaginationInfo contains pagination state
@@ -698,6 +750,54 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 						} `json:"attributes"`
 					} `json:"data"`
 				} `json:"user"`
+				// Additional fields
+				Source                      *string        `json:"source"`
+				Private                     bool           `json:"private"`
+				MitigationMessage           *string        `json:"mitigation_message"`
+				ResolutionMessage           *string        `json:"resolution_message"`
+				RetrospectiveProgressStatus *string        `json:"retrospective_progress_status"`
+				SlackChannelName            *string        `json:"slack_channel_name"`
+				SlackChannelArchived        bool           `json:"slack_channel_archived"`
+				Labels                      map[string]any `json:"labels"`
+				// Who performed actions
+				StartedBy *struct {
+					Data *struct {
+						Attributes struct {
+							Name  string `json:"name"`
+							Email string `json:"email"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"started_by"`
+				MitigatedBy *struct {
+					Data *struct {
+						Attributes struct {
+							Name  string `json:"name"`
+							Email string `json:"email"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"mitigated_by"`
+				ResolvedBy *struct {
+					Data *struct {
+						Attributes struct {
+							Name  string `json:"name"`
+							Email string `json:"email"`
+						} `json:"attributes"`
+					} `json:"data"`
+				} `json:"resolved_by"`
+				// Integration links
+				GoogleMeetingURL      *string `json:"google_meeting_url"`
+				LinearIssueURL        *string `json:"linear_issue_url"`
+				ZoomMeetingJoinURL    *string `json:"zoom_meeting_join_url"`
+				GithubIssueURL        *string `json:"github_issue_url"`
+				GitlabIssueURL        *string `json:"gitlab_issue_url"`
+				PagerdutyIncidentURL  *string `json:"pagerduty_incident_url"`
+				OpsgenieIncidentURL   *string `json:"opsgenie_incident_url"`
+				AsanaTaskURL          *string `json:"asana_task_url"`
+				TrelloCardURL         *string `json:"trello_card_url"`
+				ConfluencePageURL     *string `json:"confluence_page_url"`
+				DatadogNotebookURL    *string `json:"datadog_notebook_url"`
+				ServiceNowIncidentURL *string `json:"service_now_incident_url"`
+				FreshserviceTicketURL *string `json:"freshservice_ticket_url"`
 			} `json:"attributes"`
 		} `json:"data"`
 		Included []struct {
@@ -782,6 +882,88 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	}
 	if d.Attributes.JiraIssueURL != nil {
 		incident.JiraIssueURL = *d.Attributes.JiraIssueURL
+	}
+
+	// Parse additional fields
+	if d.Attributes.Source != nil {
+		incident.Source = *d.Attributes.Source
+	}
+	incident.Private = d.Attributes.Private
+	if d.Attributes.MitigationMessage != nil {
+		incident.MitigationMessage = strings.TrimSpace(*d.Attributes.MitigationMessage)
+	}
+	if d.Attributes.ResolutionMessage != nil {
+		incident.ResolutionMessage = strings.TrimSpace(*d.Attributes.ResolutionMessage)
+	}
+	if d.Attributes.RetrospectiveProgressStatus != nil {
+		incident.RetrospectiveProgressStatus = *d.Attributes.RetrospectiveProgressStatus
+	}
+	if d.Attributes.SlackChannelName != nil {
+		incident.SlackChannelName = *d.Attributes.SlackChannelName
+	}
+	incident.SlackChannelArchived = d.Attributes.SlackChannelArchived
+
+	// Parse labels
+	if d.Attributes.Labels != nil {
+		incident.Labels = make(map[string]string)
+		for k, v := range d.Attributes.Labels {
+			incident.Labels[k] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	// Parse who performed actions
+	if d.Attributes.StartedBy != nil && d.Attributes.StartedBy.Data != nil {
+		incident.StartedByName = strings.TrimSpace(d.Attributes.StartedBy.Data.Attributes.Name)
+		incident.StartedByEmail = strings.TrimSpace(d.Attributes.StartedBy.Data.Attributes.Email)
+	}
+	if d.Attributes.MitigatedBy != nil && d.Attributes.MitigatedBy.Data != nil {
+		incident.MitigatedByName = strings.TrimSpace(d.Attributes.MitigatedBy.Data.Attributes.Name)
+		incident.MitigatedByEmail = strings.TrimSpace(d.Attributes.MitigatedBy.Data.Attributes.Email)
+	}
+	if d.Attributes.ResolvedBy != nil && d.Attributes.ResolvedBy.Data != nil {
+		incident.ResolvedByName = strings.TrimSpace(d.Attributes.ResolvedBy.Data.Attributes.Name)
+		incident.ResolvedByEmail = strings.TrimSpace(d.Attributes.ResolvedBy.Data.Attributes.Email)
+	}
+
+	// Parse integration links
+	if d.Attributes.GoogleMeetingURL != nil {
+		incident.GoogleMeetingURL = *d.Attributes.GoogleMeetingURL
+	}
+	if d.Attributes.LinearIssueURL != nil {
+		incident.LinearIssueURL = *d.Attributes.LinearIssueURL
+	}
+	if d.Attributes.ZoomMeetingJoinURL != nil {
+		incident.ZoomMeetingJoinURL = *d.Attributes.ZoomMeetingJoinURL
+	}
+	if d.Attributes.GithubIssueURL != nil {
+		incident.GithubIssueURL = *d.Attributes.GithubIssueURL
+	}
+	if d.Attributes.GitlabIssueURL != nil {
+		incident.GitlabIssueURL = *d.Attributes.GitlabIssueURL
+	}
+	if d.Attributes.PagerdutyIncidentURL != nil {
+		incident.PagerdutyIncidentURL = *d.Attributes.PagerdutyIncidentURL
+	}
+	if d.Attributes.OpsgenieIncidentURL != nil {
+		incident.OpsgenieIncidentURL = *d.Attributes.OpsgenieIncidentURL
+	}
+	if d.Attributes.AsanaTaskURL != nil {
+		incident.AsanaTaskURL = *d.Attributes.AsanaTaskURL
+	}
+	if d.Attributes.TrelloCardURL != nil {
+		incident.TrelloCardURL = *d.Attributes.TrelloCardURL
+	}
+	if d.Attributes.ConfluencePageURL != nil {
+		incident.ConfluencePageURL = *d.Attributes.ConfluencePageURL
+	}
+	if d.Attributes.DatadogNotebookURL != nil {
+		incident.DatadogNotebookURL = *d.Attributes.DatadogNotebookURL
+	}
+	if d.Attributes.ServiceNowIncidentURL != nil {
+		incident.ServiceNowIncidentURL = *d.Attributes.ServiceNowIncidentURL
+	}
+	if d.Attributes.FreshserviceTicketURL != nil {
+		incident.FreshserviceTicketURL = *d.Attributes.FreshserviceTicketURL
 	}
 
 	if d.Attributes.Services != nil {
@@ -969,6 +1151,25 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 						} `json:"attributes"`
 					} `json:"data"`
 				} `json:"alert_urgency"`
+				// Additional fields
+				URL                *string `json:"url"`
+				ExternalID         *string `json:"external_id"`
+				Noise              *string `json:"noise"`
+				IsGroupLeaderAlert bool    `json:"is_group_leader_alert"`
+				GroupLeaderAlertID *string `json:"group_leader_alert_id"`
+				DeduplicationKey   *string `json:"deduplication_key"`
+				NotifiedUsers      []struct {
+					Name  string `json:"name"`
+					Email string `json:"email"`
+				} `json:"notified_users"`
+				Incidents []struct {
+					ID         string `json:"id"`
+					Attributes struct {
+						SequentialID *int   `json:"sequential_id"`
+						Title        string `json:"title"`
+						Status       string `json:"status"`
+					} `json:"attributes"`
+				} `json:"incidents"`
 			} `json:"attributes"`
 		} `json:"data"`
 	}
@@ -1034,6 +1235,46 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 
 	if d.Attributes.AlertUrgency != nil && d.Attributes.AlertUrgency.Data != nil {
 		alert.Urgency = d.Attributes.AlertUrgency.Data.Attributes.Name
+	}
+
+	// Parse additional fields
+	if d.Attributes.URL != nil {
+		alert.URL = *d.Attributes.URL
+	}
+	if d.Attributes.ExternalID != nil {
+		alert.ExternalID = *d.Attributes.ExternalID
+	}
+	if d.Attributes.Noise != nil {
+		alert.Noise = *d.Attributes.Noise
+	}
+	alert.IsGroupLeaderAlert = d.Attributes.IsGroupLeaderAlert
+	if d.Attributes.GroupLeaderAlertID != nil {
+		alert.GroupLeaderAlertID = *d.Attributes.GroupLeaderAlertID
+	}
+	if d.Attributes.DeduplicationKey != nil {
+		alert.DeduplicationKey = *d.Attributes.DeduplicationKey
+	}
+
+	// Parse notified users
+	for _, u := range d.Attributes.NotifiedUsers {
+		alert.NotifiedUsers = append(alert.NotifiedUsers, AlertUser{
+			Name:  u.Name,
+			Email: u.Email,
+		})
+	}
+
+	// Parse related incidents
+	for _, inc := range d.Attributes.Incidents {
+		seqID := ""
+		if inc.Attributes.SequentialID != nil {
+			seqID = fmt.Sprintf("INC-%d", *inc.Attributes.SequentialID)
+		}
+		alert.RelatedIncidents = append(alert.RelatedIncidents, AlertIncident{
+			ID:           inc.ID,
+			SequentialID: seqID,
+			Title:        inc.Attributes.Title,
+			Status:       inc.Attributes.Status,
+		})
 	}
 
 	// Store in cache
