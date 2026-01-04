@@ -692,3 +692,142 @@ func TestIncidentsModelViewShowsExtendedDetail(t *testing.T) {
 		t.Error("expected 'Rootly' link in detail view")
 	}
 }
+
+func TestIsIncidentURL(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"https://example.com", true},
+		{"http://example.com", true},
+		{"https://example.com/path/to/resource", true},
+		{"http://localhost:8080/api/v1", true},
+		{"https://example.com?query=param&foo=bar", true},
+		{"HTTPS://EXAMPLE.COM", false}, // Case sensitive prefix check
+		{"HTTP://EXAMPLE.COM", false},
+		{"ftp://example.com", false},
+		{"example.com", false},
+		{"www.example.com", false},
+		{"not a url", false},
+		{"", false},
+		{"httpsfake://example.com", false},
+		{"https", false},
+		{"http://", true}, // Technically valid prefix
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := isIncidentURL(tt.input)
+			if result != tt.expected {
+				t.Errorf("isIncidentURL(%q) = %v, expected %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIncidentsModelRenderLabelValue(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 40)
+
+	tests := []struct {
+		name        string
+		value       string
+		expectsLink bool
+	}{
+		{"https URL", "https://example.com/path", true},
+		{"http URL", "http://example.com/path", true},
+		{"plain text", "some-value", false},
+		{"email", "user@example.com", false},
+		{"empty string", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := m.renderLabelValue(tt.value)
+
+			// URLs should contain OSC 8 escape sequence for terminal hyperlinks
+			// The format is: \x1b]8;;URL\x07DISPLAY_TEXT\x1b]8;;\x07
+			hasOSC8 := strings.Contains(result, "\x1b]8;;")
+
+			if tt.expectsLink && !hasOSC8 {
+				t.Errorf("renderLabelValue(%q) expected to contain terminal hyperlink, got %q", tt.value, result)
+			}
+			if !tt.expectsLink && hasOSC8 {
+				t.Errorf("renderLabelValue(%q) should not contain terminal hyperlink, got %q", tt.value, result)
+			}
+		})
+	}
+}
+
+func TestIncidentsModelRenderLabelValueTruncation(t *testing.T) {
+	m := NewIncidentsModel()
+	// Set a small width to trigger truncation
+	m.SetDimensions(80, 40)
+
+	longURL := "https://example.com/very/long/path/that/should/definitely/be/truncated/for/display/purposes"
+	result := m.renderLabelValue(longURL)
+
+	// Should contain ellipsis for truncated display
+	if !strings.Contains(result, "...") {
+		t.Error("expected truncated URL to contain '...'")
+	}
+
+	// Original URL should still be in the hyperlink target
+	if !strings.Contains(result, longURL) {
+		t.Error("expected original URL to be preserved in hyperlink target")
+	}
+}
+
+func TestIncidentsModelViewShowsClickableLabels(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(120, 40)
+
+	// Incident with URL in labels
+	incidents := []api.Incident{
+		{
+			ID:           "1",
+			SequentialID: "INC-123",
+			Summary:      "Test incident with URL label",
+			Status:       "started",
+			Severity:     "critical",
+			CreatedAt:    time.Now(),
+			DetailLoaded: true,
+			Labels: map[string]string{
+				"runbook":    "https://wiki.example.com/runbooks/incident-abc",
+				"region":     "us-west-2",
+				"dashboard":  "https://grafana.example.com/d/abc123",
+				"owner_team": "platform",
+			},
+		},
+	}
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// Should show labels section
+	if !strings.Contains(view, "Labels") {
+		t.Error("expected 'Labels' section in detail view")
+	}
+
+	// Should show the label keys
+	if !strings.Contains(view, "runbook") {
+		t.Error("expected 'runbook' label key in view")
+	}
+	if !strings.Contains(view, "region") {
+		t.Error("expected 'region' label key in view")
+	}
+
+	// URLs should be rendered as terminal hyperlinks (OSC 8 escape sequences)
+	if !strings.Contains(view, "\x1b]8;;https://wiki.example.com") {
+		t.Error("expected runbook URL to be rendered as terminal hyperlink")
+	}
+	if !strings.Contains(view, "\x1b]8;;https://grafana.example.com") {
+		t.Error("expected dashboard URL to be rendered as terminal hyperlink")
+	}
+
+	// Plain text values should appear without OSC 8 sequence
+	// Check that "us-west-2" is in the view but preceded by region label
+	if !strings.Contains(view, "us-west-2") {
+		t.Error("expected 'us-west-2' plain text value in view")
+	}
+}
