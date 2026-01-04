@@ -3,7 +3,6 @@ package views
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,12 +17,12 @@ import (
 )
 
 // renderBulletList renders a section with a bold title and bullet list using lipgloss/list
-func renderBulletList(title string, items []string) string {
+func renderBulletList(icon, title string, items []string) string {
 	if len(items) == 0 {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(styles.TextBold.Render(title))
+	b.WriteString(styles.TextBold.Render(icon + " " + title))
 	b.WriteString("\n")
 	// Convert []string to []any for list.New
 	anyItems := make([]any, len(items))
@@ -636,11 +635,19 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	b.WriteString(styles.DetailTitle.Render(title))
 	b.WriteString("\n\n")
 
-	// Status and Severity row
+	// Status, Severity, and Kind row
 	statusBadge := styles.RenderStatus(inc.Status)
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
 	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s", i18n.T("incidents.detail.status"), statusBadge, i18n.T("incidents.detail.severity"), sevSignal, sevBadge))
+
+	// Show incident kind if it's scheduled maintenance
+	if inc.Kind == "scheduled" || inc.Kind == "scheduled_maintenance" {
+		b.WriteString("  ")
+		b.WriteString(styles.DetailLabel.Render(i18n.T("incidents.detail.kind") + ":"))
+		b.WriteString(" ")
+		b.WriteString(styles.RenderScheduledMaintenance())
+	}
 
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
@@ -658,13 +665,21 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
 	}
 	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.links")))
+		b.WriteString(styles.TextBold.Render("🔗 " + i18n.T("incidents.detail.links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
 			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.rootly"), rootlyURL))
 		}
 		if inc.SlackChannelURL != "" {
-			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.slack"), inc.SlackChannelURL))
+			if inc.SlackChannelName != "" {
+				displayName := "#" + inc.SlackChannelName
+				if inc.SlackChannelArchived {
+					displayName += " (archived)"
+				}
+				b.WriteString(m.renderLinkRowCustom(i18n.T("incidents.links.slack"), inc.SlackChannelURL, displayName))
+			} else {
+				b.WriteString(m.renderLinkRow(i18n.T("incidents.links.slack"), inc.SlackChannelURL))
+			}
 		}
 		if inc.JiraIssueURL != "" {
 			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.jira"), inc.JiraIssueURL))
@@ -677,7 +692,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	titleClean := strings.ReplaceAll(title, "\n", " ")
 	titleClean = strings.ReplaceAll(titleClean, "\r", "")
 	if summaryClean != "" && strings.TrimSpace(summaryClean) != strings.TrimSpace(titleClean) {
-		b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.description")))
+		b.WriteString(styles.TextBold.Render("📝 " + i18n.T("incidents.detail.description")))
 		b.WriteString("\n")
 		// Render as markdown, use detail width minus padding
 		descWidth := m.detailWidth - 4
@@ -689,7 +704,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	}
 
 	// Timeline
-	b.WriteString(styles.TextBold.Render(i18n.T("incidents.timeline.title")))
+	b.WriteString(styles.TextBold.Render("📅 " + i18n.T("incidents.timeline.title")))
 	b.WriteString("\n")
 
 	if !inc.CreatedAt.IsZero() {
@@ -710,18 +725,80 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	if inc.ResolvedAt != nil {
 		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.resolved"), formatTime(*inc.ResolvedAt)))
 	}
+	if inc.ClosedAt != nil {
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.closed"), formatTime(*inc.ClosedAt)))
+	}
+	if inc.CancelledAt != nil {
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.cancelled"), formatTime(*inc.CancelledAt)))
+	}
+	// Scheduled maintenance times
+	if inc.ScheduledFor != nil {
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.scheduled_for"), formatTime(*inc.ScheduledFor)))
+	}
+	if inc.ScheduledUntil != nil {
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.scheduled_until"), formatTime(*inc.ScheduledUntil)))
+	}
 	b.WriteString("\n")
 
+	// Duration Metrics section
+	hasMetrics := inc.Duration() > 0 || inc.TimeToMitigation() > 0 || inc.TimeToResolution() > 0
+	if hasMetrics {
+		b.WriteString(styles.TextBold.Render("⏳ " + i18n.T("incidents.metrics.title")))
+		b.WriteString("\n")
+
+		// Total duration
+		if duration := inc.Duration(); duration > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.duration"), formatDuration(duration)))
+		}
+
+		// Time to Detection (TTD)
+		if ttd := inc.TimeToDetection(); ttd > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.ttd"), formatHours(ttd)))
+		}
+
+		// Time to Acknowledge (TTA)
+		if tta := inc.TimeToAcknowledge(); tta > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.tta"), formatHours(tta)))
+		}
+
+		// Time to Mitigation (TTM)
+		if ttm := inc.TimeToMitigation(); ttm > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.ttm"), formatHours(ttm)))
+		}
+
+		// Time to Resolution (TTR)
+		if ttr := inc.TimeToResolution(); ttr > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.ttr"), formatHours(ttr)))
+		}
+
+		// Time to Close
+		if ttc := inc.TimeToClose(); ttc > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.ttc"), formatHours(ttc)))
+		}
+
+		// Time in Triage
+		if triage := inc.InTriageDuration(); triage > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.triage"), formatDuration(triage)))
+		}
+
+		// Maintenance duration (for scheduled incidents)
+		if maint := inc.MaintenanceDuration(); maint > 0 {
+			b.WriteString(m.renderMetricRow(i18n.T("incidents.metrics.maintenance"), formatDuration(maint)))
+		}
+
+		b.WriteString("\n")
+	}
+
 	// Services, Environments, Teams
-	b.WriteString(renderBulletList(i18n.T("incidents.detail.services"), inc.Services))
-	b.WriteString(renderBulletList(i18n.T("incidents.detail.environments"), inc.Environments))
-	b.WriteString(renderBulletList(i18n.T("incidents.detail.teams"), inc.Teams))
+	b.WriteString(renderBulletList("🛠 ", i18n.T("incidents.detail.services"), inc.Services))
+	b.WriteString(renderBulletList("🌐 ", i18n.T("incidents.detail.environments"), inc.Environments))
+	b.WriteString(renderBulletList("👥 ", i18n.T("incidents.detail.teams"), inc.Teams))
 
 	// Extended info (populated when DetailLoaded is true)
 	if inc.DetailLoaded {
 		// Mitigation message
 		if inc.MitigationMessage != "" {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.mitigation_message")))
+			b.WriteString(styles.TextBold.Render("🛡 " + i18n.T("incidents.detail.mitigation_message")))
 			b.WriteString("\n")
 			descWidth := m.detailWidth - 4
 			if descWidth < 40 {
@@ -733,7 +810,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 
 		// Resolution message
 		if inc.ResolutionMessage != "" {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.resolution_message")))
+			b.WriteString(styles.TextBold.Render("✅ " + i18n.T("incidents.detail.resolution_message")))
 			b.WriteString("\n")
 			descWidth := m.detailWidth - 4
 			if descWidth < 40 {
@@ -745,7 +822,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 
 		// Who performed actions
 		if inc.StartedByName != "" || inc.MitigatedByName != "" || inc.ResolvedByName != "" {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.responders")))
+			b.WriteString(styles.TextBold.Render("👤 " + i18n.T("incidents.detail.responders")))
 			b.WriteString("\n")
 			if inc.StartedByName != "" {
 				b.WriteString(styles.DetailLabel.Render(i18n.T("incidents.detail.started_by") + ":"))
@@ -770,7 +847,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 
 		// Roles (Commander, Communicator, etc.)
 		if len(inc.Roles) > 0 {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.roles")))
+			b.WriteString(styles.TextBold.Render("🎭 " + i18n.T("incidents.detail.roles")))
 			b.WriteString("\n")
 			for _, role := range inc.Roles {
 				userName := strings.TrimSpace(role.UserName)
@@ -788,14 +865,14 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		}
 
 		// Causes, Types, Functionalities
-		b.WriteString(renderBulletList(i18n.T("incidents.detail.causes"), inc.Causes))
-		b.WriteString(renderBulletList(i18n.T("incidents.detail.types"), inc.IncidentTypes))
-		b.WriteString(renderBulletList(i18n.T("incidents.detail.functionalities"), inc.Functionalities))
+		b.WriteString(renderBulletList("🔍 ", i18n.T("incidents.detail.causes"), inc.Causes))
+		b.WriteString(renderBulletList("📋 ", i18n.T("incidents.detail.types"), inc.IncidentTypes))
+		b.WriteString(renderBulletList("⚙️ ", i18n.T("incidents.detail.functionalities"), inc.Functionalities))
 
 		// Integration links
 		integrationLinks := m.collectIntegrationLinks(inc)
 		if len(integrationLinks) > 0 {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.integrations")))
+			b.WriteString(styles.TextBold.Render("🔌 " + i18n.T("incidents.detail.integrations")))
 			b.WriteString("\n")
 			for _, link := range integrationLinks {
 				b.WriteString(m.renderLinkRow(link.label, link.url))
@@ -805,7 +882,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 
 		// Labels
 		if len(inc.Labels) > 0 {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.labels")))
+			b.WriteString(styles.TextBold.Render("🏷  " + i18n.T("incidents.detail.labels")))
 			b.WriteString("\n")
 			// Sort keys for consistent display
 			keys := make([]string, 0, len(inc.Labels))
@@ -824,7 +901,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 		// Metadata (source, private, retrospective status)
 		hasMetadata := inc.Source != "" || inc.Private || inc.RetrospectiveProgressStatus != ""
 		if hasMetadata {
-			b.WriteString(styles.TextBold.Render(i18n.T("incidents.detail.metadata")))
+			b.WriteString(styles.TextBold.Render("ℹ️  " + i18n.T("incidents.detail.metadata")))
 			b.WriteString("\n")
 			if inc.Source != "" {
 				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.source"), inc.Source))
@@ -834,13 +911,6 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 			}
 			if inc.RetrospectiveProgressStatus != "" {
 				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.retrospective"), formatRetroStatus(inc.RetrospectiveProgressStatus)))
-			}
-			if inc.SlackChannelName != "" {
-				channelName := inc.SlackChannelName
-				if inc.SlackChannelArchived {
-					channelName += " (archived)"
-				}
-				b.WriteString(m.renderDetailRow(i18n.T("incidents.detail.slack_channel"), channelName))
 			}
 			b.WriteString("\n")
 		}
@@ -862,6 +932,10 @@ func (m IncidentsModel) renderDetailRow(label, value string) string {
 	return styles.DetailLabel.Render(label+":") + " " + styles.DetailValue.Render(value) + "\n"
 }
 
+func (m IncidentsModel) renderMetricRow(label, value string) string {
+	return styles.DetailLabel.Render(label+":") + " " + styles.RenderMetric(value) + "\n"
+}
+
 func (m IncidentsModel) renderLinkRow(label, url string) string {
 	// Calculate available width for URL display
 	// Account for label, colon, space, container padding, and border (~20 chars)
@@ -876,6 +950,10 @@ func (m IncidentsModel) renderLinkRow(label, url string) string {
 	}
 
 	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, displayURL) + "\n"
+}
+
+func (m IncidentsModel) renderLinkRowCustom(label, url, displayText string) string {
+	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, displayText) + "\n"
 }
 
 // severitySignalPlain returns plain signal bars without color styling
@@ -1007,20 +1085,6 @@ func (m *IncidentsModel) HandleSortMenuKey(key string) bool {
 // RenderSortMenu renders the sort menu overlay
 func (m IncidentsModel) RenderSortMenu() string {
 	return m.sortMenu.Render(m.sortState.Field, m.sortState.Direction)
-}
-
-func formatTime(t time.Time) string {
-	// Convert to local timezone
-	local := t.Local()
-	localStr := local.Format("Jan 2, 2006 15:04 MST")
-
-	// If not UTC, also show UTC equivalent
-	_, offset := local.Zone()
-	if offset != 0 {
-		utcStr := t.UTC().Format("15:04 UTC")
-		return localStr + " (" + utcStr + ")"
-	}
-	return localStr
 }
 
 // isIncidentURL checks if a string looks like a URL

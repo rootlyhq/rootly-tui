@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,12 +17,12 @@ import (
 )
 
 // renderAlertBulletList renders a section with a bold title and bullet list using lipgloss/list
-func renderAlertBulletList(title string, items []string) string {
+func renderAlertBulletList(icon, title string, items []string) string {
 	if len(items) == 0 {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(styles.TextBold.Render(title))
+	b.WriteString(styles.TextBold.Render(icon + " " + title))
 	b.WriteString("\n")
 	// Convert []string to []any for list.New
 	anyItems := make([]any, len(items))
@@ -581,7 +580,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
 	}
 	if rootlyURL != "" || alert.ExternalURL != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.links")))
+		b.WriteString(styles.TextBold.Render("🔗 " + i18n.T("alerts.detail.links")))
 		b.WriteString("\n")
 		if rootlyURL != "" {
 			b.WriteString(m.renderLinkRow(i18n.T("incidents.links.rootly"), rootlyURL))
@@ -594,7 +593,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 
 	// Description (rendered as markdown)
 	if alert.Description != "" {
-		b.WriteString(styles.TextBold.Render(i18n.T("description")))
+		b.WriteString(styles.TextBold.Render("📝 " + i18n.T("description")))
 		b.WriteString("\n")
 		// Render as markdown, use detail width minus padding
 		descWidth := m.detailWidth - 4
@@ -606,7 +605,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	}
 
 	// Timestamps
-	b.WriteString(styles.TextBold.Render(i18n.T("timeline")))
+	b.WriteString(styles.TextBold.Render("📅 " + i18n.T("timeline")))
 	b.WriteString("\n")
 
 	if !alert.CreatedAt.IsZero() {
@@ -621,9 +620,9 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	b.WriteString("\n")
 
 	// Services, Environments, Teams
-	b.WriteString(renderAlertBulletList(i18n.T("services"), alert.Services))
-	b.WriteString(renderAlertBulletList(i18n.T("environments"), alert.Environments))
-	b.WriteString(renderAlertBulletList(i18n.T("teams"), alert.Groups))
+	b.WriteString(renderAlertBulletList("🛠 ", i18n.T("services"), alert.Services))
+	b.WriteString(renderAlertBulletList("🌐 ", i18n.T("environments"), alert.Environments))
+	b.WriteString(renderAlertBulletList("👥 ", i18n.T("teams"), alert.Groups))
 
 	// Extended info (populated when DetailLoaded is true)
 	if alert.DetailLoaded {
@@ -635,7 +634,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		// Responders
 		if len(alert.Responders) > 0 {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.responders")))
+			b.WriteString(styles.TextBold.Render("👤 " + i18n.T("alerts.detail.responders")))
 			b.WriteString("\n")
 			for _, responder := range alert.Responders {
 				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
@@ -645,7 +644,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		// Notified users
 		if len(alert.NotifiedUsers) > 0 {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.notified_users")))
+			b.WriteString(styles.TextBold.Render("🔔 " + i18n.T("alerts.detail.notified_users")))
 			b.WriteString("\n")
 			for _, user := range alert.NotifiedUsers {
 				b.WriteString(styles.Text.Render("  • "))
@@ -657,7 +656,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		// Related incidents
 		if len(alert.RelatedIncidents) > 0 {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.related_incidents")))
+			b.WriteString(styles.TextBold.Render("🔥 " + i18n.T("alerts.detail.related_incidents")))
 			b.WriteString("\n")
 			for _, inc := range alert.RelatedIncidents {
 				incLabel := inc.SequentialID
@@ -673,7 +672,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		hasMetadata := alert.ExternalID != "" || alert.Noise != "" || alert.DeduplicationKey != "" || alert.IsGroupLeaderAlert
 		if hasMetadata {
 			b.WriteString("\n")
-			b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.metadata")))
+			b.WriteString(styles.TextBold.Render("ℹ️  " + i18n.T("alerts.detail.metadata")))
 			b.WriteString("\n")
 			if alert.ExternalID != "" {
 				b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.external_id"), alert.ExternalID))
@@ -698,7 +697,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	// Labels (sorted for consistent display)
 	if len(alert.Labels) > 0 {
 		b.WriteString("\n")
-		b.WriteString(styles.TextBold.Render(i18n.T("alerts.detail.labels")))
+		b.WriteString(styles.TextBold.Render("🏷  " + i18n.T("alerts.detail.labels")))
 		b.WriteString("\n")
 		keys := make([]string, 0, len(alert.Labels))
 		for k := range alert.Labels {
@@ -743,20 +742,6 @@ func (m AlertsModel) renderLinkRow(label, url string) string {
 	}
 
 	return styles.DetailLabel.Render(label+":") + " " + styles.RenderLink(url, displayURL) + "\n"
-}
-
-func formatAlertTime(t time.Time) string {
-	// Convert to local timezone
-	local := t.Local()
-	localStr := local.Format("Jan 2, 2006 15:04 MST")
-
-	// If not UTC, also show UTC equivalent
-	_, offset := local.Zone()
-	if offset != 0 {
-		utcStr := t.UTC().Format("15:04 UTC")
-		return localStr + " (" + utcStr + ")"
-	}
-	return localStr
 }
 
 // isURL checks if a string looks like a URL

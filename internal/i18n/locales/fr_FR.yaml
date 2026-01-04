@@ -92,6 +92,8 @@ incidents:
             other: Services
         severity:
             other: Sévérité
+        kind:
+            other: Type
         slack_channel:
             other: Canal Slack
         source:
@@ -168,8 +170,35 @@ incidents:
             other: Résolu
         started:
             other: Démarré
+        closed:
+            other: Fermé
+        cancelled:
+            other: Annulé
+        scheduled_for:
+            other: Prévu pour
+        scheduled_until:
+            other: Prévu jusqu'à
         title:
             other: Chronologie
+    metrics:
+        title:
+            other: Métriques de durée
+        duration:
+            other: Durée totale
+        ttd:
+            other: Temps de détection
+        tta:
+            other: Temps d'acquittement
+        ttm:
+            other: Temps d'atténuation
+        ttr:
+            other: Temps de résolution
+        ttc:
+            other: Temps de fermeture
+        triage:
+            other: En triage
+        maintenance:
+            other: Fenêtre de maintenance
     title:
         other: INCIDENTS
 

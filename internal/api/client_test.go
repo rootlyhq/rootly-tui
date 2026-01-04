@@ -1479,3 +1479,214 @@ func TestAlertsWithEmptyData(t *testing.T) {
 		t.Errorf("expected empty services, got %d", len(alert.Services))
 	}
 }
+
+func TestIncidentDurationMethods(t *testing.T) {
+	baseTime := time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name     string
+		incident Incident
+		method   func(Incident) float64
+		expected float64
+	}{
+		{
+			name: "TimeToDetection - 1 hour",
+			incident: Incident{
+				StartedAt:  ptrTime(baseTime),
+				DetectedAt: ptrTime(baseTime.Add(1 * time.Hour)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToDetection() },
+			expected: 1.0,
+		},
+		{
+			name: "TimeToDetection - no detected_at",
+			incident: Incident{
+				StartedAt: ptrTime(baseTime),
+			},
+			method:   func(i Incident) float64 { return i.TimeToDetection() },
+			expected: 0,
+		},
+		{
+			name: "TimeToAcknowledge - 30 minutes",
+			incident: Incident{
+				StartedAt:      ptrTime(baseTime),
+				AcknowledgedAt: ptrTime(baseTime.Add(30 * time.Minute)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToAcknowledge() },
+			expected: 0.5,
+		},
+		{
+			name: "TimeToMitigation - 2 hours",
+			incident: Incident{
+				StartedAt:   ptrTime(baseTime),
+				MitigatedAt: ptrTime(baseTime.Add(2 * time.Hour)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToMitigation() },
+			expected: 2.0,
+		},
+		{
+			name: "TimeToResolution - 3.5 hours",
+			incident: Incident{
+				StartedAt:  ptrTime(baseTime),
+				ResolvedAt: ptrTime(baseTime.Add(3*time.Hour + 30*time.Minute)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToResolution() },
+			expected: 3.5,
+		},
+		{
+			name: "TimeToClose - 5 hours",
+			incident: Incident{
+				StartedAt: ptrTime(baseTime),
+				ClosedAt:  ptrTime(baseTime.Add(5 * time.Hour)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToClose() },
+			expected: 5.0,
+		},
+		{
+			name: "TimeToTriage - 15 minutes",
+			incident: Incident{
+				InTriageAt: ptrTime(baseTime),
+				StartedAt:  ptrTime(baseTime.Add(15 * time.Minute)),
+			},
+			method:   func(i Incident) float64 { return i.TimeToTriage() },
+			expected: 0.25,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.method(tt.incident)
+			if result != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestIncidentDuration(t *testing.T) {
+	baseTime := time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC)
+
+	t.Run("Duration with resolved_at - 1 hour", func(t *testing.T) {
+		incident := Incident{
+			StartedAt:  ptrTime(baseTime),
+			ResolvedAt: ptrTime(baseTime.Add(1 * time.Hour)),
+		}
+		result := incident.Duration()
+		if result != 3600 {
+			t.Errorf("expected 3600, got %v", result)
+		}
+	})
+
+	t.Run("Duration no start time returns 0", func(t *testing.T) {
+		incident := Incident{
+			ResolvedAt: ptrTime(baseTime.Add(1 * time.Hour)),
+		}
+		result := incident.Duration()
+		if result != 0 {
+			t.Errorf("expected 0, got %v", result)
+		}
+	})
+
+	t.Run("Duration with cancelled_at", func(t *testing.T) {
+		incident := Incident{
+			StartedAt:   ptrTime(baseTime),
+			CancelledAt: ptrTime(baseTime.Add(2 * time.Hour)),
+		}
+		result := incident.Duration()
+		if result != 7200 {
+			t.Errorf("expected 7200, got %v", result)
+		}
+	})
+}
+
+func TestIncidentMaintenanceDuration(t *testing.T) {
+	baseTime := time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name     string
+		incident Incident
+		expected int64
+	}{
+		{
+			name: "Maintenance duration - 2 hours",
+			incident: Incident{
+				ScheduledFor:   ptrTime(baseTime),
+				ScheduledUntil: ptrTime(baseTime.Add(2 * time.Hour)),
+			},
+			expected: 7200,
+		},
+		{
+			name: "No scheduled_until",
+			incident: Incident{
+				ScheduledFor: ptrTime(baseTime),
+			},
+			expected: 0,
+		},
+		{
+			name: "No scheduled_for",
+			incident: Incident{
+				ScheduledUntil: ptrTime(baseTime.Add(2 * time.Hour)),
+			},
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.incident.MaintenanceDuration()
+			if result != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestIncidentInTriageDuration(t *testing.T) {
+	baseTime := time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC)
+
+	t.Run("In triage duration - 45 minutes", func(t *testing.T) {
+		incident := Incident{
+			InTriageAt: ptrTime(baseTime),
+			StartedAt:  ptrTime(baseTime.Add(45 * time.Minute)),
+		}
+		result := incident.InTriageDuration()
+		if result != 2700 {
+			t.Errorf("expected 2700, got %v", result)
+		}
+	})
+
+	t.Run("No in_triage_at returns 0", func(t *testing.T) {
+		incident := Incident{
+			StartedAt: ptrTime(baseTime.Add(45 * time.Minute)),
+		}
+		result := incident.InTriageDuration()
+		if result != 0 {
+			t.Errorf("expected 0, got %v", result)
+		}
+	})
+}
+
+func TestTruncateToTwoDecimals(t *testing.T) {
+	tests := []struct {
+		input    float64
+		expected float64
+	}{
+		{1.234567, 1.23},
+		{1.999, 1.99},
+		{2.0, 2.0},
+		{0.125, 0.12},
+		{10.555, 10.55},
+	}
+
+	for _, tt := range tests {
+		result := truncateToTwoDecimals(tt.input)
+		if result != tt.expected {
+			t.Errorf("truncateToTwoDecimals(%v) = %v, expected %v", tt.input, result, tt.expected)
+		}
+	}
+}
+
+// ptrTime is a helper to create a pointer to a time.Time
+func ptrTime(t time.Time) *time.Time {
+	return &t
+}

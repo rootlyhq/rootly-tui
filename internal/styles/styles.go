@@ -584,3 +584,30 @@ func RenderMarkdown(text string, width int) string {
 	// Trim extra whitespace that glamour adds
 	return strings.TrimSpace(rendered)
 }
+
+// ScheduledMaintenance badge style
+var ScheduledMaintenance = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("#FFFFFF")).
+	Background(lipgloss.Color("#6366F1")). // Indigo
+	Padding(0, 1).
+	Bold(true)
+
+// RenderScheduledMaintenance renders a scheduled maintenance badge
+func RenderScheduledMaintenance() string {
+	return ScheduledMaintenance.Render("🔧 Maintenance")
+}
+
+// Metric styles for duration display
+var (
+	MetricValue = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#10B981")). // Green
+			Bold(true)
+
+	MetricLabel = lipgloss.NewStyle().
+			Foreground(ColorTextDim)
+)
+
+// RenderMetric renders a metric value with optional styling
+func RenderMetric(value string) string {
+	return MetricValue.Render(value)
+}

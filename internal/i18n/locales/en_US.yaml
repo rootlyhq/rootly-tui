@@ -72,6 +72,8 @@ incidents:
       other: "Status"
     severity:
       other: "Severity"
+    kind:
+      other: "Type"
     created_by:
       other: "Created by"
     services:
@@ -131,6 +133,33 @@ incidents:
       other: "Mitigated"
     resolved:
       other: "Resolved"
+    closed:
+      other: "Closed"
+    cancelled:
+      other: "Cancelled"
+    scheduled_for:
+      other: "Scheduled For"
+    scheduled_until:
+      other: "Scheduled Until"
+  metrics:
+    title:
+      other: "Duration Metrics"
+    duration:
+      other: "Total Duration"
+    ttd:
+      other: "Time to Detect"
+    tta:
+      other: "Time to Acknowledge"
+    ttm:
+      other: "Time to Mitigate"
+    ttr:
+      other: "Time to Resolve"
+    ttc:
+      other: "Time to Close"
+    triage:
+      other: "In Triage"
+    maintenance:
+      other: "Maintenance Window"
   links:
     rootly:
       other: "Rootly"

@@ -40,6 +40,11 @@ type Incident struct {
 	AcknowledgedAt  *time.Time
 	MitigatedAt     *time.Time
 	ResolvedAt      *time.Time
+	InTriageAt      *time.Time
+	ClosedAt        *time.Time
+	CancelledAt     *time.Time
+	ScheduledFor    *time.Time
+	ScheduledUntil  *time.Time
 	Services        []string
 	Environments    []string
 	Teams           []string
@@ -323,6 +328,11 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 				AcknowledgedAt  *string `json:"acknowledged_at"`
 				MitigatedAt     *string `json:"mitigated_at"`
 				ResolvedAt      *string `json:"resolved_at"`
+				InTriageAt      *string `json:"in_triage_at"`
+				ClosedAt        *string `json:"closed_at"`
+				CancelledAt     *string `json:"cancelled_at"`
+				ScheduledFor    *string `json:"scheduled_for"`
+				ScheduledUntil  *string `json:"scheduled_until"`
 				SlackChannelURL *string `json:"slack_channel_url"`
 				JiraIssueURL    *string `json:"jira_issue_url"`
 				Services        *struct {
@@ -390,6 +400,11 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 		incident.AcknowledgedAt = parseTimePtr(d.Attributes.AcknowledgedAt)
 		incident.MitigatedAt = parseTimePtr(d.Attributes.MitigatedAt)
 		incident.ResolvedAt = parseTimePtr(d.Attributes.ResolvedAt)
+		incident.InTriageAt = parseTimePtr(d.Attributes.InTriageAt)
+		incident.ClosedAt = parseTimePtr(d.Attributes.ClosedAt)
+		incident.CancelledAt = parseTimePtr(d.Attributes.CancelledAt)
+		incident.ScheduledFor = parseTimePtr(d.Attributes.ScheduledFor)
+		incident.ScheduledUntil = parseTimePtr(d.Attributes.ScheduledUntil)
 
 		if d.Attributes.SlackChannelURL != nil {
 			incident.SlackChannelURL = *d.Attributes.SlackChannelURL
@@ -697,6 +712,11 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 				AcknowledgedAt  *string `json:"acknowledged_at"`
 				MitigatedAt     *string `json:"mitigated_at"`
 				ResolvedAt      *string `json:"resolved_at"`
+				InTriageAt      *string `json:"in_triage_at"`
+				ClosedAt        *string `json:"closed_at"`
+				CancelledAt     *string `json:"cancelled_at"`
+				ScheduledFor    *string `json:"scheduled_for"`
+				ScheduledUntil  *string `json:"scheduled_until"`
 				SlackChannelURL *string `json:"slack_channel_url"`
 				JiraIssueURL    *string `json:"jira_issue_url"`
 				Services        *struct {
@@ -876,6 +896,11 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	incident.AcknowledgedAt = parseTimePtr(d.Attributes.AcknowledgedAt)
 	incident.MitigatedAt = parseTimePtr(d.Attributes.MitigatedAt)
 	incident.ResolvedAt = parseTimePtr(d.Attributes.ResolvedAt)
+	incident.InTriageAt = parseTimePtr(d.Attributes.InTriageAt)
+	incident.ClosedAt = parseTimePtr(d.Attributes.ClosedAt)
+	incident.CancelledAt = parseTimePtr(d.Attributes.CancelledAt)
+	incident.ScheduledFor = parseTimePtr(d.Attributes.ScheduledFor)
+	incident.ScheduledUntil = parseTimePtr(d.Attributes.ScheduledUntil)
 
 	if d.Attributes.SlackChannelURL != nil {
 		incident.SlackChannelURL = *d.Attributes.SlackChannelURL
@@ -1285,4 +1310,120 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 
 	debug.Logger.Debug("Parsed alert detail", "id", alert.ID, "summary", alert.Summary)
 	return alert, nil
+}
+
+// Duration calculation methods for Incident
+
+// TimeToDetection returns time from started_at to detected_at in hours
+func (i *Incident) TimeToDetection() float64 {
+	if i.DetectedAt == nil || i.StartedAt == nil {
+		return 0
+	}
+	return truncateToTwoDecimals(i.DetectedAt.Sub(*i.StartedAt).Hours())
+}
+
+// TimeToAcknowledge returns time from started_at to acknowledged_at in hours
+func (i *Incident) TimeToAcknowledge() float64 {
+	if i.AcknowledgedAt == nil || i.StartedAt == nil {
+		return 0
+	}
+	return truncateToTwoDecimals(i.AcknowledgedAt.Sub(*i.StartedAt).Hours())
+}
+
+// TimeToMitigation returns time from started_at to mitigated_at in hours
+func (i *Incident) TimeToMitigation() float64 {
+	if i.MitigatedAt == nil || i.StartedAt == nil {
+		return 0
+	}
+	return truncateToTwoDecimals(i.MitigatedAt.Sub(*i.StartedAt).Hours())
+}
+
+// TimeToResolution returns time from started_at to resolved_at in hours
+func (i *Incident) TimeToResolution() float64 {
+	if i.ResolvedAt == nil || i.StartedAt == nil {
+		return 0
+	}
+	return truncateToTwoDecimals(i.ResolvedAt.Sub(*i.StartedAt).Hours())
+}
+
+// TimeToClose returns time from started_at to closed_at in hours
+func (i *Incident) TimeToClose() float64 {
+	if i.ClosedAt == nil || i.StartedAt == nil {
+		return 0
+	}
+	return truncateToTwoDecimals(i.ClosedAt.Sub(*i.StartedAt).Hours())
+}
+
+// TimeToTriage returns time from in_triage_at to started_at in hours
+func (i *Incident) TimeToTriage() float64 {
+	if i.InTriageAt == nil {
+		return 0
+	}
+	endTime := i.StartedAt
+	if endTime == nil {
+		now := time.Now()
+		endTime = &now
+	}
+	return truncateToTwoDecimals(endTime.Sub(*i.InTriageAt).Hours())
+}
+
+// Duration returns the total incident duration in seconds
+func (i *Incident) Duration() int64 {
+	if i.CancelledAt != nil {
+		return i.durationTillCancelled()
+	}
+	return i.ongoingDuration()
+}
+
+// ongoingDuration returns duration from start to resolution (or now if ongoing)
+func (i *Incident) ongoingDuration() int64 {
+	if i.StartedAt != nil {
+		endTime := i.ResolvedAt
+		if endTime == nil {
+			now := time.Now()
+			endTime = &now
+		}
+		return int64(endTime.Sub(*i.StartedAt).Seconds())
+	}
+	if i.InTriageAt != nil {
+		return int64(time.Since(*i.InTriageAt).Seconds())
+	}
+	return 0
+}
+
+// durationTillCancelled returns duration from start to cancellation
+func (i *Incident) durationTillCancelled() int64 {
+	startTime := i.StartedAt
+	if startTime == nil {
+		startTime = i.InTriageAt
+	}
+	if startTime == nil || i.CancelledAt == nil {
+		return 0
+	}
+	return int64(i.CancelledAt.Sub(*startTime).Seconds())
+}
+
+// MaintenanceDuration returns scheduled maintenance duration in seconds
+func (i *Incident) MaintenanceDuration() int64 {
+	if i.ScheduledFor == nil || i.ScheduledUntil == nil {
+		return 0
+	}
+	return int64(i.ScheduledUntil.Sub(*i.ScheduledFor).Seconds())
+}
+
+// InTriageDuration returns time spent in triage in seconds
+func (i *Incident) InTriageDuration() int64 {
+	if i.InTriageAt == nil {
+		return 0
+	}
+	endTime := i.StartedAt
+	if endTime == nil {
+		now := time.Now()
+		endTime = &now
+	}
+	return int64(endTime.Sub(*i.InTriageAt).Seconds())
+}
+
+func truncateToTwoDecimals(f float64) float64 {
+	return float64(int(f*100)) / 100
 }
