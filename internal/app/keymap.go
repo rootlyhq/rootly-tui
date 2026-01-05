@@ -89,8 +89,8 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("S", "sort"),
 		),
 		Copy: key.NewBinding(
-			key.WithKeys("y"),
-			key.WithHelp("y", "copy detail"),
+			key.WithKeys("c"),
+			key.WithHelp("c", "copy detail"),
 		),
 	}
 }
