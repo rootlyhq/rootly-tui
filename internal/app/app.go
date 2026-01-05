@@ -603,11 +603,11 @@ func (m Model) renderHeader() string {
 	// Tab indicators
 	var incidentsTab, alertsTab string
 	if m.activeTab == TabIncidents {
-		incidentsTab = styles.TabActive.Render(i18n.T("incidents"))
-		alertsTab = styles.TabInactive.Render(i18n.T("alerts"))
+		incidentsTab = styles.TabActive.Render(i18n.T("incidents.title"))
+		alertsTab = styles.TabInactive.Render(i18n.T("alerts.title"))
 	} else {
-		incidentsTab = styles.TabInactive.Render(i18n.T("incidents"))
-		alertsTab = styles.TabActive.Render(i18n.T("alerts"))
+		incidentsTab = styles.TabInactive.Render(i18n.T("incidents.title"))
+		alertsTab = styles.TabActive.Render(i18n.T("alerts.title"))
 	}
 	tabs := incidentsTab + " " + alertsTab
 
