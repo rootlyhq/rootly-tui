@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: সম্পর্কে
+        copy:
+            other: ক্লিপবোর্ডে বিস্তারিত কপি করুন
         details:
             other: বিস্তারিত দেখুন / নির্বাচন
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: সম্পর্কে
+    copy:
+        other: কপি
     help:
         other: সাহায্য
     logs:

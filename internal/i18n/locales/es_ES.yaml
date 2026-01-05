@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: Acerca de
+        copy:
+            other: Copiar detalles al portapapeles
         details:
             other: Ver detalles / Seleccionar
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: acerca
+    copy:
+        other: copiar
     help:
         other: ayuda
     logs:

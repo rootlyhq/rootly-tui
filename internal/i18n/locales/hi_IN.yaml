@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: परिचय
+        copy:
+            other: विवरण क्लिपबोर्ड में कॉपी करें
         details:
             other: विवरण देखें / चुनें
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: परिचय
+    copy:
+        other: कॉपी
     help:
         other: सहायता
     logs:

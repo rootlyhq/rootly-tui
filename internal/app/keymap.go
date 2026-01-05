@@ -19,6 +19,7 @@ type KeyMap struct {
 	PrevPage key.Binding
 	NextPage key.Binding
 	Sort     key.Binding
+	Copy     key.Binding
 }
 
 func DefaultKeyMap() KeyMap {
@@ -86,6 +87,10 @@ func DefaultKeyMap() KeyMap {
 		Sort: key.NewBinding(
 			key.WithKeys("S"),
 			key.WithHelp("S", "sort"),
+		),
+		Copy: key.NewBinding(
+			key.WithKeys("y"),
+			key.WithHelp("y", "copy detail"),
 		),
 	}
 }

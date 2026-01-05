@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: حول
+        copy:
+            other: نسخ التفاصيل إلى الحافظة
         details:
             other: عرض التفاصيل / اختيار
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: حول
+    copy:
+        other: نسخ
     help:
         other: مساعدة
     logs:

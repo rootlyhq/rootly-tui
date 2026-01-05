@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: О программе
+        copy:
+            other: Копировать детали в буфер обмена
         details:
             other: Просмотр деталей / Выбор
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: о прог.
+    copy:
+        other: копировать
     help:
         other: справка
     logs:

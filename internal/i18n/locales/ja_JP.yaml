@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: 情報
+        copy:
+            other: 詳細をクリップボードにコピー
         details:
             other: 詳細を表示 / 選択
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: 情報
+    copy:
+        other: コピー
     help:
         other: ヘルプ
     logs:

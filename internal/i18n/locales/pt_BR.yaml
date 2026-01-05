@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: Sobre
+        copy:
+            other: Copiar detalhes para a área de transferência
         details:
             other: Ver detalhes / Selecionar
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: sobre
+    copy:
+        other: copiar
     help:
         other: ajuda
     logs:

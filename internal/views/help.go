@@ -51,6 +51,7 @@ func (m HelpModel) View() string {
 	b.WriteString(renderHelpLine("r", i18n.T("help.action.refresh")))
 	b.WriteString(renderHelpLine("Enter", i18n.T("help.action.details")))
 	b.WriteString(renderHelpLine("o", i18n.T("help.action.open_url")))
+	b.WriteString(renderHelpLine("y", i18n.T("help.action.copy")))
 	b.WriteString("\n")
 
 	// Sorting section
@@ -93,7 +94,10 @@ func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) stri
 	if !isLoading {
 		items = append(items, styles.RenderHelpItem("r", i18n.T("helpbar.refresh")))
 		if hasSelection {
-			items = append(items, styles.RenderHelpItem("o", i18n.T("helpbar.open")))
+			items = append(items,
+				styles.RenderHelpItem("o", i18n.T("helpbar.open")),
+				styles.RenderHelpItem("y", i18n.T("helpbar.copy")),
+			)
 		}
 	}
 	// Show sorting hint only on incidents tab

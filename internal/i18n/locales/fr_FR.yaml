@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: À propos
+        copy:
+            other: Copier les détails dans le presse-papiers
         details:
             other: Voir les détails / Sélectionner
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: à propos
+    copy:
+        other: copier
     help:
         other: aide
     logs:

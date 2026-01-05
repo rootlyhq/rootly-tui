@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: Info
+        copy:
+            other: Details in Zwischenablage kopieren
         details:
             other: Details anzeigen / Auswaehlen
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: Info
+    copy:
+        other: kopieren
     help:
         other: Hilfe
     logs:

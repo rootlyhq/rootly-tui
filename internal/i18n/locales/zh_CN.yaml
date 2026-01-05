@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: 关于
+        copy:
+            other: 复制详情到剪贴板
         details:
             other: 查看详情 / 选择
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: 关于
+    copy:
+        other: 复制
     help:
         other: 帮助
     logs:

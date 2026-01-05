@@ -12,9 +12,11 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.design/x/clipboard"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/debug"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 	"github.com/rootlyhq/rootly-tui/internal/views"
@@ -322,6 +324,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Toggle sort menu for incidents tab
 			if m.activeTab == TabIncidents {
 				m.incidents.ToggleSortMenu()
+			}
+			return m, nil
+
+		case key.Matches(msg, m.keys.Copy):
+			// Copy detail panel to clipboard
+			var text string
+			if m.activeTab == TabIncidents {
+				text = m.incidents.GetDetailPlainText()
+			} else {
+				text = m.alerts.GetDetailPlainText()
+			}
+			if text != "" {
+				if err := clipboard.Init(); err != nil {
+					debug.Logger.Error("Failed to initialize clipboard", "error", err)
+					m.statusMsg = i18n.T("logs.clipboard_unavailable")
+				} else {
+					clipboard.Write(clipboard.FmtText, []byte(text))
+					m.statusMsg = i18n.T("logs.copied")
+				}
 			}
 			return m, nil
 

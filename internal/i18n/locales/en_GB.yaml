@@ -76,6 +76,8 @@ help:
     action:
         about:
             other: About
+        copy:
+            other: Copy detail to clipboard
         details:
             other: View details / Select
         help:
@@ -119,6 +121,8 @@ help:
 helpbar:
     about:
         other: about
+    copy:
+        other: copy
     help:
         other: help
     logs:

@@ -872,3 +872,102 @@ func formatNoiseStatus(noise string) string {
 		return noise
 	}
 }
+
+// GetDetailPlainText returns the detail panel content as plain text for clipboard
+func (m AlertsModel) GetDetailPlainText() string {
+	alert := m.SelectedAlert()
+	if alert == nil {
+		return ""
+	}
+	return m.generatePlainTextDetail(alert)
+}
+
+// generatePlainTextDetail generates plain text detail for copying to clipboard
+func (m AlertsModel) generatePlainTextDetail(alert *api.Alert) string {
+	var b strings.Builder
+
+	// Title line
+	summaryClean := strings.ReplaceAll(alert.Summary, "\n", " ")
+	summaryClean = strings.ReplaceAll(summaryClean, "\r", "")
+	if alert.ShortID != "" {
+		b.WriteString("[" + alert.ShortID + "] ")
+	}
+	b.WriteString(summaryClean)
+	b.WriteString("\n\n")
+
+	// Source and Status
+	b.WriteString("Source: " + alert.Source + "  Status: " + alert.Status)
+	if !alert.CreatedAt.IsZero() {
+		relTime := formatRelativeTime(alert.CreatedAt)
+		b.WriteString(fmt.Sprintf("  Triggered %s", relTime))
+	}
+	b.WriteString("\n\n")
+
+	// Links
+	rootlyURL := alert.URL
+	if rootlyURL == "" && alert.ShortID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/alerts/%s", alert.ShortID)
+	}
+	if rootlyURL != "" || alert.ExternalURL != "" {
+		b.WriteString("Links\n")
+		if rootlyURL != "" {
+			b.WriteString("  Rootly: " + rootlyURL + "\n")
+		}
+		if alert.ExternalURL != "" {
+			b.WriteString("  Source: " + alert.ExternalURL + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Description
+	if alert.Description != "" {
+		b.WriteString("Description\n")
+		b.WriteString(alert.Description)
+		b.WriteString("\n\n")
+	}
+
+	// Timeline
+	b.WriteString("Timeline\n")
+	if !alert.CreatedAt.IsZero() {
+		b.WriteString("  Created: " + formatAlertTime(alert.CreatedAt) + "\n")
+	}
+	if alert.StartedAt != nil {
+		b.WriteString("  Started: " + formatAlertTime(*alert.StartedAt) + "\n")
+	}
+	if alert.EndedAt != nil {
+		b.WriteString("  Ended: " + formatAlertTime(*alert.EndedAt) + "\n")
+	}
+	b.WriteString("\n")
+
+	// Services, Environments, Teams
+	if len(alert.Services) > 0 {
+		b.WriteString("Services: " + strings.Join(alert.Services, ", ") + "\n")
+	}
+	if len(alert.Environments) > 0 {
+		b.WriteString("Environments: " + strings.Join(alert.Environments, ", ") + "\n")
+	}
+	if len(alert.Groups) > 0 {
+		b.WriteString("Teams: " + strings.Join(alert.Groups, ", ") + "\n")
+	}
+
+	// Extended info
+	if alert.DetailLoaded {
+		if len(alert.Responders) > 0 {
+			b.WriteString("\nResponders: " + strings.Join(alert.Responders, ", ") + "\n")
+		}
+
+		if len(alert.Labels) > 0 {
+			b.WriteString("\nLabels\n")
+			keys := make([]string, 0, len(alert.Labels))
+			for k := range alert.Labels {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				b.WriteString("  " + k + ": " + alert.Labels[k] + "\n")
+			}
+		}
+	}
+
+	return b.String()
+}

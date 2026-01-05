@@ -1261,3 +1261,140 @@ func formatRetroStatus(status string) string {
 		return status
 	}
 }
+
+// GetDetailPlainText returns the detail panel content as plain text for clipboard
+func (m IncidentsModel) GetDetailPlainText() string {
+	inc := m.SelectedIncident()
+	if inc == nil {
+		return ""
+	}
+	return m.generatePlainTextDetail(inc)
+}
+
+// generatePlainTextDetail generates plain text detail for copying to clipboard
+func (m IncidentsModel) generatePlainTextDetail(inc *api.Incident) string {
+	var b strings.Builder
+
+	// Title line
+	title := inc.Title
+	if title == "" {
+		title = inc.Summary
+	}
+	title = strings.ReplaceAll(title, "\n", " ")
+	title = strings.ReplaceAll(title, "\r", "")
+	if inc.SequentialID != "" {
+		b.WriteString("[" + inc.SequentialID + "] ")
+	}
+	b.WriteString(title)
+	b.WriteString("\n\n")
+
+	// Severity, Status
+	b.WriteString("Severity: " + inc.Severity + "  Status: " + inc.Status)
+	if inc.Kind == "scheduled" || inc.Kind == "scheduled_maintenance" {
+		b.WriteString("  Type: Scheduled Maintenance")
+	}
+	if inc.CreatedByName != "" {
+		relTime := formatRelativeTime(inc.CreatedAt)
+		b.WriteString(fmt.Sprintf("  Created %s by %s", relTime, inc.CreatedByName))
+		if inc.CreatedByEmail != "" {
+			b.WriteString(" <" + inc.CreatedByEmail + ">")
+		}
+	}
+	b.WriteString("\n\n")
+
+	// Links
+	rootlyURL := inc.ShortURL
+	if rootlyURL == "" {
+		rootlyURL = inc.URL
+	}
+	if rootlyURL == "" && inc.ID != "" {
+		rootlyURL = fmt.Sprintf("https://rootly.com/account/incidents/%s", inc.ID)
+	}
+	if inc.SlackChannelURL != "" || inc.JiraIssueURL != "" || rootlyURL != "" {
+		b.WriteString("Links\n")
+		if rootlyURL != "" {
+			b.WriteString("  Rootly: " + rootlyURL + "\n")
+		}
+		if inc.SlackChannelURL != "" {
+			b.WriteString("  Slack: " + inc.SlackChannelURL + "\n")
+		}
+		if inc.JiraIssueURL != "" {
+			b.WriteString("  Jira: " + inc.JiraIssueURL + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Description
+	summaryClean := strings.ReplaceAll(inc.Summary, "\r", "")
+	titleClean := strings.ReplaceAll(title, "\n", " ")
+	titleClean = strings.ReplaceAll(titleClean, "\r", "")
+	if summaryClean != "" && strings.TrimSpace(summaryClean) != strings.TrimSpace(titleClean) {
+		b.WriteString("Description\n")
+		b.WriteString(summaryClean)
+		b.WriteString("\n\n")
+	}
+
+	// Timeline
+	b.WriteString("Timeline\n")
+	if !inc.CreatedAt.IsZero() {
+		b.WriteString("  Created: " + formatTime(inc.CreatedAt) + "\n")
+	}
+	if inc.StartedAt != nil {
+		b.WriteString("  Started: " + formatTime(*inc.StartedAt) + "\n")
+	}
+	if inc.DetectedAt != nil {
+		b.WriteString("  Detected: " + formatTime(*inc.DetectedAt) + "\n")
+	}
+	if inc.AcknowledgedAt != nil {
+		b.WriteString("  Acknowledged: " + formatTime(*inc.AcknowledgedAt) + "\n")
+	}
+	if inc.MitigatedAt != nil {
+		b.WriteString("  Mitigated: " + formatTime(*inc.MitigatedAt) + "\n")
+	}
+	if inc.ResolvedAt != nil {
+		b.WriteString("  Resolved: " + formatTime(*inc.ResolvedAt) + "\n")
+	}
+	if inc.ClosedAt != nil {
+		b.WriteString("  Closed: " + formatTime(*inc.ClosedAt) + "\n")
+	}
+	b.WriteString("\n")
+
+	// Services, Environments, Teams
+	if len(inc.Services) > 0 {
+		b.WriteString("Services: " + strings.Join(inc.Services, ", ") + "\n")
+	}
+	if len(inc.Environments) > 0 {
+		b.WriteString("Environments: " + strings.Join(inc.Environments, ", ") + "\n")
+	}
+	if len(inc.Teams) > 0 {
+		b.WriteString("Teams: " + strings.Join(inc.Teams, ", ") + "\n")
+	}
+
+	// Extended info
+	if inc.DetailLoaded {
+		if len(inc.Roles) > 0 {
+			b.WriteString("\nRoles\n")
+			for _, role := range inc.Roles {
+				userName := strings.TrimSpace(role.UserName)
+				if userName == "" {
+					continue
+				}
+				roleName := strings.TrimSpace(role.Name)
+				b.WriteString("  " + roleName + ": " + userName)
+				if role.UserEmail != "" {
+					b.WriteString(" <" + role.UserEmail + ">")
+				}
+				b.WriteString("\n")
+			}
+		}
+
+		if len(inc.Labels) > 0 {
+			b.WriteString("\nLabels\n")
+			for k, v := range inc.Labels {
+				b.WriteString("  " + k + ": " + v + "\n")
+			}
+		}
+	}
+
+	return b.String()
+}
