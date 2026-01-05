@@ -1,4 +1,4 @@
-.PHONY: build run clean test lint deps coverage coverage-html version bump-patch bump-minor bump-major push-tag release-patch release-minor release-major
+.PHONY: build run clean test lint deps coverage coverage-html version bump-patch bump-minor bump-major push-tag release-patch release-minor release-major i18n-check
 
 # Build variables
 BINARY_NAME := rootly-tui
@@ -50,8 +50,12 @@ coverage-html: coverage
 	@echo "Coverage report generated: coverage.html"
 
 # Run linter
-lint:
+lint: i18n-check
 	@which golangci-lint > /dev/null 2>&1 && golangci-lint run ./... || ~/go/bin/golangci-lint run ./...
+
+# Check i18n translations for missing keys
+i18n-check:
+	@go run scripts/i18n-check.go
 
 # Format code
 fmt:
