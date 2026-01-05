@@ -70,7 +70,18 @@ api_key: "your-api-key"
 endpoint: "api.rootly.com"  # Optional: defaults to api.rootly.com
 timezone: "America/Los_Angeles"
 language: "en_US"
+layout: "horizontal"  # "horizontal" (side-by-side) or "vertical" (stacked)
 ```
+
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `api_key` | Your Rootly API key (required) | - |
+| `endpoint` | Rootly API endpoint | `api.rootly.com` |
+| `timezone` | Timezone for displaying timestamps | `UTC` (auto-detected on setup) |
+| `language` | UI language code | `en_US` (auto-detected on setup) |
+| `layout` | Panel layout: `horizontal` or `vertical` | `horizontal` |
 
 ### Getting an API Key
 
@@ -119,6 +130,7 @@ Press `l` at any time to open the in-app log viewer. Logs are always captured in
 Log viewer controls:
 - `j/k` - Scroll up/down
 - `g/G` - Jump to top/bottom
+- `f` - Toggle auto-follow (tail) mode
 - `a` - Select all logs
 - `y` - Copy selected logs to clipboard
 - `c` - Clear logs
@@ -132,15 +144,18 @@ Log viewer controls:
 | `k` / `↑` | Move cursor up |
 | `g` | Go to first item |
 | `G` | Go to last item |
-| `h` / `←` | Previous page |
-| `l` / `→` | Next page (when not in logs view) |
+| `[` | Previous page |
+| `]` | Next page |
 | `Tab` | Switch between Incidents and Alerts |
-| `Enter` | Load detailed view for selected item |
+| `Enter` | Load detailed view / focus detail pane for scrolling |
 | `o` | Open item URL in browser |
-| `r` | Refresh data |
+| `c` | Copy detail panel to clipboard |
+| `r` | Refresh data (clears cache) |
+| `S` | Open sort menu |
 | `l` | View debug logs |
 | `s` | Open setup screen |
-| `?` | Toggle help |
+| `A` | Show about dialog |
+| `?` | Toggle help overlay |
 | `q` / `Esc` | Quit (or return from overlay/setup) |
 
 ## Screenshots
@@ -150,23 +165,24 @@ Log viewer controls:
 │  Rootly                          [Incidents] Alerts   v0.1.0│
 ├─────────────────────────────────────────────────────────────┤
 │  ┌──────────────────────┬──────────────────────────────────┐│
-│  │ INCIDENTS            │ Incident Details                 ││
+│  │ INCIDENTS            │ [INC-123] Database Connection    ││
 │  │                      │                                  ││
-│  │ ████ CRIT INC-123    │ Database Connection Failure      ││
-│  │   in_progress        │ Status: In Progress              ││
-│  │ ███  HIGH INC-122    │ Severity: Critical               ││
-│  │   resolved           │                                  ││
-│  │ ██   MED  INC-121    │ Timeline:                        ││
-│  │   resolved           │ Started: 10:30 AM                ││
-│  │                      │ Detected: 10:32 AM               ││
+│  │ ▶████ INC-123 in_pro │ Status: in_progress              ││
+│  │  ███  INC-122 resolv │ Severity: ████ Critical          ││
+│  │  ██   INC-121 resolv │                                  ││
+│  │                      │ 🔗 Links                         ││
+│  │                      │   Rootly: https://rootly.com/... ││
 │  │                      │                                  ││
-│  │                      │ Services: api, database          ││
-│  │                      │ Teams: Platform, SRE             ││
+│  │                      │ 📅 Timeline                      ││
+│  │                      │   Started: Jan 5, 10:30 AM       ││
+│  │                      │   Detected: Jan 5, 10:32 AM      ││
 │  │                      │                                  ││
-│  │                      │ Press Enter for more details     ││
+│  │  Page 1  (1-3)       │ 🛠  Services                     ││
+│  │                      │   • api                          ││
+│  │                      │   • database                     ││
 │  └──────────────────────┴──────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────┤
-│  j/k navigate  Tab switch  r refresh  ? help  q quit       │
+│  j/k nav  Tab switch  o open  c copy  r refresh  ? help    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
