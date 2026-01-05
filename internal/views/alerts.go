@@ -545,7 +545,7 @@ func (m AlertsModel) View() string {
 	}
 
 	if m.error != "" {
-		return styles.Error.Render(i18n.T("error") + ": " + m.error)
+		return styles.Error.Render(i18n.T("common.error") + ": " + m.error)
 	}
 
 	if len(m.alerts) == 0 {
@@ -585,7 +585,7 @@ func (m AlertsModel) renderList(height int) string {
 	} else {
 		footer.WriteString(styles.TextDim.Render("  "))
 	}
-	fmt.Fprintf(&footer, " %s %d ", i18n.T("page"), m.currentPage)
+	fmt.Fprintf(&footer, " %s %d ", i18n.T("common.page"), m.currentPage)
 	if m.hasNext {
 		footer.WriteString(styles.TextDim.Render("] →"))
 	}
@@ -658,7 +658,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
+	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("incidents.detail.status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
 
 	// Links section (high up for quick access)
 	rootlyURL := alert.URL // Use URL from API if available
@@ -679,7 +679,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 
 	// Description (rendered as markdown)
 	if alert.Description != "" {
-		b.WriteString(styles.TextBold.Render("📝 " + i18n.T("description")))
+		b.WriteString(styles.TextBold.Render("📝 " + i18n.T("incidents.detail.description")))
 		b.WriteString("\n")
 		// Render as markdown, use detail width minus padding
 		descWidth := m.detailWidth - 4
@@ -801,7 +801,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	// Show loading spinner or hint if detail not loaded
 	if m.IsLoadingAlert(alert.ID) {
 		b.WriteString("\n")
-		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("loading_details"))
+		fmt.Fprintf(&b, "%s %s", m.spinnerView, i18n.T("incidents.loading_details"))
 	} else if !alert.DetailLoaded {
 		b.WriteString("\n")
 		b.WriteString(styles.TextDim.Render(i18n.T("incidents.press_enter")))

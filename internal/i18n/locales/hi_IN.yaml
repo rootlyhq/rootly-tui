@@ -1,159 +1,77 @@
-# Hindi (IN) translations
-# Organized in nested Rails-style format
-
-common:
-    error:
-        other: त्रुटि
-    loading:
-        other: लोड हो रहा है...
-    saving:
-        other: सहेजा जा रहा है...
-    of:
-        other: में से
-    page:
-        other: पृष्ठ
-    refreshing:
-        other: रीफ्रेश हो रहा है...
-
-app:
-    title:
-        other: Rootly
-
-setup:
-    api_endpoint:
-        other: API एंडपॉइंट
-    api_key:
-        other: API कुंजी
-    connection_title:
-        other: कनेक्शन
-    preferences_title:
-        other: प्राथमिकताएं
-    connection_success:
-        other: कनेक्शन सफल!
-    connection_saved:
-        other: कनेक्शन सहेजा गया!
-    preferences_saved:
-        other: प्राथमिकताएं सहेजी गईं!
-    enter_credentials:
-        other: शुरू करने के लिए अपने Rootly API क्रेडेंशियल दर्ज करें।
-    help:
-        other: Tab/तीर नेविगेट करें, Enter चुनें, q/Esc बाहर निकलें
-    help_panels:
-        other: "Tab: पैनल बदलें | ↑↓: नेविगेट | ←→: मान बदलें | Enter: चुनें | q/Esc: बाहर"
-    language:
-        other: भाषा
-    layout:
-        other: लेआउट
-    layout_horizontal:
-        other: क्षैतिज (साथ-साथ)
-    layout_vertical:
-        other: लंबवत (स्टैक्ड)
-    save_and_continue:
-        other: सहेजें और जारी रखें
-    test:
-        other: परीक्षण
-    save:
-        other: सहेजें
-    save_preferences:
-        other: प्राथमिकताएं सहेजें
-    test_connection:
-        other: कनेक्शन परीक्षण
-    testing_connection:
-        other: कनेक्शन परीक्षण हो रहा है...
-    timezone:
-        other: समय क्षेत्र
-    use_arrows:
-        other: (बदलने के लिए तीर कुंजियों का उपयोग करें)
-    welcome:
-        other: Rootly में आपका स्वागत है
-
-incidents:
-    col:
-        id:
-            other: ID
-        severity:
-            other: गंभी
-        title:
-            other: शीर्षक
-    detail:
-        causes:
-            other: कारण
-        created_by:
-            other: द्वारा बनाया गया
-        description:
-            other: विवरण
-        environments:
-            other: वातावरण
-        functionalities:
-            other: कार्यक्षमताएं
-        links:
-            other: लिंक
-        roles:
-            other: भूमिकाएं
-        services:
-            other: सेवाएं
-        severity:
-            other: गंभीरता
-        status:
-            other: स्थिति
-        teams:
-            other: टीमें
-        types:
-            other: प्रकार
+about:
+    description:
+        other: Rootly घटनाओं और अलर्ट देखने के लिए टर्मिनल इंटरफ़ेस।
+    docs:
+        other: दस्तावेज़
+    go_version:
+        other: Go
     links:
-        jira:
-            other: Jira
-        rootly:
-            other: Rootly
-        slack:
-            other: Slack
-    loading_details:
-        other: विवरण लोड हो रहा है...
-    loading_page:
-        other: पृष्ठ {{.Page}} लोड हो रहा है...
-    none_found:
-        other: कोई घटना नहीं मिली
-    press_enter:
-        other: अधिक विवरण के लिए Enter दबाएं
-    select_prompt:
-        other: विवरण देखने के लिए एक घटना चुनें
-    timeline:
-        acknowledged:
-            other: स्वीकृत
-        created:
-            other: बनाया गया
-        detected:
-            other: पता चला
-        mitigated:
-            other: कम किया गया
-        resolved:
-            other: हल किया गया
-        started:
-            other: शुरू हुआ
-        title:
-            other: समयरेखा
+        other: Links
+    platform:
+        other: प्लेटफ़ॉर्म
+    press_to_close:
+        other: बंद करने के लिए A या Esc दबाएं
+    system:
+        other: सिस्टम
     title:
-        other: घटनाएं
-
+        other: परिचय
 alerts:
     detail:
+        dedup_key:
+            other: Dedup Key
         ended:
             other: समाप्त
+        external_id:
+            other: External ID
+        group_leader:
+            other: Group Leader
         labels:
             other: लेबल
+        links:
+            other: Links
+        metadata:
+            other: Metadata
+        noise:
+            other: Noise Classification
+        notified_users:
+            other: Notified Users
+        related_incidents:
+            other: Related Incidents
         responders:
             other: प्रतिसादकर्ता
         source:
             other: स्रोत
         urgency:
             other: तात्कालिकता
+        "yes":
+            other: "Yes"
+    noise:
+        noise:
+            other: Noise
+        not_noise:
+            other: Not Noise
+        possible_noise:
+            other: Possible Noise
     none_found:
         other: कोई अलर्ट नहीं मिला
     select_prompt:
         other: विवरण देखने के लिए एक अलर्ट चुनें
     title:
         other: अलर्ट
-
+app:
+    title:
+        other: Rootly
+common:
+    error:
+        other: त्रुटि
+    loading:
+        other: लोड हो रहा है...
+    page:
+        other: पृष्ठ
+    refreshing:
+        other: रीफ्रेश हो रहा है...
+    saving:
+        other: सहेजा जा रहा है...
 help:
     action:
         about:
@@ -198,7 +116,6 @@ help:
             other: नेविगेशन
     title:
         other: कीबोर्ड शॉर्टकट
-
 helpbar:
     about:
         other: परिचय
@@ -220,7 +137,160 @@ helpbar:
         other: सेटअप
     switch:
         other: स्विच
-
+incidents:
+    col:
+        id:
+            other: ID
+        severity:
+            other: गंभी
+        title:
+            other: शीर्षक
+    detail:
+        causes:
+            other: कारण
+        created_by:
+            other: द्वारा बनाया गया
+        description:
+            other: विवरण
+        environments:
+            other: वातावरण
+        functionalities:
+            other: कार्यक्षमताएं
+        integrations:
+            other: Integrations
+        kind:
+            other: Type
+        labels:
+            other: Labels
+        links:
+            other: लिंक
+        metadata:
+            other: Metadata
+        mitigated_by:
+            other: Mitigated by
+        mitigation_message:
+            other: Mitigation
+        private:
+            other: Private
+        resolution_message:
+            other: Resolution
+        resolved_by:
+            other: Resolved by
+        responders:
+            other: Responders
+        retrospective:
+            other: Retrospective
+        roles:
+            other: भूमिकाएं
+        services:
+            other: सेवाएं
+        severity:
+            other: गंभीरता
+        source:
+            other: Source
+        started_by:
+            other: Started by
+        status:
+            other: स्थिति
+        teams:
+            other: टीमें
+        types:
+            other: प्रकार
+    integrations:
+        asana:
+            other: Asana
+        confluence:
+            other: Confluence
+        datadog:
+            other: Datadog
+        freshservice:
+            other: Freshservice
+        github:
+            other: GitHub
+        gitlab:
+            other: GitLab
+        google_meet:
+            other: Google Meet
+        linear:
+            other: Linear
+        opsgenie:
+            other: OpsGenie
+        pagerduty:
+            other: PagerDuty
+        servicenow:
+            other: ServiceNow
+        trello:
+            other: Trello
+        zoom:
+            other: Zoom
+    links:
+        jira:
+            other: Jira
+        rootly:
+            other: Rootly
+        slack:
+            other: Slack
+    loading_details:
+        other: विवरण लोड हो रहा है...
+    loading_page:
+        other: पृष्ठ {{.Page}} लोड हो रहा है...
+    metrics:
+        duration:
+            other: Total Duration
+        maintenance:
+            other: Maintenance Window
+        title:
+            other: Duration Metrics
+        triage:
+            other: In Triage
+        tta:
+            other: Time to Acknowledge
+        ttc:
+            other: Time to Close
+        ttd:
+            other: Time to Detect
+        ttm:
+            other: Time to Mitigate
+        ttr:
+            other: Time to Resolve
+    none_found:
+        other: कोई घटना नहीं मिली
+    press_enter:
+        other: अधिक विवरण के लिए Enter दबाएं
+    retro:
+        completed:
+            other: Completed
+        in_progress:
+            other: In Progress
+        not_started:
+            other: Not Started
+    select_prompt:
+        other: विवरण देखने के लिए एक घटना चुनें
+    timeline:
+        acknowledged:
+            other: स्वीकृत
+        cancelled:
+            other: Cancelled
+        closed:
+            other: Closed
+        created:
+            other: बनाया गया
+        detected:
+            other: पता चला
+        mitigated:
+            other: कम किया गया
+        resolved:
+            other: हल किया गया
+        scheduled_for:
+            other: Scheduled For
+        scheduled_until:
+            other: Scheduled Until
+        started:
+            other: शुरू हुआ
+        title:
+            other: समयरेखा
+    title:
+        other: घटनाएं
 logs:
     clipboard_unavailable:
         other: क्लिपबोर्ड उपलब्ध नहीं (लॉग देखें)
@@ -228,28 +298,72 @@ logs:
         other: कॉपी हो गया!
     empty:
         other: अभी तक कोई लॉग नहीं। लॉग स्वचालित रूप से कैप्चर होते हैं।
-    help:
-        other: j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | y कॉपी | c साफ करें | l/Esc बंद
-    help_no_clipboard:
-        other: j/k स्क्रॉल | g/G ऊपर/नीचे | a सभी चुनें | c साफ करें | l/Esc बंद
-    showing_lines:
-        other: पंक्तियां दिखा रहा है
+    following:
+        other: following
+    line_count:
+        other: '{{.Count}} lines'
+    memory:
+        other: memory
+    scroll_percent:
+        other: '{{.Percent}}%'
     title:
         other: डीबग लॉग
-
-about:
-    description:
-        other: Rootly घटनाओं और अलर्ट देखने के लिए टर्मिनल इंटरफ़ेस।
-    docs:
-        other: दस्तावेज़
-    go_version:
-        other: Go
-    platform:
-        other: प्लेटफ़ॉर्म
-    press_to_close:
-        other: बंद करने के लिए A या Esc दबाएं
-    system:
-        other: सिस्टम
+setup:
+    api_endpoint:
+        other: API एंडपॉइंट
+    api_key:
+        other: API कुंजी
+    connection_saved:
+        other: कनेक्शन सहेजा गया!
+    connection_success:
+        other: कनेक्शन सफल!
+    connection_title:
+        other: कनेक्शन
+    help_panels:
+        other: 'Tab: पैनल बदलें | ↑↓: नेविगेट | ←→: मान बदलें | Enter: चुनें | q/Esc: बाहर'
+    language:
+        other: भाषा
+    layout:
+        other: लेआउट
+    layout_horizontal:
+        other: क्षैतिज (साथ-साथ)
+    layout_vertical:
+        other: लंबवत (स्टैक्ड)
+    preferences_saved:
+        other: प्राथमिकताएं सहेजी गईं!
+    preferences_title:
+        other: प्राथमिकताएं
+    save:
+        other: सहेजें
+    save_preferences:
+        other: प्राथमिकताएं सहेजें
+    test:
+        other: परीक्षण
+    testing_connection:
+        other: कनेक्शन परीक्षण हो रहा है...
+    timezone:
+        other: समय क्षेत्र
+sort_by:
+    other: Sort By
+sort_menu_help:
+    other: ↑/↓ navigate • Enter select • Esc close
+sorting:
+    created:
+        other: Created
+    desc:
+        created:
+            other: Sort by creation date (press again to toggle)
+        updated:
+            other: Sort by last updated date (press again to toggle)
+    newest_first:
+        other: Newest First
+    oldest_first:
+        other: Oldest First
+    open_sort_menu:
+        other: Open sort menu (press again to toggle)
+    sort_by_date:
+        other: sort by date
     title:
-        other: परिचय
-
+        other: Sorting
+    updated:
+        other: Updated

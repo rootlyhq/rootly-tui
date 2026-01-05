@@ -56,7 +56,7 @@ func (m AboutModel) View() string {
 	b.WriteString("\n")
 
 	// Links
-	b.WriteString(styles.TextBold.Render(i18n.T("links")))
+	b.WriteString(styles.TextBold.Render(i18n.T("about.links")))
 	b.WriteString("\n")
 	b.WriteString(renderAboutLine(i18n.T("about.docs"), "https://docs.rootly.com/integrations/tui"))
 	b.WriteString(renderAboutLine("GitHub", "https://github.com/rootlyhq/rootly-tui"))
