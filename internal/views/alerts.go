@@ -82,9 +82,9 @@ func NewAlertsModel() AlertsModel {
 	columns := []table.Column{
 		table.NewColumn(alertColKeyIndicator, "", 2), // Selection indicator column
 		table.NewColumn(alertColKeySource, i18n.T("alerts.detail.source"), 4),
-		table.NewColumn(alertColKeyID, i18n.T("col_id"), 8),
-		table.NewColumn(alertColKeyStatus, i18n.T("status"), 10),
-		table.NewFlexColumn(alertColKeyTitle, i18n.T("col_title"), 1), // Flex to fill remaining space
+		table.NewColumn(alertColKeyID, i18n.T("incidents.col.id"), 8),
+		table.NewColumn(alertColKeyStatus, i18n.T("incidents.detail.status"), 10),
+		table.NewFlexColumn(alertColKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 
 	t := table.New(columns).
