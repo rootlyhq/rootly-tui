@@ -17,6 +17,8 @@ about:
         other: Sobre
 alerts:
     detail:
+        data:
+            other: Dados
         dedup_key:
             other: Dedup Key
         ended:

@@ -17,6 +17,8 @@ about:
         other: परिचय
 alerts:
     detail:
+        data:
+            other: डेटा
         dedup_key:
             other: Dedup Key
         ended:

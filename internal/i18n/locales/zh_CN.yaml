@@ -17,6 +17,8 @@ about:
         other: 关于
 alerts:
     detail:
+        data:
+            other: 数据
         dedup_key:
             other: Dedup Key
         ended:

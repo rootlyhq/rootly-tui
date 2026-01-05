@@ -17,6 +17,8 @@ about:
         other: 情報
 alerts:
     detail:
+        data:
+            other: データ
         dedup_key:
             other: Dedup Key
         ended:

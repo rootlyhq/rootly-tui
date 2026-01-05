@@ -17,6 +17,8 @@ about:
         other: À propos
 alerts:
     detail:
+        data:
+            other: Données
         dedup_key:
             other: Clé de dédup
         ended:

@@ -17,6 +17,8 @@ about:
         other: О программе
 alerts:
     detail:
+        data:
+            other: Данные
         dedup_key:
             other: Dedup Key
         ended:

@@ -17,6 +17,8 @@ about:
         other: حول
 alerts:
     detail:
+        data:
+            other: بيانات
         dedup_key:
             other: Dedup Key
         ended:

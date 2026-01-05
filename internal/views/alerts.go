@@ -1,6 +1,7 @@
 package views
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -805,6 +806,18 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		}
 	}
 
+	// Data section (raw alert payload from source)
+	if len(alert.Data) > 0 {
+		b.WriteString("\n")
+		b.WriteString(styles.TextBold.Render("📦  " + i18n.T("alerts.detail.data")))
+		b.WriteString("\n")
+		dataJSON, err := json.MarshalIndent(alert.Data, "", "  ")
+		if err == nil {
+			b.WriteString(styles.TextDim.Render(string(dataJSON)))
+			b.WriteString("\n")
+		}
+	}
+
 	// Show loading spinner or hint if detail not loaded
 	if m.IsLoadingAlert(alert.ID) {
 		b.WriteString("\n")
@@ -965,6 +978,15 @@ func (m AlertsModel) generatePlainTextDetail(alert *api.Alert) string {
 			sort.Strings(keys)
 			for _, k := range keys {
 				b.WriteString("  " + k + ": " + alert.Labels[k] + "\n")
+			}
+		}
+
+		if len(alert.Data) > 0 {
+			b.WriteString("\nData\n")
+			dataJSON, err := json.MarshalIndent(alert.Data, "", "  ")
+			if err == nil {
+				b.WriteString(string(dataJSON))
+				b.WriteString("\n")
 			}
 		}
 	}

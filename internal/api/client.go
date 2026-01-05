@@ -131,6 +131,7 @@ type Alert struct {
 	NotifiedUsers      []AlertUser     // Users who were notified
 	RelatedIncidents   []AlertIncident // Related incidents
 	DeduplicationKey   string
+	Data               map[string]interface{} // Raw alert payload from source
 }
 
 // AlertUser represents a user who was notified about an alert
@@ -536,6 +537,7 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 					Key   string      `json:"key"`
 					Value interface{} `json:"value"`
 				} `json:"labels"`
+				Data map[string]interface{} `json:"data"`
 			} `json:"attributes"`
 		} `json:"data"`
 		Links struct {
@@ -594,6 +596,10 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		}
 		for _, l := range d.Attributes.Labels {
 			alert.Labels[l.Key] = fmt.Sprintf("%v", l.Value)
+		}
+
+		if d.Attributes.Data != nil {
+			alert.Data = d.Attributes.Data
 		}
 
 		alerts = append(alerts, alert)
@@ -1075,6 +1081,8 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 
 // GetAlert fetches detailed alert data by ID
 // updatedAt is used for cache invalidation - cache key includes it so changes invalidate the cache
+//
+//nolint:gocyclo // Parsing API response requires many field assignments
 func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (*Alert, error) {
 	// Build cache key with updated_at for smart invalidation
 	cacheKey := NewCacheKey(CacheKeyPrefixAlertDetail).
@@ -1199,6 +1207,7 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 						Status       string `json:"status"`
 					} `json:"attributes"`
 				} `json:"incidents"`
+				Data map[string]interface{} `json:"data"`
 			} `json:"attributes"`
 		} `json:"data"`
 	}
@@ -1282,6 +1291,9 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	}
 	if d.Attributes.DeduplicationKey != nil {
 		alert.DeduplicationKey = *d.Attributes.DeduplicationKey
+	}
+	if d.Attributes.Data != nil {
+		alert.Data = d.Attributes.Data
 	}
 
 	// Parse notified users

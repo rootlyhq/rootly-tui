@@ -17,6 +17,8 @@ about:
         other: সম্পর্কে
 alerts:
     detail:
+        data:
+            other: ডেটা
         dedup_key:
             other: Dedup Key
         ended:
