@@ -12,6 +12,7 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/components"
+	"github.com/rootlyhq/rootly-tui/internal/config"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
@@ -59,13 +60,16 @@ const (
 )
 
 type IncidentsModel struct {
-	incidents   []api.Incident
-	width       int
-	height      int
-	listWidth   int
-	detailWidth int
-	loading     bool
-	error       string
+	incidents    []api.Incident
+	width        int
+	height       int
+	listWidth    int
+	detailWidth  int
+	listHeight   int
+	detailHeight int
+	layout       string // "horizontal" or "vertical"
+	loading      bool
+	error        string
 	// Pagination state
 	currentPage int
 	hasNext     bool
@@ -315,42 +319,93 @@ func (m *IncidentsModel) updateViewportContent() {
 }
 
 func (m *IncidentsModel) updateDimensions() {
-	if m.width > 0 {
-		m.listWidth = int(float64(m.width) * 0.35)
-		m.detailWidth = m.width - m.listWidth - 6 // Account for borders and padding
+	if m.width <= 0 {
+		return
+	}
 
-		// Update viewport dimensions
-		contentHeight := m.height - 8
-		if contentHeight < 5 {
-			contentHeight = 5
+	// Default to horizontal layout
+	if m.layout == "" {
+		m.layout = config.LayoutHorizontal
+	}
+
+	var tableWidth, tableHeight, viewportWidth, viewportHeight int
+
+	if m.layout == config.LayoutVertical {
+		// Vertical layout: use full height, minimal overhead
+		// App already subtracts 10 for header/help bar, so we only need minimal adjustment
+		totalContentHeight := m.height - 2 // Just account for spacing between panes
+		if totalContentHeight < 10 {
+			totalContentHeight = 10
 		}
 
-		// Update table dimensions using fluent API
-		// Account for: title (2 lines), footer (2 lines), container borders (2)
-		tableHeight := contentHeight - 6
+		// 45/55 split - give more space to detail pane for scrolling content
+		m.listWidth = m.width - 2
+		m.detailWidth = m.width - 2
+		m.listHeight = (totalContentHeight * 45) / 100
+		m.detailHeight = totalContentHeight - m.listHeight
+
+		tableWidth = m.listWidth - 4
+		// Account for: title (2 lines), footer (1 line), container borders (2)
+		tableHeight = m.listHeight - 5
 		if tableHeight < 3 {
 			tableHeight = 3
 		}
-		m.table = m.table.WithTargetWidth(m.listWidth - 4).WithMinimumHeight(tableHeight)
 
-		// Account for detail container borders/padding
-		viewportHeight := contentHeight - 4
-		viewportWidth := m.detailWidth - 4
-		if viewportHeight < 1 {
-			viewportHeight = 1
-		}
-		if viewportWidth < 20 {
-			viewportWidth = 20
+		viewportWidth = m.detailWidth - 4
+		viewportHeight = m.detailHeight - 4
+	} else {
+		// Horizontal layout: 50/50 split left/right
+		// Account for header, help bar, borders
+		totalContentHeight := m.height - 8
+		if totalContentHeight < 5 {
+			totalContentHeight = 5
 		}
 
-		if !m.detailViewportReady {
-			m.detailViewport = viewport.New(viewportWidth, viewportHeight)
-			m.detailViewport.MouseWheelEnabled = true
-			m.detailViewportReady = true
-		} else {
-			m.detailViewport.Width = viewportWidth
-			m.detailViewport.Height = viewportHeight
+		m.listWidth = (m.width - 6) / 2 // -6 for gap between panes
+		m.detailWidth = m.width - m.listWidth - 6
+		m.listHeight = totalContentHeight
+		m.detailHeight = totalContentHeight
+
+		tableWidth = m.listWidth - 4
+		// Account for: title (2 lines), footer (2 lines), container borders (2)
+		tableHeight = totalContentHeight - 6
+		if tableHeight < 3 {
+			tableHeight = 3
 		}
+
+		viewportWidth = m.detailWidth - 4
+		viewportHeight = totalContentHeight - 4
+	}
+
+	// Ensure minimum dimensions
+	if viewportHeight < 1 {
+		viewportHeight = 1
+	}
+	if viewportWidth < 20 {
+		viewportWidth = 20
+	}
+
+	// Calculate page size based on available table height
+	// Account for header row (1 line) and some padding
+	pageSize := tableHeight - 2
+	if pageSize < 3 {
+		pageSize = 3
+	}
+	if pageSize > 25 {
+		pageSize = 25 // Cap at API page size
+	}
+
+	// Update table dimensions and page size
+	m.table = m.table.WithTargetWidth(tableWidth).WithMinimumHeight(tableHeight).WithPageSize(pageSize)
+
+	// Update or create viewport
+	if !m.detailViewportReady {
+		m.detailViewport = viewport.New(viewportWidth, viewportHeight)
+		m.detailViewport.MouseWheelEnabled = true
+		m.detailViewportReady = true
+	} else {
+		m.detailViewport.Width = viewportWidth
+		m.detailViewport.Height = viewportHeight
 	}
 }
 
@@ -424,6 +479,12 @@ func (m *IncidentsModel) SetError(err string) {
 func (m *IncidentsModel) SetDimensions(width, height int) {
 	m.width = width
 	m.height = height
+	m.updateDimensions()
+}
+
+// SetLayout sets the layout direction (horizontal or vertical)
+func (m *IncidentsModel) SetLayout(layout string) {
+	m.layout = layout
 	m.updateDimensions()
 }
 
@@ -505,19 +566,13 @@ func (m *IncidentsModel) UpdateIncidentDetail(index int, incident *api.Incident)
 }
 
 func (m IncidentsModel) View() string {
-	// Calculate available height for content
-	contentHeight := m.height - 8 // Account for header, help bar, etc.
-	if contentHeight < 5 {
-		contentHeight = 5
-	}
-
 	if m.loading {
 		// Show loading within the layout structure to prevent jarring shift
 		loadingMsg := fmt.Sprintf("%s %s", m.spinnerView, i18n.Tf("incidents.loading_page", map[string]any{"Page": m.currentPage}))
 		listContent := styles.TextBold.Render(i18n.T("incidents.title")) + "\n\n" + styles.TextDim.Render(loadingMsg)
-		listView := styles.ListContainer.Width(m.listWidth).Height(contentHeight).Render(listContent)
-		detailView := styles.DetailContainer.Width(m.detailWidth).Height(contentHeight).Render("")
-		return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
+		listView := styles.ListContainer.Width(m.listWidth).Height(m.listHeight).Render(listContent)
+		detailView := styles.DetailContainer.Width(m.detailWidth).Height(m.detailHeight).Render("")
+		return m.joinPanes(listView, detailView)
 	}
 
 	if m.error != "" {
@@ -529,12 +584,20 @@ func (m IncidentsModel) View() string {
 	}
 
 	// Build list view
-	listView := m.renderList(contentHeight)
+	listView := m.renderList(m.listHeight)
 
 	// Build detail view
-	detailView := m.renderDetail(contentHeight)
+	detailView := m.renderDetail(m.detailHeight)
 
-	// Join horizontally
+	// Join based on layout
+	return m.joinPanes(listView, detailView)
+}
+
+// joinPanes joins the list and detail panes based on the current layout
+func (m IncidentsModel) joinPanes(listView, detailView string) string {
+	if m.layout == config.LayoutVertical {
+		return lipgloss.JoinVertical(lipgloss.Left, listView, detailView)
+	}
 	return lipgloss.JoinHorizontal(lipgloss.Top, listView, "  ", detailView)
 }
 

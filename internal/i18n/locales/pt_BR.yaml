@@ -6,6 +6,8 @@ common:
         other: Erro
     loading:
         other: Carregando...
+    saving:
+        other: Salvando...
     of:
         other: de
     page:
@@ -22,16 +24,38 @@ setup:
         other: Endpoint da API
     api_key:
         other: Chave da API
+    connection_title:
+        other: Conexão
+    preferences_title:
+        other: Preferências
     connection_success:
         other: Conexao bem-sucedida!
+    connection_saved:
+        other: Conexão salva!
+    preferences_saved:
+        other: Preferências salvas!
     enter_credentials:
         other: Digite suas credenciais da API Rootly para comecar.
     help:
         other: Tab/Setas para navegar, Enter para selecionar, q/Esc para sair
+    help_panels:
+        other: "Tab: trocar painel | ↑↓: navegar | ←→: alterar valor | Enter: selecionar | q/Esc: sair"
     language:
         other: Idioma
+    layout:
+        other: Layout
+    layout_horizontal:
+        other: Horizontal (lado a lado)
+    layout_vertical:
+        other: Vertical (empilhado)
     save_and_continue:
         other: Salvar e continuar
+    test:
+        other: Testar
+    save:
+        other: Salvar
+    save_preferences:
+        other: Salvar preferências
     test_connection:
         other: Testar conexao
     testing_connection:

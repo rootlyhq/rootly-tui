@@ -19,12 +19,14 @@ const (
 // Color palette (Rootly brand colors)
 var (
 	ColorPrimary    = lipgloss.Color("#7C3AED") // Purple
+	ColorPurple     = lipgloss.Color("#7C3AED") // Alias for Primary
 	ColorSecondary  = lipgloss.Color("#6366F1") // Indigo
 	ColorSuccess    = lipgloss.Color("#10B981") // Green
 	ColorWarning    = lipgloss.Color("#F59E0B") // Amber
 	ColorDanger     = lipgloss.Color("#EF4444") // Red
 	ColorInfo       = lipgloss.Color("#4D96FF") // Blue
 	ColorMuted      = lipgloss.Color("#6B7280") // Gray
+	ColorDisabled   = lipgloss.Color("#4B5563") // Darker gray
 	ColorText       = lipgloss.Color("#F9FAFB") // Light
 	ColorTextDim    = lipgloss.Color("#9CA3AF") // Dimmed
 	ColorBackground = lipgloss.Color("#1F2937") // Dark
@@ -174,13 +176,13 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ColorBorder).
 			Padding(SpacingNone, SpacingSmall).
-			Width(50)
+			Width(46)
 
 	InputFieldFocused = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(ColorPrimary).
 				Padding(SpacingNone, SpacingSmall).
-				Width(50)
+				Width(46)
 
 	// Button styles
 	Button = lipgloss.NewStyle().
@@ -192,6 +194,12 @@ var (
 	ButtonFocused = lipgloss.NewStyle().
 			Foreground(ColorText).
 			Background(ColorPrimary).
+			Padding(SpacingNone, SpacingMedium).
+			MarginRight(SpacingSmall)
+
+	ButtonDisabled = lipgloss.NewStyle().
+			Foreground(ColorTextDim).
+			Background(ColorDisabled).
 			Padding(SpacingNone, SpacingMedium).
 			MarginRight(SpacingSmall)
 

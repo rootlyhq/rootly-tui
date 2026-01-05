@@ -6,6 +6,8 @@ common:
         other: 错误
     loading:
         other: 加载中...
+    saving:
+        other: 保存中...
     of:
         other: 共
     page:
@@ -22,16 +24,38 @@ setup:
         other: API 端点
     api_key:
         other: API 密钥
+    connection_title:
+        other: 连接
+    preferences_title:
+        other: 偏好设置
     connection_success:
         other: 连接成功!
+    connection_saved:
+        other: 连接已保存!
+    preferences_saved:
+        other: 偏好设置已保存!
     enter_credentials:
         other: 请输入您的 Rootly API 凭据以开始。
     help:
         other: Tab/方向键导航，Enter选择，q/Esc退出
+    help_panels:
+        other: "Tab: 切换面板 | ↑↓: 导航 | ←→: 更改值 | Enter: 选择 | q/Esc: 退出"
     language:
         other: 语言
+    layout:
+        other: 布局
+    layout_horizontal:
+        other: 水平（并排）
+    layout_vertical:
+        other: 垂直（堆叠）
     save_and_continue:
         other: 保存并继续
+    test:
+        other: 测试
+    save:
+        other: 保存
+    save_preferences:
+        other: 保存偏好设置
     test_connection:
         other: 测试连接
     testing_connection:

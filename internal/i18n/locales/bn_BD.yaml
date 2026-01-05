@@ -6,6 +6,8 @@ common:
         other: ত্রুটি
     loading:
         other: লোড হচ্ছে...
+    saving:
+        other: সংরক্ষণ হচ্ছে...
     of:
         other: এর মধ্যে
     page:
@@ -22,16 +24,38 @@ setup:
         other: API এন্ডপয়েন্ট
     api_key:
         other: API কী
+    connection_title:
+        other: সংযোগ
+    preferences_title:
+        other: পছন্দসমূহ
     connection_success:
         other: সংযোগ সফল!
+    connection_saved:
+        other: সংযোগ সংরক্ষিত!
+    preferences_saved:
+        other: পছন্দসমূহ সংরক্ষিত!
     enter_credentials:
         other: শুরু করতে আপনার Rootly API শংসাপত্র লিখুন।
     help:
         other: Tab/তীর নেভিগেট, Enter নির্বাচন, q/Esc প্রস্থান
+    help_panels:
+        other: "Tab: প্যানেল বদল | ↑↓: নেভিগেট | ←→: মান পরিবর্তন | Enter: নির্বাচন | q/Esc: প্রস্থান"
     language:
         other: ভাষা
+    layout:
+        other: লেআউট
+    layout_horizontal:
+        other: অনুভূমিক (পাশাপাশি)
+    layout_vertical:
+        other: উল্লম্ব (স্ট্যাকড)
     save_and_continue:
         other: সংরক্ষণ করুন এবং চালিয়ে যান
+    test:
+        other: পরীক্ষা
+    save:
+        other: সংরক্ষণ
+    save_preferences:
+        other: পছন্দসমূহ সংরক্ষণ
     test_connection:
         other: সংযোগ পরীক্ষা
     testing_connection:

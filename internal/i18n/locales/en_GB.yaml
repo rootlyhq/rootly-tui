@@ -6,6 +6,8 @@ common:
         other: Error
     loading:
         other: Loading...
+    saving:
+        other: Saving...
     of:
         other: of
     page:
@@ -22,16 +24,38 @@ setup:
         other: API Endpoint
     api_key:
         other: API Key
+    connection_title:
+        other: Connection
+    preferences_title:
+        other: Preferences
     connection_success:
         other: Connection successful!
+    connection_saved:
+        other: Connection saved!
+    preferences_saved:
+        other: Preferences saved!
     enter_credentials:
         other: Enter your Rootly API credentials to get started.
     help:
         other: Tab/Arrow keys to navigate, Enter to select, q/Esc to quit
+    help_panels:
+        other: "Tab: switch panels | ↑↓: navigate | ←→: change value | Enter: select | q/Esc: quit"
     language:
         other: Language
+    layout:
+        other: Layout
+    layout_horizontal:
+        other: Horizontal (side by side)
+    layout_vertical:
+        other: Vertical (stacked)
     save_and_continue:
         other: Save & Continue
+    test:
+        other: Test
+    save:
+        other: Save
+    save_preferences:
+        other: Save Preferences
     test_connection:
         other: Test Connection
     testing_connection:

@@ -6,6 +6,8 @@ common:
         other: त्रुटि
     loading:
         other: लोड हो रहा है...
+    saving:
+        other: सहेजा जा रहा है...
     of:
         other: में से
     page:
@@ -22,16 +24,38 @@ setup:
         other: API एंडपॉइंट
     api_key:
         other: API कुंजी
+    connection_title:
+        other: कनेक्शन
+    preferences_title:
+        other: प्राथमिकताएं
     connection_success:
         other: कनेक्शन सफल!
+    connection_saved:
+        other: कनेक्शन सहेजा गया!
+    preferences_saved:
+        other: प्राथमिकताएं सहेजी गईं!
     enter_credentials:
         other: शुरू करने के लिए अपने Rootly API क्रेडेंशियल दर्ज करें।
     help:
         other: Tab/तीर नेविगेट करें, Enter चुनें, q/Esc बाहर निकलें
+    help_panels:
+        other: "Tab: पैनल बदलें | ↑↓: नेविगेट | ←→: मान बदलें | Enter: चुनें | q/Esc: बाहर"
     language:
         other: भाषा
+    layout:
+        other: लेआउट
+    layout_horizontal:
+        other: क्षैतिज (साथ-साथ)
+    layout_vertical:
+        other: लंबवत (स्टैक्ड)
     save_and_continue:
         other: सहेजें और जारी रखें
+    test:
+        other: परीक्षण
+    save:
+        other: सहेजें
+    save_preferences:
+        other: प्राथमिकताएं सहेजें
     test_connection:
         other: कनेक्शन परीक्षण
     testing_connection:

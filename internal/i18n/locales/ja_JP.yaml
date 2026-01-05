@@ -6,6 +6,8 @@ common:
         other: エラー
     loading:
         other: 読み込み中...
+    saving:
+        other: 保存中...
     of:
         other: 件中
     page:
@@ -22,16 +24,38 @@ setup:
         other: APIエンドポイント
     api_key:
         other: APIキー
+    connection_title:
+        other: 接続
+    preferences_title:
+        other: 設定
     connection_success:
         other: 接続成功!
+    connection_saved:
+        other: 接続を保存しました!
+    preferences_saved:
+        other: 設定を保存しました!
     enter_credentials:
         other: 開始するにはRootly APIの認証情報を入力してください。
     help:
         other: Tab/矢印で移動、Enterで選択、q/Escで終了
+    help_panels:
+        other: "Tab: パネル切替 | ↑↓: 移動 | ←→: 値変更 | Enter: 選択 | q/Esc: 終了"
     language:
         other: 言語
+    layout:
+        other: レイアウト
+    layout_horizontal:
+        other: 水平（横並び）
+    layout_vertical:
+        other: 垂直（縦積み）
     save_and_continue:
         other: 保存して続行
+    test:
+        other: テスト
+    save:
+        other: 保存
+    save_preferences:
+        other: 設定を保存
     test_connection:
         other: 接続テスト
     testing_connection:

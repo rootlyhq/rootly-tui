@@ -6,6 +6,8 @@ common:
         other: خطا
     loading:
         other: جاري التحميل...
+    saving:
+        other: جاري الحفظ...
     of:
         other: من
     page:
@@ -22,16 +24,38 @@ setup:
         other: نقطة نهاية API
     api_key:
         other: مفتاح API
+    connection_title:
+        other: الاتصال
+    preferences_title:
+        other: الإعدادات
     connection_success:
         other: تم الاتصال بنجاح!
+    connection_saved:
+        other: تم حفظ الاتصال!
+    preferences_saved:
+        other: تم حفظ الإعدادات!
     enter_credentials:
         other: ادخل بيانات اعتماد Rootly API للبدء.
     help:
         other: Tab/الاسهم للتنقل، Enter للاختيار، q/Esc للخروج
+    help_panels:
+        other: "Tab: تبديل اللوحة | ↑↓: تنقل | ←→: تغيير القيمة | Enter: اختيار | q/Esc: خروج"
     language:
         other: اللغة
+    layout:
+        other: التخطيط
+    layout_horizontal:
+        other: أفقي (جنبًا إلى جنب)
+    layout_vertical:
+        other: عمودي (مكدس)
     save_and_continue:
         other: حفظ ومتابعة
+    test:
+        other: اختبار
+    save:
+        other: حفظ
+    save_preferences:
+        other: حفظ الإعدادات
     test_connection:
         other: اختبار الاتصال
     testing_connection:

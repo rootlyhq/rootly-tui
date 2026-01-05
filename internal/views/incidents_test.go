@@ -831,3 +831,121 @@ func TestIncidentsModelViewShowsClickableLabels(t *testing.T) {
 		t.Error("expected 'us-west-2' plain text value in view")
 	}
 }
+
+func TestIncidentsModelSetLayout(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 50)
+
+	// Default layout should be horizontal
+	if m.layout != "" && m.layout != "horizontal" {
+		t.Errorf("expected default layout to be empty or 'horizontal', got '%s'", m.layout)
+	}
+
+	// Set vertical layout
+	m.SetLayout("vertical")
+	if m.layout != "vertical" {
+		t.Errorf("expected layout 'vertical', got '%s'", m.layout)
+	}
+
+	// Set horizontal layout
+	m.SetLayout("horizontal")
+	if m.layout != "horizontal" {
+		t.Errorf("expected layout 'horizontal', got '%s'", m.layout)
+	}
+}
+
+func TestIncidentsModelLayoutDimensions(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(200, 100)
+
+	// Test horizontal layout dimensions
+	m.SetLayout("horizontal")
+	horizontalListWidth := m.listWidth
+	horizontalListHeight := m.listHeight
+	horizontalDetailHeight := m.detailHeight
+
+	// List and detail should have similar heights in horizontal
+	if horizontalListHeight != horizontalDetailHeight {
+		t.Errorf("horizontal layout: expected equal heights, got list=%d detail=%d",
+			horizontalListHeight, horizontalDetailHeight)
+	}
+
+	// Test vertical layout dimensions
+	m.SetLayout("vertical")
+	verticalListWidth := m.listWidth
+	verticalDetailWidth := m.detailWidth
+	verticalListHeight := m.listHeight
+	verticalDetailHeight := m.detailHeight
+
+	// In vertical layout, widths should be similar (full width)
+	if verticalListWidth != verticalDetailWidth {
+		t.Errorf("vertical layout: expected equal widths, got list=%d detail=%d",
+			verticalListWidth, verticalDetailWidth)
+	}
+
+	// In vertical layout, widths should be larger than horizontal
+	if verticalListWidth <= horizontalListWidth {
+		t.Errorf("vertical layout: expected list width > horizontal list width, got %d <= %d",
+			verticalListWidth, horizontalListWidth)
+	}
+
+	// In vertical layout, heights should add up approximately to total
+	totalHeight := verticalListHeight + verticalDetailHeight
+	expectedTotal := 100 - 2 // height - overhead
+	if totalHeight < expectedTotal-5 || totalHeight > expectedTotal+5 {
+		t.Errorf("vertical layout: heights don't add up correctly, got %d expected ~%d",
+			totalHeight, expectedTotal)
+	}
+}
+
+func TestIncidentsModelVerticalLayoutView(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 50)
+	m.SetLayout("vertical")
+
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// View should still contain incidents
+	if !strings.Contains(view, "INCIDENTS") {
+		t.Error("expected 'INCIDENTS' in vertical layout view")
+	}
+}
+
+func TestIncidentsModelHorizontalLayoutView(t *testing.T) {
+	m := NewIncidentsModel()
+	m.SetDimensions(100, 50)
+	m.SetLayout("horizontal")
+
+	incidents := api.MockIncidents()
+	m.SetIncidents(incidents, api.PaginationInfo{CurrentPage: 1})
+
+	view := m.View()
+
+	// View should still contain incidents
+	if !strings.Contains(view, "INCIDENTS") {
+		t.Error("expected 'INCIDENTS' in horizontal layout view")
+	}
+}
+
+func TestIncidentsModelLayoutPageSize(t *testing.T) {
+	m := NewIncidentsModel()
+
+	// Test with small height (vertical layout will have less space per pane)
+	m.SetDimensions(100, 30)
+
+	// In horizontal layout, full height available
+	m.SetLayout("horizontal")
+	// Page size is calculated based on tableHeight
+
+	// In vertical layout, only ~45% height available
+	m.SetLayout("vertical")
+	// The table should adapt its page size to fit
+
+	// Just verify no panic and dimensions are set
+	if m.listHeight == 0 || m.detailHeight == 0 {
+		t.Error("expected non-zero heights after layout set")
+	}
+}

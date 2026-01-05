@@ -101,6 +101,11 @@ func New(version string) Model {
 			if cfg.Language != "" {
 				i18n.SetLanguage(i18n.Language(cfg.Language))
 			}
+			// Set layout from config
+			if cfg.Layout != "" {
+				m.incidents.SetLayout(cfg.Layout)
+				m.alerts.SetLayout(cfg.Layout)
+			}
 			// Create the API client once here
 			client, err := api.NewClient(cfg)
 			if err == nil {
@@ -387,12 +392,64 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if cfg.Language != "" {
 					i18n.SetLanguage(i18n.Language(cfg.Language))
 				}
+				// Update layout from saved config
+				if cfg.Layout != "" {
+					m.incidents.SetLayout(cfg.Layout)
+					m.alerts.SetLayout(cfg.Layout)
+				}
 				client, err := api.NewClient(cfg)
 				if err == nil {
 					m.apiClient = client
 					m.screen = ScreenMain
 					m.initialLoading = true
 					return m, tea.Batch(m.spinner.Tick, m.loadData())
+				}
+			}
+		}
+		return m, nil
+
+	case views.ConnectionSavedMsg:
+		m.setup.HandleConnectionSaved(msg)
+		if msg.Success {
+			// Connection saved, load it and switch to main screen
+			cfg, err := config.Load()
+			if err == nil && cfg.IsValid() {
+				m.cfg = cfg
+				// Update language from saved config
+				if cfg.Language != "" {
+					i18n.SetLanguage(i18n.Language(cfg.Language))
+				}
+				// Update layout from saved config
+				if cfg.Layout != "" {
+					m.incidents.SetLayout(cfg.Layout)
+					m.alerts.SetLayout(cfg.Layout)
+				}
+				client, err := api.NewClient(cfg)
+				if err == nil {
+					m.apiClient = client
+					m.screen = ScreenMain
+					m.initialLoading = true
+					return m, tea.Batch(m.spinner.Tick, m.loadData())
+				}
+			}
+		}
+		return m, nil
+
+	case views.PreferencesSavedMsg:
+		m.setup.HandlePreferencesSaved(msg)
+		if msg.Success {
+			// Preferences saved, update settings but stay on setup screen
+			cfg, err := config.Load()
+			if err == nil {
+				m.cfg = cfg
+				// Update language from saved config
+				if cfg.Language != "" {
+					i18n.SetLanguage(i18n.Language(cfg.Language))
+				}
+				// Update layout from saved config
+				if cfg.Layout != "" {
+					m.incidents.SetLayout(cfg.Layout)
+					m.alerts.SetLayout(cfg.Layout)
 				}
 			}
 		}

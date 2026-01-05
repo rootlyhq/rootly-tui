@@ -6,6 +6,8 @@ common:
         other: Ошибка
     loading:
         other: Загрузка...
+    saving:
+        other: Сохранение...
     of:
         other: из
     page:
@@ -22,16 +24,38 @@ setup:
         other: Конечная точка API
     api_key:
         other: Ключ API
+    connection_title:
+        other: Соединение
+    preferences_title:
+        other: Настройки
     connection_success:
         other: Соединение успешно!
+    connection_saved:
+        other: Соединение сохранено!
+    preferences_saved:
+        other: Настройки сохранены!
     enter_credentials:
         other: Введите учетные данные Rootly API для начала.
     help:
         other: Tab/Стрелки для навигации, Enter для выбора, q/Esc для выхода
+    help_panels:
+        other: "Tab: переключить панель | ↑↓: навигация | ←→: изменить | Enter: выбор | q/Esc: выход"
     language:
         other: Язык
+    layout:
+        other: Макет
+    layout_horizontal:
+        other: Горизонтальный (бок о бок)
+    layout_vertical:
+        other: Вертикальный (стопкой)
     save_and_continue:
         other: Сохранить и продолжить
+    test:
+        other: Тест
+    save:
+        other: Сохранить
+    save_preferences:
+        other: Сохранить настройки
     test_connection:
         other: Проверить соединение
     testing_connection:

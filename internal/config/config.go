@@ -22,10 +22,18 @@ type Config struct {
 	Endpoint string `yaml:"endpoint"`
 	Timezone string `yaml:"timezone"`
 	Language string `yaml:"language"`
+	Layout   string `yaml:"layout"`
 }
 
 const DefaultTimezone = "UTC"
 const DefaultLanguage = "en_US"
+const DefaultLayout = "horizontal"
+
+// Layout constants
+const (
+	LayoutHorizontal = "horizontal"
+	LayoutVertical   = "vertical"
+)
 
 func Dir() string {
 	home, err := os.UserHomeDir()
@@ -70,6 +78,10 @@ func Load() (*Config, error) {
 		cfg.Language = DefaultLanguage
 	}
 
+	if cfg.Layout == "" {
+		cfg.Layout = DefaultLayout
+	}
+
 	return &cfg, nil
 }
 
@@ -84,6 +96,10 @@ func Save(cfg *Config) error {
 
 	if cfg.Language == "" {
 		cfg.Language = DefaultLanguage
+	}
+
+	if cfg.Layout == "" {
+		cfg.Layout = DefaultLayout
 	}
 
 	if err := os.MkdirAll(Dir(), 0700); err != nil {

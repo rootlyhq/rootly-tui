@@ -6,6 +6,8 @@ common:
     other: "Error"
   loading:
     other: "Loading..."
+  saving:
+    other: "Saving..."
   refreshing:
     other: "Refreshing..."
   page:
@@ -22,6 +24,10 @@ setup:
     other: "Welcome to Rootly"
   enter_credentials:
     other: "Enter your Rootly API credentials to get started."
+  connection_title:
+    other: "Connection"
+  preferences_title:
+    other: "Preferences"
   api_endpoint:
     other: "API Endpoint"
   api_key:
@@ -30,18 +36,36 @@ setup:
     other: "Timezone"
   language:
     other: "Language"
+  layout:
+    other: "Layout"
+  layout_horizontal:
+    other: "Horizontal (side by side)"
+  layout_vertical:
+    other: "Vertical (stacked)"
   use_arrows:
     other: "(use arrows to change)"
   testing_connection:
     other: "Testing connection..."
   connection_success:
     other: "Connection successful!"
+  connection_saved:
+    other: "Connection saved!"
+  preferences_saved:
+    other: "Preferences saved!"
   test_connection:
     other: "Test Connection"
+  test:
+    other: "Test"
+  save:
+    other: "Save"
+  save_preferences:
+    other: "Save Preferences"
   save_and_continue:
     other: "Save & Continue"
   help:
     other: "Tab/Arrow keys to navigate, Enter to select, q/Esc to quit"
+  help_panels:
+    other: "Tab: switch panels | ↑↓: navigate | ←→: change value | Enter: select | q/Esc: quit"
 
 incidents:
   title:

@@ -410,8 +410,3 @@ func TestLogsModelWindowResize(t *testing.T) {
 		t.Errorf("expected height 40, got %d", m.height)
 	}
 }
-
-// containsStr is a helper function used by multiple test files
-func containsStr(s, substr string) bool {
-	return strings.Contains(s, substr)
-}

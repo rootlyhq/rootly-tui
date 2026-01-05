@@ -484,6 +484,7 @@ func TestConfigStruct(t *testing.T) {
 		Endpoint: "custom.endpoint.com",
 		Timezone: "Asia/Tokyo",
 		Language: "ja_JP",
+		Layout:   "vertical",
 	}
 
 	if cfg.APIKey != "my-api-key" {
@@ -497,5 +498,81 @@ func TestConfigStruct(t *testing.T) {
 	}
 	if cfg.Language != "ja_JP" {
 		t.Errorf("Language mismatch")
+	}
+	if cfg.Layout != "vertical" {
+		t.Errorf("Layout mismatch")
+	}
+}
+
+func TestSaveAndLoadWithLayout(t *testing.T) {
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	// Test saving config with layout
+	cfg := &Config{
+		APIKey:   "test-api-key",
+		Endpoint: "api.test.rootly.com",
+		Timezone: "America/New_York",
+		Language: "en_US",
+		Layout:   LayoutVertical,
+	}
+
+	err := Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify layout is preserved
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Layout != LayoutVertical {
+		t.Errorf("expected layout '%s', got '%s'", LayoutVertical, loaded.Layout)
+	}
+}
+
+func TestLoadDefaultLayout(t *testing.T) {
+	_, cleanup := setupTestEnv(t)
+	defer cleanup()
+
+	// Save config without layout
+	cfg := &Config{
+		APIKey:   "test-key",
+		Endpoint: "api.rootly.com",
+		Timezone: "UTC",
+		Language: "en_US",
+		Layout:   "", // Empty layout
+	}
+
+	err := Save(cfg)
+	if err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Load and verify default layout is set
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if loaded.Layout != DefaultLayout {
+		t.Errorf("expected default layout '%s', got '%s'", DefaultLayout, loaded.Layout)
+	}
+}
+
+func TestDefaultLayoutConstant(t *testing.T) {
+	if DefaultLayout != "horizontal" {
+		t.Errorf("expected default layout to be 'horizontal', got '%s'", DefaultLayout)
+	}
+}
+
+func TestLayoutConstants(t *testing.T) {
+	if LayoutHorizontal != "horizontal" {
+		t.Errorf("expected LayoutHorizontal to be 'horizontal', got '%s'", LayoutHorizontal)
+	}
+	if LayoutVertical != "vertical" {
+		t.Errorf("expected LayoutVertical to be 'vertical', got '%s'", LayoutVertical)
 	}
 }

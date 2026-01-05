@@ -6,6 +6,8 @@ common:
         other: Erreur
     loading:
         other: Chargement...
+    saving:
+        other: Enregistrement...
     of:
         other: sur
     page:
@@ -22,16 +24,38 @@ setup:
         other: Point de terminaison API
     api_key:
         other: Clé API
+    connection_title:
+        other: Connexion
+    preferences_title:
+        other: Préférences
     connection_success:
         other: Connexion réussie !
+    connection_saved:
+        other: Connexion enregistrée !
+    preferences_saved:
+        other: Préférences enregistrées !
     enter_credentials:
         other: Entrez vos identifiants API Rootly pour commencer.
     help:
         other: Tab/Flèches pour naviguer, Entrée pour sélectionner, q/Échap pour quitter
+    help_panels:
+        other: "Tab: changer panneau | ↑↓: naviguer | ←→: modifier | Entrée: sélectionner | q/Échap: quitter"
     language:
         other: Langue
+    layout:
+        other: Disposition
+    layout_horizontal:
+        other: Horizontal (côte à côte)
+    layout_vertical:
+        other: Vertical (empilé)
     save_and_continue:
         other: Enregistrer et continuer
+    test:
+        other: Tester
+    save:
+        other: Enregistrer
+    save_preferences:
+        other: Enregistrer les préférences
     test_connection:
         other: Tester la connexion
     testing_connection:
