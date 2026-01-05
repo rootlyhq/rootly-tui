@@ -85,7 +85,7 @@ func NewAlertsModel() AlertsModel {
 		table.NewColumn(alertColKeySource, i18n.T("alerts.detail.source"), 4),
 		table.NewColumn(alertColKeyID, i18n.T("incidents.col.id"), 8),
 		table.NewColumn(alertColKeyStatus, i18n.T("incidents.detail.status"), 10),
-		table.NewColumn(alertColKeyTime, "", 4),                                 // Relative time (e.g., "2d", "3h")
+		table.NewColumn(alertColKeyTime, "", 8),                                 // Relative time (e.g., "2d ago", "3h ago")
 		table.NewFlexColumn(alertColKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 

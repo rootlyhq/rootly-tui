@@ -107,3 +107,90 @@ func TestFormatAlertTimeHelper(t *testing.T) {
 		t.Errorf("formatAlertTime() should contain time with ':', got %q", result)
 	}
 }
+
+func TestFormatRelativeTime(t *testing.T) {
+	now := time.Now()
+
+	tests := []struct {
+		name     string
+		time     time.Time
+		expected string
+	}{
+		{"zero time", time.Time{}, "-"},
+		{"now (0 seconds ago)", now, "now"},
+		{"30 seconds ago", now.Add(-30 * time.Second), "now"},
+		{"59 seconds ago", now.Add(-59 * time.Second), "now"},
+		{"1 minute ago", now.Add(-1 * time.Minute), "1m ago"},
+		{"5 minutes ago", now.Add(-5 * time.Minute), "5m ago"},
+		{"30 minutes ago", now.Add(-30 * time.Minute), "30m ago"},
+		{"59 minutes ago", now.Add(-59 * time.Minute), "59m ago"},
+		{"1 hour ago", now.Add(-1 * time.Hour), "1h ago"},
+		{"2 hours ago", now.Add(-2 * time.Hour), "2h ago"},
+		{"23 hours ago", now.Add(-23 * time.Hour), "23h ago"},
+		{"1 day ago", now.Add(-24 * time.Hour), "1d ago"},
+		{"2 days ago", now.Add(-48 * time.Hour), "2d ago"},
+		{"6 days ago", now.Add(-6 * 24 * time.Hour), "6d ago"},
+		{"1 week ago", now.Add(-7 * 24 * time.Hour), "1w ago"},
+		{"2 weeks ago", now.Add(-14 * 24 * time.Hour), "2w ago"},
+		{"3 weeks ago", now.Add(-21 * 24 * time.Hour), "3w ago"},
+		{"1 month ago", now.Add(-30 * 24 * time.Hour), "1mo ago"},
+		{"2 months ago", now.Add(-60 * 24 * time.Hour), "2mo ago"},
+		{"6 months ago", now.Add(-180 * 24 * time.Hour), "6mo ago"},
+		{"1 year ago", now.Add(-365 * 24 * time.Hour), "1y ago"},
+		{"2 years ago", now.Add(-730 * 24 * time.Hour), "2y ago"},
+		{"future time", now.Add(1 * time.Hour), "now"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := formatRelativeTime(tt.time)
+			if result != tt.expected {
+				t.Errorf("formatRelativeTime() = %q, expected %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestFormatRelativeTimeEdgeCases(t *testing.T) {
+	now := time.Now()
+
+	// Test boundary between minutes and hours (60 minutes = 1 hour)
+	t.Run("exactly 60 minutes", func(t *testing.T) {
+		result := formatRelativeTime(now.Add(-60 * time.Minute))
+		if result != "1h ago" {
+			t.Errorf("formatRelativeTime(60 min ago) = %q, expected '1h ago'", result)
+		}
+	})
+
+	// Test boundary between hours and days (24 hours = 1 day)
+	t.Run("exactly 24 hours", func(t *testing.T) {
+		result := formatRelativeTime(now.Add(-24 * time.Hour))
+		if result != "1d ago" {
+			t.Errorf("formatRelativeTime(24h ago) = %q, expected '1d ago'", result)
+		}
+	})
+
+	// Test boundary between days and weeks (7 days = 1 week)
+	t.Run("exactly 7 days", func(t *testing.T) {
+		result := formatRelativeTime(now.Add(-7 * 24 * time.Hour))
+		if result != "1w ago" {
+			t.Errorf("formatRelativeTime(7d ago) = %q, expected '1w ago'", result)
+		}
+	})
+
+	// Test boundary between weeks and months (30 days = 1 month)
+	t.Run("exactly 30 days", func(t *testing.T) {
+		result := formatRelativeTime(now.Add(-30 * 24 * time.Hour))
+		if result != "1mo ago" {
+			t.Errorf("formatRelativeTime(30d ago) = %q, expected '1mo ago'", result)
+		}
+	})
+
+	// Test boundary between months and years (365 days = 1 year)
+	t.Run("exactly 365 days", func(t *testing.T) {
+		result := formatRelativeTime(now.Add(-365 * 24 * time.Hour))
+		if result != "1y ago" {
+			t.Errorf("formatRelativeTime(365d ago) = %q, expected '1y ago'", result)
+		}
+	})
+}

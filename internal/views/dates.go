@@ -78,7 +78,7 @@ func formatHours(hours float64) string {
 	return fmt.Sprintf("%dd", days)
 }
 
-// formatRelativeTime formats a time as a short relative string (e.g., "2d", "3h", "5m")
+// formatRelativeTime formats a time as a short relative string (e.g., "2d ago", "3h ago", "5m ago")
 func formatRelativeTime(t time.Time) string {
 	if t.IsZero() {
 		return "-"
@@ -97,21 +97,21 @@ func formatRelativeTime(t time.Time) string {
 		return "now"
 	case diff < time.Hour:
 		mins := int(diff.Minutes())
-		return fmt.Sprintf("%dm", mins)
+		return fmt.Sprintf("%dm ago", mins)
 	case diff < 24*time.Hour:
 		hours := int(diff.Hours())
-		return fmt.Sprintf("%dh", hours)
+		return fmt.Sprintf("%dh ago", hours)
 	case diff < 7*24*time.Hour:
 		days := int(diff.Hours() / 24)
-		return fmt.Sprintf("%dd", days)
+		return fmt.Sprintf("%dd ago", days)
 	case diff < 30*24*time.Hour:
 		weeks := int(diff.Hours() / (24 * 7))
-		return fmt.Sprintf("%dw", weeks)
+		return fmt.Sprintf("%dw ago", weeks)
 	case diff < 365*24*time.Hour:
 		months := int(diff.Hours() / (24 * 30))
-		return fmt.Sprintf("%dmo", months)
+		return fmt.Sprintf("%dmo ago", months)
 	default:
 		years := int(diff.Hours() / (24 * 365))
-		return fmt.Sprintf("%dy", years)
+		return fmt.Sprintf("%dy ago", years)
 	}
 }

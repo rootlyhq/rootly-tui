@@ -120,7 +120,7 @@ func NewIncidentsModel() IncidentsModel {
 		table.NewColumn(colKeySev, i18n.T("incidents.col.severity"), 4),
 		table.NewColumn(colKeyID, i18n.T("incidents.col.id"), 10),
 		table.NewColumn(colKeyStatus, i18n.T("incidents.detail.status"), 12),
-		table.NewColumn(colKeyTime, "", 4),                                 // Relative time (e.g., "2d", "3h")
+		table.NewColumn(colKeyTime, "", 8),                                 // Relative time (e.g., "2d ago", "3h ago")
 		table.NewFlexColumn(colKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 
