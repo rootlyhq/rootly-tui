@@ -238,6 +238,8 @@ alerts:
       other: "Source"
     created:
       other: "Created"
+    started:
+      other: "Started"
     ended:
       other: "Ended"
     urgency:

@@ -691,14 +691,14 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	}
 
 	// Timestamps
-	b.WriteString(styles.TextBold.Render("📅 " + i18n.T("timeline")))
+	b.WriteString(styles.TextBold.Render("📅 " + i18n.T("incidents.timeline.title")))
 	b.WriteString("\n")
 
 	if !alert.CreatedAt.IsZero() {
-		b.WriteString(m.renderDetailRow(i18n.T("created"), formatAlertTime(alert.CreatedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.created"), formatAlertTime(alert.CreatedAt)))
 	}
 	if alert.StartedAt != nil {
-		b.WriteString(m.renderDetailRow(i18n.T("started"), formatAlertTime(*alert.StartedAt)))
+		b.WriteString(m.renderDetailRow(i18n.T("incidents.timeline.started"), formatAlertTime(*alert.StartedAt)))
 	}
 	if alert.EndedAt != nil {
 		b.WriteString(m.renderDetailRow(i18n.T("alerts.detail.ended"), formatAlertTime(*alert.EndedAt)))
@@ -706,9 +706,9 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	b.WriteString("\n")
 
 	// Services, Environments, Teams
-	b.WriteString(renderAlertBulletList("🛠 ", i18n.T("services"), alert.Services))
-	b.WriteString(renderAlertBulletList("🌐 ", i18n.T("environments"), alert.Environments))
-	b.WriteString(renderAlertBulletList("👥 ", i18n.T("teams"), alert.Groups))
+	b.WriteString(renderAlertBulletList("🛠 ", i18n.T("incidents.detail.services"), alert.Services))
+	b.WriteString(renderAlertBulletList("🌐 ", i18n.T("incidents.detail.environments"), alert.Environments))
+	b.WriteString(renderAlertBulletList("👥 ", i18n.T("incidents.detail.teams"), alert.Groups))
 
 	// Extended info (populated when DetailLoaded is true)
 	if alert.DetailLoaded {
