@@ -18,6 +18,9 @@ import (
 // DefaultCacheTTL is the default cache duration
 const DefaultCacheTTL = 5 * time.Minute
 
+// Version is set by the main package to include in User-Agent
+var Version = "dev"
+
 type Client struct {
 	client   *rootly.ClientWithResponses
 	endpoint string
@@ -175,6 +178,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		rootly.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
 			req.Header.Set("Content-Type", "application/vnd.api+json")
+			req.Header.Set("User-Agent", "rootly-tui/"+Version)
 			debug.Logger.Debug("API request",
 				"method", req.Method,
 				"url", req.URL.String(),

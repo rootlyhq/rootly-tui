@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/app"
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 )
@@ -50,6 +51,9 @@ func main() {
 		}
 		debug.Logger.Info("Debug mode enabled")
 	}
+
+	// Set API client version for User-Agent header
+	api.Version = version
 
 	model := app.New(version)
 	p := tea.NewProgram(

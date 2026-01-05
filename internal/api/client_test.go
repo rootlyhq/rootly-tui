@@ -87,6 +87,50 @@ func TestNewClientWithHTTPS(t *testing.T) {
 	}
 }
 
+func TestUserAgentHeader(t *testing.T) {
+	defer setupTestEnv(t)()
+
+	// Set a test version
+	Version = "1.2.3"
+
+	var receivedUserAgent string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedUserAgent = r.Header.Get("User-Agent")
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"data": map[string]interface{}{
+				"id":   "123",
+				"type": "users",
+				"attributes": map[string]interface{}{
+					"name":  "Test User",
+					"email": "test@example.com",
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		APIKey:   "test-key",
+		Endpoint: server.URL,
+	}
+
+	client, err := NewClient(cfg)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	// Make a request to trigger the header
+	_ = client.ValidateAPIKey(context.Background())
+
+	expectedUserAgent := "rootly-tui/1.2.3"
+	if receivedUserAgent != expectedUserAgent {
+		t.Errorf("User-Agent = %q, want %q", receivedUserAgent, expectedUserAgent)
+	}
+}
+
 func TestValidateAPIKey(t *testing.T) {
 	defer setupTestEnv(t)()
 
