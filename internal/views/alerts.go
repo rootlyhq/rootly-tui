@@ -723,7 +723,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 			b.WriteString(styles.TextBold.Render("👤 " + i18n.T("alerts.detail.responders")))
 			b.WriteString("\n")
 			for _, responder := range alert.Responders {
-				b.WriteString(styles.Text.Render("  • " + responder + "\n"))
+				b.WriteString(styles.Text.Render("• " + responder + "\n"))
 			}
 		}
 
@@ -733,7 +733,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 			b.WriteString(styles.TextBold.Render("🔔 " + i18n.T("alerts.detail.notified_users")))
 			b.WriteString("\n")
 			for _, user := range alert.NotifiedUsers {
-				b.WriteString(styles.Text.Render("  • "))
+				b.WriteString(styles.Text.Render("• "))
 				b.WriteString(styles.RenderNameWithEmail(user.Name, user.Email))
 				b.WriteString("\n")
 			}
@@ -750,7 +750,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 					incLabel = inc.ID[:8]
 				}
 				incInfo := fmt.Sprintf("%s - %s (%s)", incLabel, inc.Title, inc.Status)
-				b.WriteString(styles.Text.Render("  • " + incInfo + "\n"))
+				b.WriteString(styles.Text.Render("• " + incInfo + "\n"))
 			}
 		}
 
