@@ -813,7 +813,7 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 		b.WriteString("\n")
 		dataJSON, err := json.MarshalIndent(alert.Data, "", "  ")
 		if err == nil {
-			b.WriteString(styles.TextDim.Render(string(dataJSON)))
+			b.WriteString(styles.HighlightJSON(string(dataJSON)))
 			b.WriteString("\n")
 		}
 	}
