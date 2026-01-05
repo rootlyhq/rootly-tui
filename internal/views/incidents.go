@@ -44,6 +44,7 @@ const (
 	colKeySev       = "sev"
 	colKeyID        = "id"
 	colKeyStatus    = "status"
+	colKeyTime      = "time"
 	colKeyTitle     = "title"
 )
 
@@ -119,6 +120,7 @@ func NewIncidentsModel() IncidentsModel {
 		table.NewColumn(colKeySev, i18n.T("incidents.col.severity"), 4),
 		table.NewColumn(colKeyID, i18n.T("incidents.col.id"), 10),
 		table.NewColumn(colKeyStatus, i18n.T("incidents.detail.status"), 12),
+		table.NewColumn(colKeyTime, "", 4),                                 // Relative time (e.g., "2d", "3h")
 		table.NewFlexColumn(colKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 
@@ -288,6 +290,15 @@ func (m *IncidentsModel) updateRowIndicators() {
 		sevCell := table.NewStyledCell(severitySignalPlain(inc.Severity), severityStyle(inc.Severity))
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Use StartedAt if available, otherwise CreatedAt
+		timeStr := "-"
+		if inc.StartedAt != nil {
+			timeStr = formatRelativeTime(*inc.StartedAt)
+		} else if !inc.CreatedAt.IsZero() {
+			timeStr = formatRelativeTime(inc.CreatedAt)
+		}
+		timeCell := table.NewStyledCell(timeStr, styles.TextDim)
+
 		indicator := ""
 		if i == cursor {
 			indicator = rowIndicator
@@ -298,6 +309,7 @@ func (m *IncidentsModel) updateRowIndicators() {
 			colKeySev:       sevCell,
 			colKeyID:        seqID,
 			colKeyStatus:    statusCell,
+			colKeyTime:      timeCell,
 			colKeyTitle:     title,
 		})
 	}
@@ -440,6 +452,15 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 		sevCell := table.NewStyledCell(severitySignalPlain(inc.Severity), severityStyle(inc.Severity))
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Use StartedAt if available, otherwise CreatedAt
+		timeStr := "-"
+		if inc.StartedAt != nil {
+			timeStr = formatRelativeTime(*inc.StartedAt)
+		} else if !inc.CreatedAt.IsZero() {
+			timeStr = formatRelativeTime(inc.CreatedAt)
+		}
+		timeCell := table.NewStyledCell(timeStr, styles.TextDim)
+
 		// Show indicator for highlighted row
 		indicator := ""
 		if i == cursor {
@@ -451,6 +472,7 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 			colKeySev:       sevCell,
 			colKeyID:        seqID,
 			colKeyStatus:    statusCell,
+			colKeyTime:      timeCell,
 			colKeyTitle:     title,
 		})
 	}

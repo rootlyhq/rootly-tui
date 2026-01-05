@@ -44,6 +44,7 @@ const (
 	alertColKeySource    = "source"
 	alertColKeyID        = "id"
 	alertColKeyStatus    = "status"
+	alertColKeyTime      = "time"
 	alertColKeyTitle     = "title"
 )
 
@@ -84,6 +85,7 @@ func NewAlertsModel() AlertsModel {
 		table.NewColumn(alertColKeySource, i18n.T("alerts.detail.source"), 4),
 		table.NewColumn(alertColKeyID, i18n.T("incidents.col.id"), 8),
 		table.NewColumn(alertColKeyStatus, i18n.T("incidents.detail.status"), 10),
+		table.NewColumn(alertColKeyTime, "", 4),                                 // Relative time (e.g., "2d", "3h")
 		table.NewFlexColumn(alertColKeyTitle, i18n.T("incidents.col.title"), 1), // Flex to fill remaining space
 	}
 
@@ -254,6 +256,15 @@ func (m *AlertsModel) updateRowIndicators() {
 
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Use StartedAt if available, otherwise CreatedAt
+		timeStr := "-"
+		if alert.StartedAt != nil {
+			timeStr = formatRelativeTime(*alert.StartedAt)
+		} else if !alert.CreatedAt.IsZero() {
+			timeStr = formatRelativeTime(alert.CreatedAt)
+		}
+		timeCell := table.NewStyledCell(timeStr, styles.TextDim)
+
 		indicator := ""
 		if i == cursor {
 			indicator = alertRowIndicator
@@ -264,6 +275,7 @@ func (m *AlertsModel) updateRowIndicators() {
 			alertColKeySource:    styles.AlertSourceIcon(alert.Source),
 			alertColKeyID:        shortID,
 			alertColKeyStatus:    statusCell,
+			alertColKeyTime:      timeCell,
 			alertColKeyTitle:     summary,
 		})
 	}
@@ -397,6 +409,15 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 		// Create styled cells using evertras/bubble-table
 		statusCell := table.NewStyledCell(status, statusStyle(status))
 
+		// Use StartedAt if available, otherwise CreatedAt
+		timeStr := "-"
+		if alert.StartedAt != nil {
+			timeStr = formatRelativeTime(*alert.StartedAt)
+		} else if !alert.CreatedAt.IsZero() {
+			timeStr = formatRelativeTime(alert.CreatedAt)
+		}
+		timeCell := table.NewStyledCell(timeStr, styles.TextDim)
+
 		// Show indicator for highlighted row
 		indicator := ""
 		if i == cursor {
@@ -408,6 +429,7 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 			alertColKeySource:    styles.AlertSourceIcon(alert.Source),
 			alertColKeyID:        shortID,
 			alertColKeyStatus:    statusCell,
+			alertColKeyTime:      timeCell,
 			alertColKeyTitle:     summary,
 		})
 	}

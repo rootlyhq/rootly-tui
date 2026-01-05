@@ -77,3 +77,41 @@ func formatHours(hours float64) string {
 	}
 	return fmt.Sprintf("%dd", days)
 }
+
+// formatRelativeTime formats a time as a short relative string (e.g., "2d", "3h", "5m")
+func formatRelativeTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+
+	now := time.Now()
+	diff := now.Sub(t)
+
+	// Handle future times
+	if diff < 0 {
+		return "now"
+	}
+
+	switch {
+	case diff < time.Minute:
+		return "now"
+	case diff < time.Hour:
+		mins := int(diff.Minutes())
+		return fmt.Sprintf("%dm", mins)
+	case diff < 24*time.Hour:
+		hours := int(diff.Hours())
+		return fmt.Sprintf("%dh", hours)
+	case diff < 7*24*time.Hour:
+		days := int(diff.Hours() / 24)
+		return fmt.Sprintf("%dd", days)
+	case diff < 30*24*time.Hour:
+		weeks := int(diff.Hours() / (24 * 7))
+		return fmt.Sprintf("%dw", weeks)
+	case diff < 365*24*time.Hour:
+		months := int(diff.Hours() / (24 * 30))
+		return fmt.Sprintf("%dmo", months)
+	default:
+		years := int(diff.Hours() / (24 * 365))
+		return fmt.Sprintf("%dy", years)
+	}
+}
