@@ -11,7 +11,7 @@ builds:
     main: ./cmd/rootly-tui
     binary: rootly-tui
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     flags:
       - -tags=netgo
       - -a

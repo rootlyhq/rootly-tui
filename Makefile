@@ -17,7 +17,7 @@ deps:
 
 # Build the binary
 build: deps
-	CGO_ENABLED=0 go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/rootly-tui
+	CGO_ENABLED=1 go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/rootly-tui
 
 # Build and run
 run: build
