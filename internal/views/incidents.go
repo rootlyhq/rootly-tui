@@ -720,11 +720,11 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	b.WriteString(styles.DetailTitle.Render(title))
 	b.WriteString("\n\n")
 
-	// Status, Severity, and Kind row
-	statusBadge := styles.RenderStatus(inc.Status)
+	// Severity, Status, and Kind row
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
-	b.WriteString(fmt.Sprintf("%s: %s  %s: %s %s", i18n.T("incidents.detail.status"), statusBadge, i18n.T("incidents.detail.severity"), sevSignal, sevBadge))
+	statusBadge := styles.RenderStatus(inc.Status)
+	b.WriteString(fmt.Sprintf("%s: %s %s  %s: %s", i18n.T("incidents.detail.severity"), sevSignal, sevBadge, i18n.T("incidents.detail.status"), statusBadge))
 
 	// Show incident kind if it's scheduled maintenance
 	if inc.Kind == "scheduled" || inc.Kind == "scheduled_maintenance" {
@@ -737,7 +737,8 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	// Show creator if available (from detail view)
 	if inc.CreatedByName != "" {
 		creatorInfo := styles.RenderNameWithEmail(inc.CreatedByName, inc.CreatedByEmail)
-		fmt.Fprintf(&b, "  %s: %s", i18n.T("incidents.detail.created_by"), creatorInfo)
+		relTime := formatRelativeTime(inc.CreatedAt)
+		fmt.Fprintf(&b, "  %s %s by %s", i18n.T("incidents.timeline.created"), relTime, creatorInfo)
 	}
 	b.WriteString("\n\n")
 

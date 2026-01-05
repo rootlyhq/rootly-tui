@@ -658,7 +658,14 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	statusBadge := styles.RenderStatus(alert.Status)
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	fmt.Fprintf(&b, "%s: %s  %s: %s %s\n\n", i18n.T("incidents.detail.status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
+	fmt.Fprintf(&b, "%s: %s  %s: %s %s", i18n.T("incidents.detail.status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
+
+	// Triggered time
+	if !alert.CreatedAt.IsZero() {
+		relTime := formatRelativeTime(alert.CreatedAt)
+		fmt.Fprintf(&b, "  Triggered %s", relTime)
+	}
+	b.WriteString("\n\n")
 
 	// Links section (high up for quick access)
 	rootlyURL := alert.URL // Use URL from API if available
