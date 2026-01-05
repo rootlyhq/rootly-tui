@@ -654,11 +654,11 @@ func (m AlertsModel) generateDetailContent(alert *api.Alert) string {
 	b.WriteString(styles.DetailTitle.Render(summaryClean))
 	b.WriteString("\n\n")
 
-	// Status and Source row
-	statusBadge := styles.RenderStatus(alert.Status)
+	// Source and Status row
 	sourceIcon := styles.AlertSourceIcon(alert.Source)
 	sourceName := styles.AlertSourceName(alert.Source)
-	fmt.Fprintf(&b, "%s: %s  %s: %s %s", i18n.T("incidents.detail.status"), statusBadge, i18n.T("alerts.detail.source"), sourceIcon, sourceName)
+	statusBadge := styles.RenderStatus(alert.Status)
+	fmt.Fprintf(&b, "%s: %s %s  %s: %s", i18n.T("alerts.detail.source"), sourceIcon, sourceName, i18n.T("incidents.detail.status"), statusBadge)
 
 	// Triggered time
 	if !alert.CreatedAt.IsZero() {
