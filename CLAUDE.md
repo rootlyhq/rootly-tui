@@ -137,3 +137,28 @@ The debug package (`internal/debug/debug.go`) provides:
 - `debug.PrettyJSON()` - Format JSON for readable output
 - `debug.SetLogFile()` - Write logs to file
 - Ring buffer captures logs in memory (1000 entries) for in-app viewer
+
+## Releasing New Versions
+
+Releases are automated via GitHub Actions and GoReleaser. Pushing a tag triggers the release workflow.
+
+```bash
+# Check current version and recent tags
+make version
+
+# Release options (creates tag and pushes to trigger release):
+make release-patch   # v0.2.0 -> v0.2.1 (bug fixes)
+make release-minor   # v0.2.0 -> v0.3.0 (new features)
+make release-major   # v0.2.0 -> v1.0.0 (breaking changes)
+
+# Or do it in two steps:
+make bump-minor      # Create tag locally
+make push-tag        # Push tag to trigger release
+```
+
+The release workflow:
+1. Builds binaries for Linux, macOS (Intel + Apple Silicon), and Windows
+2. Creates GitHub release with changelog
+3. Updates Homebrew tap at `rootlyhq/homebrew-tap`
+
+Monitor releases at: https://github.com/rootlyhq/rootly-tui/actions
