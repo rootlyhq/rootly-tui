@@ -283,6 +283,41 @@ func TestAlertsModelNextPageAtEnd(t *testing.T) {
 	}
 }
 
+func TestAlertsModelNextPageRespectsTotal(t *testing.T) {
+	m := NewAlertsModel()
+	// HasNext is true but we're already at the last page (18/18)
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{
+		CurrentPage: 18,
+		TotalPages:  18,
+		TotalCount:  887,
+		HasNext:     true, // API might incorrectly say hasNext
+	})
+
+	m.NextPage()
+
+	// Should not go beyond totalPages even if hasNext is true
+	if m.currentPage != 18 {
+		t.Errorf("expected page to stay at 18 (totalPages), got %d", m.currentPage)
+	}
+}
+
+func TestAlertsModelNextPageWithZeroTotal(t *testing.T) {
+	m := NewAlertsModel()
+	// TotalPages is 0 (unknown), rely on hasNext
+	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{
+		CurrentPage: 1,
+		TotalPages:  0,
+		HasNext:     true,
+	})
+
+	m.NextPage()
+
+	// Should allow pagination when totalPages is unknown
+	if m.currentPage != 2 {
+		t.Errorf("expected page 2 when totalPages is 0, got %d", m.currentPage)
+	}
+}
+
 func TestAlertsModelPrevPage(t *testing.T) {
 	m := NewAlertsModel()
 	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})

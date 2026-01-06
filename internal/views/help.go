@@ -1,7 +1,10 @@
 package views
 
 import (
+	"fmt"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
@@ -85,7 +88,8 @@ func renderHelpLine(key, desc string) string {
 // hasSelection indicates whether an incident or alert is currently selected
 // isLoading indicates whether data is currently being loaded
 // isIncidentsTab indicates whether we're on the incidents tab (for sorting hints)
-func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) string {
+// currentPage, totalPages, totalCount are for pagination display
+func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool, currentPage, totalPages, totalCount int) string {
 	items := []string{
 		styles.RenderHelpItem("j/k", i18n.T("helpbar.navigate")),
 		styles.RenderHelpItem("[/]", i18n.T("helpbar.page")),
@@ -112,5 +116,26 @@ func RenderHelpBar(width int, hasSelection, isLoading, isIncidentsTab bool) stri
 		styles.RenderHelpItem("q", i18n.T("helpbar.quit")),
 	)
 
-	return styles.HelpBar.Width(width).Render(strings.Join(items, "  "))
+	helpText := strings.Join(items, "  ")
+
+	// Add pagination info on the right side
+	var pageInfo string
+	if totalPages > 0 && totalCount > 0 {
+		pageInfo = fmt.Sprintf("Page %d/%d (%d total)", currentPage, totalPages, totalCount)
+	} else if currentPage > 0 {
+		pageInfo = fmt.Sprintf("Page %d", currentPage)
+	}
+	if pageInfo != "" {
+		pageInfoStyled := styles.Muted.Render(pageInfo)
+		// Calculate spacing to right-align pagination info
+		helpLen := lipgloss.Width(helpText)
+		pageInfoLen := lipgloss.Width(pageInfoStyled)
+		availableWidth := width - 4 // Account for padding
+		if helpLen+pageInfoLen+2 < availableWidth {
+			spacing := availableWidth - helpLen - pageInfoLen
+			helpText = helpText + strings.Repeat(" ", spacing) + pageInfoStyled
+		}
+	}
+
+	return styles.HelpBar.Width(width).Render(helpText)
 }

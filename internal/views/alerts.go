@@ -65,6 +65,8 @@ type AlertsModel struct {
 	error        string
 	// Pagination state
 	currentPage int
+	totalPages  int
+	totalCount  int
 	hasNext     bool
 	hasPrev     bool
 	// Loading spinner (passed from app)
@@ -389,6 +391,8 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 	m.loading = false
 	m.error = ""
 	m.currentPage = pagination.CurrentPage
+	m.totalPages = pagination.TotalPages
+	m.totalCount = pagination.TotalCount
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
 
@@ -436,11 +440,26 @@ func (m *AlertsModel) SetAlerts(alerts []api.Alert, pagination api.PaginationInf
 	}
 	m.table = m.table.WithRows(rows)
 
+	// Set custom footer with pagination info
+	footer := m.buildPaginationFooter()
+	m.table = m.table.WithStaticFooter(footer)
+
 	// Adjust cursor if needed
 	if cursor >= len(alerts) && len(alerts) > 0 {
 		m.table = m.table.WithHighlightedRow(len(alerts) - 1)
 	}
 	m.updateViewportContent()
+}
+
+// buildPaginationFooter creates a footer string showing pagination info
+func (m *AlertsModel) buildPaginationFooter() string {
+	if m.totalPages > 0 && m.totalCount > 0 {
+		return fmt.Sprintf("Page %d/%d (%d total)", m.currentPage, m.totalPages, m.totalCount)
+	}
+	if m.currentPage > 0 {
+		return fmt.Sprintf("Page %d", m.currentPage)
+	}
+	return ""
 }
 
 func (m *AlertsModel) SetLoading(loading bool) {
@@ -481,8 +500,17 @@ func (m AlertsModel) HasPrevPage() bool {
 	return m.hasPrev
 }
 
+func (m AlertsModel) TotalPages() int {
+	return m.totalPages
+}
+
+func (m AlertsModel) TotalCount() int {
+	return m.totalCount
+}
+
 func (m *AlertsModel) NextPage() {
-	if m.hasNext {
+	// Check both hasNext flag and totalPages to prevent going beyond the last page
+	if m.hasNext && (m.totalPages == 0 || m.currentPage < m.totalPages) {
 		m.currentPage++
 		m.table = m.table.WithHighlightedRow(0)
 	}

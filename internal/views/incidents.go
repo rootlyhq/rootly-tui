@@ -73,6 +73,8 @@ type IncidentsModel struct {
 	error        string
 	// Pagination state
 	currentPage int
+	totalPages  int
+	totalCount  int
 	hasNext     bool
 	hasPrev     bool
 	// Loading spinner (passed from app)
@@ -426,6 +428,8 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 	m.loading = false
 	m.error = ""
 	m.currentPage = pagination.CurrentPage
+	m.totalPages = pagination.TotalPages
+	m.totalCount = pagination.TotalCount
 	m.hasNext = pagination.HasNext
 	m.hasPrev = pagination.HasPrev
 
@@ -478,11 +482,26 @@ func (m *IncidentsModel) SetIncidents(incidents []api.Incident, pagination api.P
 	}
 	m.table = m.table.WithRows(rows)
 
+	// Set custom footer with pagination info
+	footer := m.buildPaginationFooter()
+	m.table = m.table.WithStaticFooter(footer)
+
 	// Adjust cursor if needed
 	if cursor >= len(incidents) && len(incidents) > 0 {
 		m.table = m.table.WithHighlightedRow(len(incidents) - 1)
 	}
 	m.updateViewportContent()
+}
+
+// buildPaginationFooter creates a footer string showing pagination info
+func (m *IncidentsModel) buildPaginationFooter() string {
+	if m.totalPages > 0 && m.totalCount > 0 {
+		return fmt.Sprintf("Page %d/%d (%d total)", m.currentPage, m.totalPages, m.totalCount)
+	}
+	if m.currentPage > 0 {
+		return fmt.Sprintf("Page %d", m.currentPage)
+	}
+	return ""
 }
 
 func (m *IncidentsModel) SetLoading(loading bool) {
@@ -523,8 +542,17 @@ func (m IncidentsModel) HasPrevPage() bool {
 	return m.hasPrev
 }
 
+func (m IncidentsModel) TotalPages() int {
+	return m.totalPages
+}
+
+func (m IncidentsModel) TotalCount() int {
+	return m.totalCount
+}
+
 func (m *IncidentsModel) NextPage() {
-	if m.hasNext {
+	// Check both hasNext flag and totalPages to prevent going beyond the last page
+	if m.hasNext && (m.totalPages == 0 || m.currentPage < m.totalPages) {
 		m.currentPage++
 		m.table = m.table.WithHighlightedRow(0)
 	}

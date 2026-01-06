@@ -151,6 +151,8 @@ type AlertIncident struct {
 // PaginationInfo contains pagination state
 type PaginationInfo struct {
 	CurrentPage int
+	TotalPages  int
+	TotalCount  int
 	HasNext     bool
 	HasPrev     bool
 }
@@ -367,6 +369,13 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 			Next *string `json:"next"`
 			Prev *string `json:"prev"`
 		} `json:"links"`
+		Meta struct {
+			CurrentPage int  `json:"current_page"`
+			NextPage    *int `json:"next_page"`
+			PrevPage    *int `json:"prev_page"`
+			TotalCount  int  `json:"total_count"`
+			TotalPages  int  `json:"total_pages"`
+		} `json:"meta"`
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
@@ -437,13 +446,31 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 		incidents = append(incidents, incident)
 	}
 
-	// Build result with pagination info
+	// Build result with pagination info from Meta
+	// Fall back to Links if Meta values are zero (API might not return meta)
+	hasNext := result.Meta.NextPage != nil && *result.Meta.NextPage > 0
+	if !hasNext && result.Links.Next != nil && *result.Links.Next != "" {
+		hasNext = true
+	}
+	hasPrev := result.Meta.PrevPage != nil && *result.Meta.PrevPage > 0
+	if !hasPrev && result.Links.Prev != nil && *result.Links.Prev != "" {
+		hasPrev = true
+	}
+
+	// Use Meta values, fall back to page parameter if Meta.CurrentPage is 0
+	currentPage := result.Meta.CurrentPage
+	if currentPage == 0 {
+		currentPage = page
+	}
+
 	incidentsResult := &IncidentsResult{
 		Incidents: incidents,
 		Pagination: PaginationInfo{
-			CurrentPage: page,
-			HasNext:     result.Links.Next != nil && *result.Links.Next != "",
-			HasPrev:     result.Links.Prev != nil && *result.Links.Prev != "",
+			CurrentPage: currentPage,
+			TotalPages:  result.Meta.TotalPages,
+			TotalCount:  result.Meta.TotalCount,
+			HasNext:     hasNext,
+			HasPrev:     hasPrev,
 		},
 	}
 
@@ -481,137 +508,126 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 
 	debug.Logger.Debug("Fetching alerts", "pageSize", pageSize, "cache", "miss", "key", cacheKey)
 
-	// Use raw ListAlerts to bypass SDK's broken parsing (labels.value is interface{}, not string)
-	httpResp, err := c.client.ListAlerts(ctx, params)
+	resp, err := c.client.ListAlertsWithResponse(ctx, params)
 	if err != nil {
 		debug.Logger.Error("Failed to list alerts", "error", err)
 		return nil, fmt.Errorf("failed to list alerts: %w", err)
 	}
-	defer func() { _ = httpResp.Body.Close() }()
-
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		debug.Logger.Error("Failed to read alerts response", "error", err)
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
 
 	debug.Logger.Debug("Alerts response",
-		"status", httpResp.StatusCode,
-		"bodyLength", len(body),
+		"status", resp.StatusCode(),
+		"bodyLength", len(resp.Body),
 	)
-	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(body))
+	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(resp.Body))
 
-	if httpResp.StatusCode == 403 {
-		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
+	if resp.StatusCode() == 403 {
+		debug.Logger.Error("API forbidden", "status", resp.StatusCode())
 		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
 	}
-	if httpResp.StatusCode != 200 {
-		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
-		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
+	if resp.StatusCode() != 200 {
+		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
+		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
 
-	var result struct {
-		Data []struct {
-			ID         string `json:"id"`
-			Attributes struct {
-				ShortID     *string `json:"short_id"`
-				Summary     string  `json:"summary"`
-				Description *string `json:"description"`
-				Status      string  `json:"status"`
-				Source      *string `json:"source"`
-				CreatedAt   string  `json:"created_at"`
-				StartedAt   *string `json:"started_at"`
-				EndedAt     *string `json:"ended_at"`
-				ExternalURL *string `json:"external_url"`
-				// Direct arrays (not nested data structures like incidents)
-				Services []struct {
-					Name string `json:"name"`
-				} `json:"services"`
-				Environments []struct {
-					Name string `json:"name"`
-				} `json:"environments"`
-				Groups []struct {
-					Name string `json:"name"`
-				} `json:"groups"`
-				Labels []struct {
-					Key   string      `json:"key"`
-					Value interface{} `json:"value"`
-				} `json:"labels"`
-				Data map[string]interface{} `json:"data"`
-			} `json:"attributes"`
-		} `json:"data"`
-		Links struct {
-			Next *string `json:"next"`
-			Prev *string `json:"prev"`
-		} `json:"links"`
+	if resp.ApplicationvndApiJSON200 == nil {
+		debug.Logger.Error("Failed to parse alerts response", "body", debug.PrettyJSON(resp.Body))
+		return nil, fmt.Errorf("failed to parse response")
 	}
 
-	if err := json.Unmarshal(body, &result); err != nil {
-		debug.Logger.Error("Failed to parse alerts response",
-			"error", err,
-			"body", debug.PrettyJSON(body),
-		)
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
+	result := resp.ApplicationvndApiJSON200
 	debug.Logger.Debug("Parsed alerts", "count", len(result.Data))
 
 	alerts := make([]Alert, 0, len(result.Data))
 	for _, d := range result.Data {
 		alert := Alert{
-			ID:      d.ID,
+			ID:      d.Id,
+			ShortID: strings.TrimSpace(d.Attributes.ShortId),
 			Summary: strings.TrimSpace(d.Attributes.Summary),
-			Status:  strings.TrimSpace(d.Attributes.Status),
+			Source:  string(d.Attributes.Source),
 			Labels:  make(map[string]string),
 		}
 
-		if d.Attributes.Source != nil {
-			alert.Source = *d.Attributes.Source
+		if d.Attributes.Status != nil {
+			alert.Status = strings.TrimSpace(string(*d.Attributes.Status))
 		}
 
-		if d.Attributes.ShortID != nil {
-			alert.ShortID = strings.TrimSpace(*d.Attributes.ShortID)
+		if desc, err := d.Attributes.Description.Get(); err == nil {
+			alert.Description = strings.TrimSpace(desc)
 		}
-		if d.Attributes.Description != nil {
-			alert.Description = strings.TrimSpace(*d.Attributes.Description)
-		}
-		if d.Attributes.ExternalURL != nil {
-			alert.ExternalURL = *d.Attributes.ExternalURL
+		if extURL, err := d.Attributes.ExternalUrl.Get(); err == nil {
+			alert.ExternalURL = extURL
 		}
 
 		if t, err := time.Parse(time.RFC3339, d.Attributes.CreatedAt); err == nil {
 			alert.CreatedAt = t
 		}
-		alert.StartedAt = parseTimePtr(d.Attributes.StartedAt)
-		alert.EndedAt = parseTimePtr(d.Attributes.EndedAt)
-
-		for _, s := range d.Attributes.Services {
-			alert.Services = append(alert.Services, s.Name)
+		if t, err := time.Parse(time.RFC3339, d.Attributes.UpdatedAt); err == nil {
+			alert.UpdatedAt = t
 		}
-		for _, e := range d.Attributes.Environments {
-			alert.Environments = append(alert.Environments, e.Name)
+		if startedAt, err := d.Attributes.StartedAt.Get(); err == nil {
+			alert.StartedAt = &startedAt
 		}
-		for _, g := range d.Attributes.Groups {
-			alert.Groups = append(alert.Groups, g.Name)
-		}
-		for _, l := range d.Attributes.Labels {
-			alert.Labels[l.Key] = fmt.Sprintf("%v", l.Value)
+		if endedAt, err := d.Attributes.EndedAt.Get(); err == nil {
+			alert.EndedAt = &endedAt
 		}
 
-		if d.Attributes.Data != nil {
-			alert.Data = d.Attributes.Data
+		if d.Attributes.Services != nil {
+			for _, s := range *d.Attributes.Services {
+				alert.Services = append(alert.Services, s.Name)
+			}
+		}
+		if d.Attributes.Environments != nil {
+			for _, e := range *d.Attributes.Environments {
+				alert.Environments = append(alert.Environments, e.Name)
+			}
+		}
+		if d.Attributes.Groups != nil {
+			for _, g := range *d.Attributes.Groups {
+				alert.Groups = append(alert.Groups, g.Name)
+			}
+		}
+		if d.Attributes.Labels != nil {
+			for _, l := range *d.Attributes.Labels {
+				alert.Labels[l.Key] = alertLabelValueToString(l.Value)
+			}
+		}
+
+		if data, err := d.Attributes.Data.Get(); err == nil {
+			alert.Data = data
 		}
 
 		alerts = append(alerts, alert)
 	}
 
-	// Build result with pagination info
+	// Build result with pagination info from Meta
+	// Fall back to Links if Meta values are zero (API might not return meta)
+	hasNext := false
+	hasPrev := false
+	if nextPage, err := result.Meta.NextPage.Get(); err == nil && nextPage > 0 {
+		hasNext = true
+	} else if next, err := result.Links.Next.Get(); err == nil && next != "" {
+		hasNext = true
+	}
+	if prevPage, err := result.Meta.PrevPage.Get(); err == nil && prevPage > 0 {
+		hasPrev = true
+	} else if prev, err := result.Links.Prev.Get(); err == nil && prev != "" {
+		hasPrev = true
+	}
+
+	// Use Meta values, fall back to page parameter if Meta.CurrentPage is 0
+	currentPage := result.Meta.CurrentPage
+	if currentPage == 0 {
+		currentPage = page
+	}
+
 	alertsResult := &AlertsResult{
 		Alerts: alerts,
 		Pagination: PaginationInfo{
-			CurrentPage: page,
-			HasNext:     result.Links.Next != nil && *result.Links.Next != "",
-			HasPrev:     result.Links.Prev != nil && *result.Links.Prev != "",
+			CurrentPage: currentPage,
+			TotalPages:  result.Meta.TotalPages,
+			TotalCount:  result.Meta.TotalCount,
+			HasNext:     hasNext,
+			HasPrev:     hasPrev,
 		},
 	}
 
@@ -622,6 +638,20 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 	}
 
 	return alertsResult, nil
+}
+
+// alertLabelValueToString converts the SDK's union type to a string
+func alertLabelValueToString(v rootly.Alert_Labels_Value) string {
+	if s, err := v.AsAlertLabelsValue0(); err == nil {
+		return s
+	}
+	if f, err := v.AsAlertLabelsValue1(); err == nil {
+		return fmt.Sprintf("%v", f)
+	}
+	if b, err := v.AsAlertLabelsValue2(); err == nil {
+		return fmt.Sprintf("%v", b)
+	}
+	return ""
 }
 
 func parseTimePtr(s *string) *time.Time {

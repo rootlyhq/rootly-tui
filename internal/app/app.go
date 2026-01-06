@@ -580,13 +580,20 @@ func (m Model) View() string {
 	// Help bar
 	b.WriteString("\n")
 	hasSelection := false
+	var currentPage, totalPages, totalCount int
 	if m.activeTab == TabIncidents {
 		hasSelection = m.incidents.SelectedIncident() != nil
+		currentPage = m.incidents.CurrentPage()
+		totalPages = m.incidents.TotalPages()
+		totalCount = m.incidents.TotalCount()
 	} else {
 		hasSelection = m.alerts.SelectedAlert() != nil
+		currentPage = m.alerts.CurrentPage()
+		totalPages = m.alerts.TotalPages()
+		totalCount = m.alerts.TotalCount()
 	}
 	isIncidentsTab := m.activeTab == TabIncidents
-	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading, isIncidentsTab))
+	b.WriteString(views.RenderHelpBar(m.width, hasSelection, m.loading, isIncidentsTab, currentPage, totalPages, totalCount))
 
 	// Wrap content
 	content := styles.App.Render(b.String())

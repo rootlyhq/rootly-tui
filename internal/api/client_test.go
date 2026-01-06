@@ -231,6 +231,13 @@ func TestListIncidents(t *testing.T) {
 					},
 				},
 			},
+			"meta": map[string]interface{}{
+				"current_page": 1,
+				"next_page":    2,
+				"prev_page":    nil,
+				"total_count":  50,
+				"total_pages":  5,
+			},
 		}
 
 		_ = json.NewEncoder(w).Encode(response)
@@ -268,6 +275,18 @@ func TestListIncidents(t *testing.T) {
 	if result.Pagination.CurrentPage != 1 {
 		t.Errorf("expected current page 1, got %d", result.Pagination.CurrentPage)
 	}
+
+	if result.Pagination.TotalPages != 5 {
+		t.Errorf("expected total pages 5, got %d", result.Pagination.TotalPages)
+	}
+
+	if result.Pagination.TotalCount != 50 {
+		t.Errorf("expected total count 50, got %d", result.Pagination.TotalCount)
+	}
+
+	if !result.Pagination.HasNext {
+		t.Error("expected HasNext to be true")
+	}
 }
 
 func TestListAlerts(t *testing.T) {
@@ -288,22 +307,38 @@ func TestListAlerts(t *testing.T) {
 				{
 					"id": "alert_001",
 					"attributes": map[string]interface{}{
+						"short_id":   "ALT001",
 						"summary":    "High CPU Usage",
 						"status":     "triggered",
 						"source":     "datadog",
 						"created_at": "2025-01-01T10:00:00Z",
+						"updated_at": "2025-01-01T10:00:00Z",
 					},
 				},
 				{
 					"id": "alert_002",
 					"attributes": map[string]interface{}{
+						"short_id":    "ALT002",
 						"summary":     "Memory Warning",
 						"description": "Memory usage is high",
 						"status":      "acknowledged",
 						"source":      "grafana",
 						"created_at":  "2025-01-01T09:00:00Z",
+						"updated_at":  "2025-01-01T09:00:00Z",
 					},
 				},
+			},
+			"links": map[string]interface{}{
+				"first": "http://test/v1/alerts?page=1",
+				"last":  "http://test/v1/alerts?page=5",
+				"self":  "http://test/v1/alerts?page=1",
+			},
+			"meta": map[string]interface{}{
+				"current_page": 1,
+				"next_page":    2,
+				"prev_page":    nil,
+				"total_count":  50,
+				"total_pages":  5,
 			},
 		}
 
@@ -345,6 +380,18 @@ func TestListAlerts(t *testing.T) {
 
 	if result.Pagination.CurrentPage != 1 {
 		t.Errorf("expected current page 1, got %d", result.Pagination.CurrentPage)
+	}
+
+	if result.Pagination.TotalPages != 5 {
+		t.Errorf("expected total pages 5, got %d", result.Pagination.TotalPages)
+	}
+
+	if result.Pagination.TotalCount != 50 {
+		t.Errorf("expected total count 50, got %d", result.Pagination.TotalCount)
+	}
+
+	if !result.Pagination.HasNext {
+		t.Error("expected HasNext to be true")
 	}
 }
 
