@@ -37,6 +37,13 @@ A terminal user interface for viewing Rootly incidents and alerts.
 ### Homebrew (macOS/Linux)
 
 ```bash
+brew tap rootlyhq/tap
+brew install rootly-tui
+```
+
+Or in a single command:
+
+```bash
 brew install rootlyhq/tap/rootly-tui
 ```
 

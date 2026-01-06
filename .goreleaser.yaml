@@ -89,6 +89,12 @@ homebrew_casks:
     description: "Terminal UI for Rootly incidents and alerts"
     binaries:
       - rootly-tui
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/rootly-tui"]
+          end
 
 release:
   github:
