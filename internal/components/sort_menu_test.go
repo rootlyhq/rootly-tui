@@ -22,10 +22,6 @@ func TestNewSortMenu(t *testing.T) {
 
 	menu := NewSortMenu(options)
 
-	if menu == nil {
-		t.Fatal("expected NewSortMenu to return non-nil value")
-	}
-
 	if menu.visible {
 		t.Error("expected menu to be hidden initially")
 	}

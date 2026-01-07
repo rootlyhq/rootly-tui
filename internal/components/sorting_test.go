@@ -7,10 +7,6 @@ import (
 func TestNewSortState(t *testing.T) {
 	s := NewSortState()
 
-	if s == nil {
-		t.Fatal("expected NewSortState to return non-nil value")
-	}
-
 	if s.Field != nil {
 		t.Errorf("expected Field to be nil, got %v", s.Field)
 	}

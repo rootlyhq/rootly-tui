@@ -8,9 +8,6 @@ import (
 func TestNewCache(t *testing.T) {
 	cache := NewCache(time.Minute)
 
-	if cache == nil {
-		t.Fatal("expected cache to be non-nil")
-	}
 	if cache.ttl != time.Minute {
 		t.Errorf("expected ttl %v, got %v", time.Minute, cache.ttl)
 	}
