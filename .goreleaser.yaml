@@ -11,11 +11,7 @@ builds:
     main: ./cmd/rootly-tui
     binary: rootly-tui
     env:
-      - CGO_ENABLED=1
-    flags:
-      - -tags=netgo
-      - -a
-      - -v
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -23,20 +19,11 @@ builds:
     goarch:
       - amd64
       - arm64
-      - arm
-    goarm:
-      - "6"
-      - "7"
     ignore:
       - goos: windows
-        goarch: arm
-      - goos: darwin
-        goarch: arm
-      - goos: linux
-        goarch: arm  # CGO cross-compilation not supported
+        goarch: arm64
     ldflags:
       - -s -w
-      - -extldflags "-static"
       - -X main.version={{.Version}}
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
