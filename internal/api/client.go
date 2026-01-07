@@ -169,6 +169,117 @@ type AlertsResult struct {
 	Pagination PaginationInfo
 }
 
+// incidentResponseData represents the structure of incident data from the API response
+type incidentResponseData struct {
+	ID         string `json:"id"`
+	Attributes struct {
+		SequentialID *int   `json:"sequential_id"`
+		Title        string `json:"title"`
+		Summary      string `json:"summary"`
+		Status       string `json:"status"`
+		Severity     *struct {
+			Data *struct {
+				Attributes *struct {
+					Name string `json:"name"`
+				} `json:"attributes"`
+			} `json:"data"`
+		} `json:"severity"`
+		Kind            string  `json:"kind"`
+		CreatedAt       string  `json:"created_at"`
+		StartedAt       *string `json:"started_at"`
+		DetectedAt      *string `json:"detected_at"`
+		AcknowledgedAt  *string `json:"acknowledged_at"`
+		MitigatedAt     *string `json:"mitigated_at"`
+		ResolvedAt      *string `json:"resolved_at"`
+		InTriageAt      *string `json:"in_triage_at"`
+		ClosedAt        *string `json:"closed_at"`
+		CancelledAt     *string `json:"cancelled_at"`
+		ScheduledFor    *string `json:"scheduled_for"`
+		ScheduledUntil  *string `json:"scheduled_until"`
+		SlackChannelURL *string `json:"slack_channel_url"`
+		JiraIssueURL    *string `json:"jira_issue_url"`
+		Services        *struct {
+			Data []struct {
+				Attributes struct {
+					Name string `json:"name"`
+				} `json:"attributes"`
+			} `json:"data"`
+		} `json:"services"`
+		Environments *struct {
+			Data []struct {
+				Attributes struct {
+					Name string `json:"name"`
+				} `json:"attributes"`
+			} `json:"data"`
+		} `json:"environments"`
+		Groups *struct {
+			Data []struct {
+				Attributes struct {
+					Name string `json:"name"`
+				} `json:"attributes"`
+			} `json:"data"`
+		} `json:"groups"`
+	} `json:"attributes"`
+}
+
+// parseIncidentData converts API response data to an Incident struct
+func parseIncidentData(d incidentResponseData) Incident {
+	incident := Incident{
+		ID:      d.ID,
+		Title:   strings.TrimSpace(d.Attributes.Title),
+		Summary: strings.TrimSpace(d.Attributes.Summary),
+		Status:  strings.TrimSpace(d.Attributes.Status),
+		Kind:    d.Attributes.Kind,
+	}
+
+	if d.Attributes.SequentialID != nil {
+		incident.SequentialID = fmt.Sprintf("INC-%d", *d.Attributes.SequentialID)
+	}
+
+	if d.Attributes.Severity != nil && d.Attributes.Severity.Data != nil && d.Attributes.Severity.Data.Attributes != nil {
+		incident.Severity = d.Attributes.Severity.Data.Attributes.Name
+	}
+
+	if t, err := time.Parse(time.RFC3339, d.Attributes.CreatedAt); err == nil {
+		incident.CreatedAt = t
+	}
+	incident.StartedAt = parseTimePtr(d.Attributes.StartedAt)
+	incident.DetectedAt = parseTimePtr(d.Attributes.DetectedAt)
+	incident.AcknowledgedAt = parseTimePtr(d.Attributes.AcknowledgedAt)
+	incident.MitigatedAt = parseTimePtr(d.Attributes.MitigatedAt)
+	incident.ResolvedAt = parseTimePtr(d.Attributes.ResolvedAt)
+	incident.InTriageAt = parseTimePtr(d.Attributes.InTriageAt)
+	incident.ClosedAt = parseTimePtr(d.Attributes.ClosedAt)
+	incident.CancelledAt = parseTimePtr(d.Attributes.CancelledAt)
+	incident.ScheduledFor = parseTimePtr(d.Attributes.ScheduledFor)
+	incident.ScheduledUntil = parseTimePtr(d.Attributes.ScheduledUntil)
+
+	if d.Attributes.SlackChannelURL != nil {
+		incident.SlackChannelURL = *d.Attributes.SlackChannelURL
+	}
+	if d.Attributes.JiraIssueURL != nil {
+		incident.JiraIssueURL = *d.Attributes.JiraIssueURL
+	}
+
+	if d.Attributes.Services != nil {
+		for _, s := range d.Attributes.Services.Data {
+			incident.Services = append(incident.Services, s.Attributes.Name)
+		}
+	}
+	if d.Attributes.Environments != nil {
+		for _, e := range d.Attributes.Environments.Data {
+			incident.Environments = append(incident.Environments, e.Attributes.Name)
+		}
+	}
+	if d.Attributes.Groups != nil {
+		for _, g := range d.Attributes.Groups.Data {
+			incident.Teams = append(incident.Teams, g.Attributes.Name)
+		}
+	}
+
+	return incident
+}
+
 func NewClient(cfg *config.Config) (*Client, error) {
 	endpoint := cfg.Endpoint
 	if endpoint != "" && !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
@@ -314,57 +425,7 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 	}
 
 	var result struct {
-		Data []struct {
-			ID         string `json:"id"`
-			Attributes struct {
-				SequentialID *int   `json:"sequential_id"`
-				Title        string `json:"title"`
-				Summary      string `json:"summary"`
-				Status       string `json:"status"`
-				Severity     *struct {
-					Data *struct {
-						Attributes *struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
-				} `json:"severity"`
-				Kind            string  `json:"kind"`
-				CreatedAt       string  `json:"created_at"`
-				StartedAt       *string `json:"started_at"`
-				DetectedAt      *string `json:"detected_at"`
-				AcknowledgedAt  *string `json:"acknowledged_at"`
-				MitigatedAt     *string `json:"mitigated_at"`
-				ResolvedAt      *string `json:"resolved_at"`
-				InTriageAt      *string `json:"in_triage_at"`
-				ClosedAt        *string `json:"closed_at"`
-				CancelledAt     *string `json:"cancelled_at"`
-				ScheduledFor    *string `json:"scheduled_for"`
-				ScheduledUntil  *string `json:"scheduled_until"`
-				SlackChannelURL *string `json:"slack_channel_url"`
-				JiraIssueURL    *string `json:"jira_issue_url"`
-				Services        *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
-				} `json:"services"`
-				Environments *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
-				} `json:"environments"`
-				Groups *struct {
-					Data []struct {
-						Attributes struct {
-							Name string `json:"name"`
-						} `json:"attributes"`
-					} `json:"data"`
-				} `json:"groups"`
-			} `json:"attributes"`
-		} `json:"data"`
+		Data  []incidentResponseData `json:"data"`
 		Links struct {
 			Next *string `json:"next"`
 			Prev *string `json:"prev"`
@@ -390,60 +451,7 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 
 	incidents := make([]Incident, 0, len(result.Data))
 	for _, d := range result.Data {
-		incident := Incident{
-			ID:      d.ID,
-			Title:   strings.TrimSpace(d.Attributes.Title),
-			Summary: strings.TrimSpace(d.Attributes.Summary),
-			Status:  strings.TrimSpace(d.Attributes.Status),
-			Kind:    d.Attributes.Kind,
-		}
-
-		if d.Attributes.SequentialID != nil {
-			incident.SequentialID = fmt.Sprintf("INC-%d", *d.Attributes.SequentialID)
-		}
-
-		if d.Attributes.Severity != nil && d.Attributes.Severity.Data != nil && d.Attributes.Severity.Data.Attributes != nil {
-			incident.Severity = d.Attributes.Severity.Data.Attributes.Name
-		}
-
-		if t, err := time.Parse(time.RFC3339, d.Attributes.CreatedAt); err == nil {
-			incident.CreatedAt = t
-		}
-		incident.StartedAt = parseTimePtr(d.Attributes.StartedAt)
-		incident.DetectedAt = parseTimePtr(d.Attributes.DetectedAt)
-		incident.AcknowledgedAt = parseTimePtr(d.Attributes.AcknowledgedAt)
-		incident.MitigatedAt = parseTimePtr(d.Attributes.MitigatedAt)
-		incident.ResolvedAt = parseTimePtr(d.Attributes.ResolvedAt)
-		incident.InTriageAt = parseTimePtr(d.Attributes.InTriageAt)
-		incident.ClosedAt = parseTimePtr(d.Attributes.ClosedAt)
-		incident.CancelledAt = parseTimePtr(d.Attributes.CancelledAt)
-		incident.ScheduledFor = parseTimePtr(d.Attributes.ScheduledFor)
-		incident.ScheduledUntil = parseTimePtr(d.Attributes.ScheduledUntil)
-
-		if d.Attributes.SlackChannelURL != nil {
-			incident.SlackChannelURL = *d.Attributes.SlackChannelURL
-		}
-		if d.Attributes.JiraIssueURL != nil {
-			incident.JiraIssueURL = *d.Attributes.JiraIssueURL
-		}
-
-		if d.Attributes.Services != nil {
-			for _, s := range d.Attributes.Services.Data {
-				incident.Services = append(incident.Services, s.Attributes.Name)
-			}
-		}
-		if d.Attributes.Environments != nil {
-			for _, e := range d.Attributes.Environments.Data {
-				incident.Environments = append(incident.Environments, e.Attributes.Name)
-			}
-		}
-		if d.Attributes.Groups != nil {
-			for _, g := range d.Attributes.Groups.Data {
-				incident.Teams = append(incident.Teams, g.Attributes.Name)
-			}
-		}
-
-		incidents = append(incidents, incident)
+		incidents = append(incidents, parseIncidentData(d))
 	}
 
 	// Build result with pagination info from Meta
