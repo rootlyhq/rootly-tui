@@ -78,6 +78,7 @@ func TestAlertsModelSelectedAlert(t *testing.T) {
 	selected := m.SelectedAlert()
 	if selected == nil {
 		t.Fatal("expected selected alert to be non-nil")
+		return
 	}
 
 	if selected.ID != alerts[0].ID {

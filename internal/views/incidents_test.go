@@ -79,6 +79,7 @@ func TestIncidentsModelSelectedIncident(t *testing.T) {
 	selected := m.SelectedIncident()
 	if selected == nil {
 		t.Fatal("expected selected incident to be non-nil")
+		return
 	}
 
 	if selected.ID != incidents[0].ID {
