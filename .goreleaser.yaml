@@ -32,6 +32,8 @@ builds:
         goarch: arm
       - goos: darwin
         goarch: arm
+      - goos: linux
+        goarch: arm  # CGO cross-compilation not supported
     ldflags:
       - -s -w
       - -extldflags "-static"
@@ -50,7 +52,7 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
     files:
       - README.md
-      - LICENSE
+      - LICENSE.txt
 
 checksum:
   name_template: "checksums.txt"
