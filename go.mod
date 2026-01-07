@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
 	github.com/charmbracelet/log v0.4.2
 	github.com/evertras/bubble-table v0.19.2
-	github.com/nicksnyder/go-i18n/v2 v2.6.0
+	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/rootlyhq/rootly-go v0.4.0
 	go.etcd.io/bbolt v1.4.3
 	golang.design/x/clipboard v0.7.1
