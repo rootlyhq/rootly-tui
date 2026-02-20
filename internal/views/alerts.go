@@ -940,7 +940,7 @@ func (m AlertsModel) generatePlainTextDetail(alert *api.Alert) string {
 	b.WriteString("Source: " + alert.Source + "  Status: " + alert.Status)
 	if !alert.CreatedAt.IsZero() {
 		relTime := formatRelativeTime(alert.CreatedAt)
-		b.WriteString(fmt.Sprintf("  Triggered %s", relTime))
+		fmt.Fprintf(&b, "  Triggered %s", relTime)
 	}
 	b.WriteString("\n\n")
 
