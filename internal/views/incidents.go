@@ -752,7 +752,7 @@ func (m IncidentsModel) generateDetailContent(inc *api.Incident) string {
 	sevSignal := styles.RenderSeveritySignal(inc.Severity)
 	sevBadge := styles.RenderSeverity(inc.Severity)
 	statusBadge := styles.RenderStatus(inc.Status)
-	b.WriteString(fmt.Sprintf("%s: %s %s  %s: %s", i18n.T("incidents.detail.severity"), sevSignal, sevBadge, i18n.T("incidents.detail.status"), statusBadge))
+	fmt.Fprintf(&b, "%s: %s %s  %s: %s", i18n.T("incidents.detail.severity"), sevSignal, sevBadge, i18n.T("incidents.detail.status"), statusBadge)
 
 	// Show incident kind if it's scheduled maintenance
 	if inc.Kind == "scheduled" || inc.Kind == "scheduled_maintenance" {
@@ -1323,7 +1323,7 @@ func (m IncidentsModel) generatePlainTextDetail(inc *api.Incident) string {
 	}
 	if inc.CreatedByName != "" {
 		relTime := formatRelativeTime(inc.CreatedAt)
-		b.WriteString(fmt.Sprintf("  Created %s by %s", relTime, inc.CreatedByName))
+		fmt.Fprintf(&b, "  Created %s by %s", relTime, inc.CreatedByName)
 		if inc.CreatedByEmail != "" {
 			b.WriteString(" <" + inc.CreatedByEmail + ">")
 		}

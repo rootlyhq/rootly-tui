@@ -537,19 +537,19 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
 
-	if resp.ApplicationvndApiJSON200 == nil {
+	if resp.ApplicationVndAPIJSON200 == nil {
 		debug.Logger.Error("Failed to parse alerts response", "body", debug.PrettyJSON(resp.Body))
 		return nil, fmt.Errorf("failed to parse response")
 	}
 
-	result := resp.ApplicationvndApiJSON200
+	result := resp.ApplicationVndAPIJSON200
 	debug.Logger.Debug("Parsed alerts", "count", len(result.Data))
 
 	alerts := make([]Alert, 0, len(result.Data))
 	for _, d := range result.Data {
 		alert := Alert{
-			ID:      d.Id,
-			ShortID: strings.TrimSpace(d.Attributes.ShortId),
+			ID:      d.ID,
+			ShortID: strings.TrimSpace(d.Attributes.ShortID),
 			Summary: strings.TrimSpace(d.Attributes.Summary),
 			Source:  string(d.Attributes.Source),
 			Labels:  make(map[string]string),
@@ -562,7 +562,7 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		if desc, err := d.Attributes.Description.Get(); err == nil {
 			alert.Description = strings.TrimSpace(desc)
 		}
-		if extURL, err := d.Attributes.ExternalUrl.Get(); err == nil {
+		if extURL, err := d.Attributes.ExternalURL.Get(); err == nil {
 			alert.ExternalURL = extURL
 		}
 
@@ -579,25 +579,17 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 			alert.EndedAt = &endedAt
 		}
 
-		if d.Attributes.Services != nil {
-			for _, s := range *d.Attributes.Services {
-				alert.Services = append(alert.Services, s.Name)
-			}
+		for _, s := range d.Attributes.Services {
+			alert.Services = append(alert.Services, s.Name)
 		}
-		if d.Attributes.Environments != nil {
-			for _, e := range *d.Attributes.Environments {
-				alert.Environments = append(alert.Environments, e.Name)
-			}
+		for _, e := range d.Attributes.Environments {
+			alert.Environments = append(alert.Environments, e.Name)
 		}
-		if d.Attributes.Groups != nil {
-			for _, g := range *d.Attributes.Groups {
-				alert.Groups = append(alert.Groups, g.Name)
-			}
+		for _, g := range d.Attributes.Groups {
+			alert.Groups = append(alert.Groups, g.Name)
 		}
-		if d.Attributes.Labels != nil {
-			for _, l := range *d.Attributes.Labels {
-				alert.Labels[l.Key] = alertLabelValueToString(l.Value)
-			}
+		for _, l := range d.Attributes.Labels {
+			alert.Labels[l.Key] = alertLabelValueToString(l.Value)
 		}
 
 		if data, err := d.Attributes.Data.Get(); err == nil {

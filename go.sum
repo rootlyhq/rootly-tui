@@ -119,8 +119,8 @@ github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJ
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
-github.com/rootlyhq/rootly-go v0.6.0 h1:aSWJ+gB3YnaguLAbi3utFCp30mY5wXcYPRhTZFHNswQ=
-github.com/rootlyhq/rootly-go v0.6.0/go.mod h1:/vIONsKgglT/kXbqB3WYx+cZvZKvXAsdpf6yLERa3Ek=
+github.com/rootlyhq/rootly-go v0.7.0 h1:BA/rFAA9ODwm3GSgUb9ta8+dtjKinsYO/59PWOBSxzk=
+github.com/rootlyhq/rootly-go v0.7.0/go.mod h1:ksTnoO7/A4oDC4dg40akBgfjw91P+lWJQz8JPmd45Ow=
 github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad/go.mod h1:qLr4V1qq6nMqFKkMo8ZTx3f+BZEkzsRUY10Xsm2mwU0=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
