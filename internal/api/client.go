@@ -589,7 +589,9 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 			alert.Groups = append(alert.Groups, g.Name)
 		}
 		for _, l := range d.Attributes.Labels {
-			alert.Labels[l.Key] = alertLabelValueToString(l.Value)
+			if lv, err := l.Get(); err == nil {
+				alert.Labels[lv.Key] = alertLabelValueToString(lv.Value)
+			}
 		}
 
 		if data, err := d.Attributes.Data.Get(); err == nil {
