@@ -210,7 +210,13 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 		if m.testing || m.connSaving || m.configSaving {
 			return m, nil
 		}
-		return m.handleKeyMsg(msg)
+
+		var cmd tea.Cmd
+		var handled bool
+		m, cmd, handled = m.handleKeyMsg(msg)
+		if handled {
+			return m, cmd
+		}
 
 	case spinner.TickMsg:
 		var cmd tea.Cmd
@@ -238,22 +244,46 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m SetupModel) handleKeyMsg(msg tea.KeyMsg) (SetupModel, tea.Cmd) {
+func (m SetupModel) handleKeyMsg(msg tea.KeyMsg) (SetupModel, tea.Cmd, bool) {
+	textInputFocused := m.activePanel == PanelConnection && (m.connFocus == ConnFieldEndpoint || m.connFocus == ConnFieldAPIKey)
+
 	switch msg.String() {
 	case "tab":
-		return m.handleKeyTab(), nil
-	case "down", "j":
-		return m.handleKeyDown(), nil
-	case "up", "k":
-		return m.handleKeyUp(), nil
-	case "left", "h":
-		return m.handleKeyLeft(), nil
-	case "right", "l":
-		return m.handleKeyRight(), nil
+		return m.handleKeyTab(), nil, true
+	case "down":
+		return m.handleKeyDown(), nil, true
+	case "j":
+		if !textInputFocused {
+			return m.handleKeyDown(), nil, true
+		}
+	case "up":
+		return m.handleKeyUp(), nil, true
+	case "k":
+		if !textInputFocused {
+			return m.handleKeyUp(), nil, true
+		}
+	case "left":
+		if !textInputFocused {
+			return m.handleKeyLeft(), nil, true
+		}
+	case "h":
+		if !textInputFocused {
+			return m.handleKeyLeft(), nil, true
+		}
+	case "right":
+		if !textInputFocused {
+			return m.handleKeyRight(), nil, true
+		}
+	case "l":
+		if !textInputFocused {
+			return m.handleKeyRight(), nil, true
+		}
 	case "enter":
-		return m.handleKeyEnter()
+		updated, cmd := m.handleKeyEnter()
+		return updated, cmd, true
 	}
-	return m, nil
+
+	return m, nil, false
 }
 
 func (m SetupModel) handleKeyTab() SetupModel {
