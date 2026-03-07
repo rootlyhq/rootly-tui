@@ -529,21 +529,48 @@ func TestSetupModelPreferencesSaved(t *testing.T) {
 func TestSetupModelJKNavigation(t *testing.T) {
 	m := NewSetupModel()
 
-	// j moves down
+	// In text fields, j/k should be typed as text.
+	initialEndpoint := m.endpoint.Value()
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	if m.FocusIndex() != FieldAPIKey {
-		t.Errorf("expected focus on API key after 'j', got %v", m.FocusIndex())
-	}
-
-	// k moves up
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
 	if m.FocusIndex() != FieldEndpoint {
-		t.Errorf("expected focus on endpoint after 'k', got %v", m.FocusIndex())
+		t.Errorf("expected focus to remain on endpoint while typing, got %v", m.FocusIndex())
+	}
+	if m.endpoint.Value() != initialEndpoint+"jk" {
+		t.Errorf("expected endpoint value to append 'jk', got %q", m.endpoint.Value())
+	}
+
+	// In non-text controls, j/k should navigate.
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown}) // API key
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown}) // Buttons
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.FocusIndex() != FieldEndpoint {
+		t.Errorf("expected focus on endpoint after 'j' from buttons, got %v", m.FocusIndex())
+	}
+
+	// In config panel (non-text controls), j/k should navigate.
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	if m.FocusIndex() != FieldLanguage {
+		t.Errorf("expected focus on language after 'j' in config panel, got %v", m.FocusIndex())
+	}
+
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	if m.FocusIndex() != FieldTimezone {
+		t.Errorf("expected focus on timezone after 'k' in config panel, got %v", m.FocusIndex())
 	}
 }
 
 func TestSetupModelHLNavigation(t *testing.T) {
 	m := NewSetupModel()
+
+	// In text fields, h/l should be typed as text.
+	initialEndpoint := m.endpoint.Value()
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}})
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	if m.endpoint.Value() != initialEndpoint+"hl" {
+		t.Errorf("expected endpoint value to append 'hl', got %q", m.endpoint.Value())
+	}
 
 	// Switch to config panel for selector fields
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
