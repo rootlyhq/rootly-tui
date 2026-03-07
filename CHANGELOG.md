@@ -7,8 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-03-06
+
+### Fixed
+- Enable editing of API Key and Endpoint text fields on setup panel
+
 ### Changed
-- Migrated GoReleaser config from deprecated `brews` to `homebrew_casks`
+- Switch all GitHub Actions runners to Blacksmith
+- Bump goreleaser/goreleaser-action from 6 to 7
+
+## [0.2.2] - 2026-02-24
+
+### Changed
+- Upgrade rootly-go from v0.7.0 to v0.8.0
+
+## [0.2.1] - 2026-02-20
+
+### Changed
+- Bump charmbracelet/bubbles from 0.21.1 to 1.0.0
+- Upgrade rootly-go from v0.4.0 to v0.7.0
+- Bump golang.org/x/text (minor-and-patch group)
+- Bump charmbracelet/bubbles and rootly-go dependencies
+
+## [0.2.0] - 2026-01-06
+
+### Added
+- Sorting logic for incidents (API-based sorting)
+- Extended detail fields for incidents and alerts
+- Clickable URLs in label values
+- Duration metrics, section icons, and UI improvements
+- Split setup screen into two independent panels
+- Relative time column to incidents and alerts tables
+- i18n-check to lint step
+- Custom User-Agent header to API client
+- Copy to clipboard shortcut (c) for detail panel
+- JSON syntax highlighting for alert data payload
+- Pagination metadata display and boundary protection
+
+### Fixed
+- Missing newline before labels section in alerts view
+- Use correct i18n keys for alerts table columns and tab titles
+- Sync i18n locale files and fix broken keys
+- Align bullet points in alerts detail view
+- Show Source before Status in alerts detail view
+- Remove unnecessary nil checks in tests (staticcheck SA5011)
+- Disable linux/arm builds and fix LICENSE path in release config
+- Disable CGO for cross-platform builds
+
+### Changed
+- Refactor i18n to use nested Rails-style YAML for locale files
+- Rename LICENSE to LICENSE.txt and update copyright year to 2026
+- Change copy shortcut from 'y' to 'c'
+- Refactor: extract parseIncidentData to reduce cyclomatic complexity
+- Enable CGO for clipboard support
+- Improve detail view formatting
 
 ## [0.1.0] - 2024-12-31
 
@@ -50,5 +102,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - golangci-lint for code quality
 - 80%+ test coverage
 
-[Unreleased]: https://github.com/rootlyhq/rootly-tui/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rootlyhq/rootly-tui/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/rootlyhq/rootly-tui/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/rootlyhq/rootly-tui/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/rootlyhq/rootly-tui/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/rootlyhq/rootly-tui/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rootlyhq/rootly-tui/releases/tag/v0.1.0
