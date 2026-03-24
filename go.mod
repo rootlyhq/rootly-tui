@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
-	github.com/charmbracelet/log v0.4.2
+	github.com/charmbracelet/log v1.0.0
 	github.com/evertras/bubble-table v0.19.2
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/rootlyhq/rootly-go v0.8.0
