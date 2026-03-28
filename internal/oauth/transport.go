@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -10,6 +11,10 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 )
+
+// ErrTokenRefreshFailed indicates the refresh token is expired or revoked
+// and the user needs to re-authenticate.
+var ErrTokenRefreshFailed = errors.New("oauth2: token refresh failed, please login again")
 
 // NewHTTPClientWithTokens creates an http.Client that automatically injects Bearer tokens,
 // refreshes expired tokens, retries on 401, and persists refreshed tokens to disk.
@@ -91,11 +96,8 @@ func (t *retryOn401Transport) RoundTrip(req *http.Request) (*http.Response, erro
 		_ = resp.Body.Close()
 		newTok, err := t.forceRefresh(tok)
 		if err != nil {
-			debug.Logger.Error("OAuth force refresh failed", "error", err)
-			// Can't refresh — re-execute with same token to return 401 to caller
-			req2b := req.Clone(req.Context())
-			tok.SetAuthHeader(req2b)
-			return t.base.RoundTrip(req2b)
+			debug.Logger.Error("OAuth force refresh failed, user needs to re-login", "error", err)
+			return nil, ErrTokenRefreshFailed
 		}
 		debug.Logger.Info("OAuth force refresh succeeded, retrying request",
 			"new_expiry", newTok.Expiry.Format(time.RFC3339),
