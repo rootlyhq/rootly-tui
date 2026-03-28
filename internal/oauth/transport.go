@@ -7,11 +7,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// NewHTTPClient creates an http.Client that automatically injects Bearer tokens
+// NewHTTPClientWithTokens creates an http.Client that automatically injects Bearer tokens
 // and refreshes expired tokens, persisting refreshed tokens to disk.
-func NewHTTPClient(cfg *oauth2.Config, baseTransport http.RoundTripper, userAgent string) *http.Client {
-	td, err := LoadTokens()
-	if err != nil || !td.HasValidTokens() {
+// Accepts pre-loaded TokenData to avoid redundant disk reads.
+func NewHTTPClientWithTokens(cfg *oauth2.Config, td *TokenData, baseTransport http.RoundTripper, userAgent string) *http.Client {
+	if td == nil || !td.HasValidTokens() {
 		return &http.Client{Transport: baseTransport}
 	}
 
@@ -26,9 +26,11 @@ func NewHTTPClient(cfg *oauth2.Config, baseTransport http.RoundTripper, userAgen
 	return &http.Client{Transport: transport}
 }
 
-// persistingTokenSource wraps a TokenSource and saves refreshed tokens to disk.
+// persistingTokenSource wraps a TokenSource and saves refreshed tokens to disk
+// only when the token actually changes.
 type persistingTokenSource struct {
-	src oauth2.TokenSource
+	src             oauth2.TokenSource
+	lastAccessToken string
 }
 
 func (p *persistingTokenSource) Token() (*oauth2.Token, error) {
@@ -36,8 +38,11 @@ func (p *persistingTokenSource) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Best-effort save of refreshed tokens
-	_ = SaveOAuth2Token(tok)
+	// Only save when the token has changed (i.e., was refreshed)
+	if tok.AccessToken != p.lastAccessToken {
+		p.lastAccessToken = tok.AccessToken
+		_ = SaveOAuth2Token(tok)
+	}
 	return tok, nil
 }
 

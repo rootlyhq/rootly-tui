@@ -57,6 +57,24 @@ var shimmerColors = []lipgloss.Color{
 	"#C4B5FD",
 }
 
+// Pre-computed styles to avoid per-character allocations on every render frame.
+var (
+	gradientStyles []lipgloss.Style
+	shimmerStyles  []lipgloss.Style
+	cursorStyle    = lipgloss.NewStyle().Foreground(styles.ColorPrimary).Bold(true)
+)
+
+func init() {
+	gradientStyles = make([]lipgloss.Style, len(gradientColors))
+	for i, c := range gradientColors {
+		gradientStyles[i] = lipgloss.NewStyle().Foreground(c).Bold(true)
+	}
+	shimmerStyles = make([]lipgloss.Style, len(shimmerColors))
+	for i, c := range shimmerColors {
+		shimmerStyles[i] = lipgloss.NewStyle().Foreground(c).Bold(true)
+	}
+}
+
 type welcomeTickMsg time.Time
 
 type WelcomeModel struct {
@@ -94,6 +112,10 @@ func (m WelcomeModel) tickCmd() tea.Cmd {
 func (m WelcomeModel) Update(msg tea.Msg) (WelcomeModel, tea.Cmd) {
 	if _, ok := msg.(welcomeTickMsg); ok {
 		m.tick++
+		// Stop ticking once the panel is shown and one shimmer cycle completes
+		if m.ShowPanel() && m.ticksSinceTypingDone() > panelDelay+int(float64(m.logoWidth+shimmerWidth*2)/shimmerSpeed)+gradientHoldTicks {
+			return m, nil
+		}
 		return m, m.tickCmd()
 	}
 	return m, nil
@@ -164,24 +186,16 @@ func (m WelcomeModel) View() string {
 			if charIdx >= revealed {
 				// Cursor at the typing position
 				if charIdx == revealed {
-					b.WriteString(lipgloss.NewStyle().
-						Foreground(styles.ColorPrimary).
-						Bold(true).
-						Render("█"))
+					b.WriteString(cursorStyle.Render("█"))
 				}
 				// Rest is empty
 				break
 			}
 
-			// Determine color for this character
-			color := m.colorForChar(i)
 			if r == ' ' {
 				b.WriteRune(r)
 			} else {
-				b.WriteString(lipgloss.NewStyle().
-					Foreground(color).
-					Bold(true).
-					Render(string(r)))
+				b.WriteString(m.styleForChar(i).Render(string(r)))
 			}
 			charIdx++
 		}
@@ -201,17 +215,14 @@ func (m WelcomeModel) View() string {
 	return b.String()
 }
 
-func (m WelcomeModel) colorForChar(colIdx int) lipgloss.Color {
+func (m WelcomeModel) styleForChar(colIdx int) lipgloss.Style {
 	if !m.typingDone() {
-		// During typing: static gradient based on column position
-		return columnGradient(colIdx, m.logoWidth)
+		return columnGradientStyle(colIdx, m.logoWidth)
 	}
 
-	// After typing: shimmer sweep
 	since := m.ticksSinceTypingDone()
 	if since < gradientHoldTicks {
-		// Brief hold on static gradient
-		return columnGradient(colIdx, m.logoWidth)
+		return columnGradientStyle(colIdx, m.logoWidth)
 	}
 
 	// Shimmer phase: a bright band sweeps left to right repeatedly
@@ -220,7 +231,6 @@ func (m WelcomeModel) colorForChar(colIdx int) lipgloss.Color {
 
 	dist := math.Abs(float64(colIdx) - shimmerPos)
 	if dist < float64(shimmerWidth)/2 {
-		// Inside shimmer band
 		idx := int((1.0 - dist/(float64(shimmerWidth)/2)) * float64(len(shimmerColors)-1))
 		if idx < 0 {
 			idx = 0
@@ -228,15 +238,15 @@ func (m WelcomeModel) colorForChar(colIdx int) lipgloss.Color {
 		if idx >= len(shimmerColors) {
 			idx = len(shimmerColors) - 1
 		}
-		return shimmerColors[idx]
+		return shimmerStyles[idx]
 	}
 
-	return columnGradient(colIdx, m.logoWidth)
+	return columnGradientStyle(colIdx, m.logoWidth)
 }
 
-func columnGradient(col, width int) lipgloss.Color {
+func columnGradientStyle(col, width int) lipgloss.Style {
 	if width <= 0 {
-		return gradientColors[0]
+		return gradientStyles[0]
 	}
 	idx := col * (len(gradientColors) - 1) / width
 	if idx < 0 {
@@ -245,7 +255,7 @@ func columnGradient(col, width int) lipgloss.Color {
 	if idx >= len(gradientColors) {
 		idx = len(gradientColors) - 1
 	}
-	return gradientColors[idx]
+	return gradientStyles[idx]
 }
 
 // RenderSubtitle renders the subtitle with fade-in effect.

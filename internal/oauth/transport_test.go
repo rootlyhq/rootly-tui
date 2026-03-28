@@ -65,7 +65,8 @@ func TestNewHTTPClientNoTokens(t *testing.T) {
 	}
 
 	oauthCfg := NewConfig("https://app.rootly.com")
-	client := NewHTTPClient(oauthCfg, http.DefaultTransport, "rootly-tui/test")
+	td, _ := LoadTokens()
+	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
 		t.Fatal("expected non-nil client")
@@ -96,7 +97,8 @@ func TestNewHTTPClientWithTokens(t *testing.T) {
 	}
 
 	oauthCfg := NewConfig(tokenSrv.URL)
-	client := NewHTTPClient(oauthCfg, http.DefaultTransport, "rootly-tui/test")
+	td2, _ := LoadTokens()
+	client := NewHTTPClientWithTokens(oauthCfg, td2, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
 		t.Fatal("expected non-nil client")

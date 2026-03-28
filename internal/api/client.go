@@ -303,7 +303,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 			useOAuth = true
 			authBaseURL := oauth.DeriveAuthBaseURL(cfg.Endpoint)
 			oauthCfg := oauth.NewConfig(authBaseURL)
-			oauthHTTPClient = oauth.NewHTTPClient(oauthCfg, http.DefaultTransport, "rootly-tui/"+Version)
+			oauthHTTPClient = oauth.NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/"+Version)
 			debug.Logger.Debug("Using OAuth2 authentication")
 		}
 	}

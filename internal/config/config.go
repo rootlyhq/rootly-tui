@@ -139,12 +139,6 @@ func (c *Config) IsValid() bool {
 	return (c.APIKey != "" || c.UseOAuth) && c.Endpoint != ""
 }
 
-// IsValidForAPI returns true if the config has enough info to make API calls
-// (either API key or OAuth tokens).
-func (c *Config) IsValidForAPI() bool {
-	return c.IsValid()
-}
-
 // DetectTimezone returns the local system timezone name.
 // Falls back to UTC if detection fails.
 func DetectTimezone() string {

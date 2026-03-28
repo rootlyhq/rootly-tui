@@ -834,13 +834,11 @@ func (m SetupModel) doSavePreferences() tea.Cmd {
 			}
 		}
 
-		cfg := &config.Config{
-			Endpoint: existingCfg.Endpoint,
-			APIKey:   existingCfg.APIKey,
-			Timezone: timezone,
-			Language: language,
-			Layout:   layout,
-		}
+		// Update only preferences, preserve everything else (including OAuth tokens)
+		existingCfg.Timezone = timezone
+		existingCfg.Language = language
+		existingCfg.Layout = layout
+		cfg := existingCfg
 
 		if err := config.Save(cfg); err != nil {
 			return PreferencesSavedMsg{Success: false, Error: err.Error()}
