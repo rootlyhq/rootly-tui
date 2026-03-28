@@ -3,16 +3,24 @@ package views
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os/exec"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/oauth2"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
+	"github.com/rootlyhq/rootly-tui/internal/debug"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
+	"github.com/rootlyhq/rootly-tui/internal/oauth"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
 
@@ -24,11 +32,20 @@ const (
 	PanelConfig
 )
 
+// Auth method
+type AuthMethod int
+
+const (
+	AuthMethodOAuth AuthMethod = iota
+	AuthMethodAPIKey
+)
+
 // Connection panel fields
 type ConnectionField int
 
 const (
-	ConnFieldEndpoint ConnectionField = iota
+	ConnFieldAuthMethod ConnectionField = iota
+	ConnFieldEndpoint
 	ConnFieldAPIKey
 	ConnFieldButtons
 )
@@ -60,17 +77,38 @@ const (
 	FieldButtons
 )
 
+// OAuthLoginStartedMsg is sent when the OAuth login flow begins.
+type OAuthLoginStartedMsg struct{}
+
+// OAuthLoginResultMsg is sent when the OAuth login flow completes.
+type OAuthLoginResultMsg struct {
+	Success bool
+	Error   string
+}
+
+// OAuthLogoutResultMsg is sent when the user logs out.
+type OAuthLogoutResultMsg struct {
+	Success bool
+	Error   string
+}
+
 type SetupModel struct {
 	// Connection panel
+	authMethod AuthMethod
 	endpoint   textinput.Model
 	apiKey     textinput.Model
 	connFocus  ConnectionField
-	connButton int // 0 = Test, 1 = Save
+	connButton int // 0 = Test/Login, 1 = Save
 	testing    bool
 	testResult string
 	testError  string
 	connSaved  bool
 	connSaving bool
+
+	// OAuth state
+	oauthLoggingIn bool
+	oauthLoggedIn  bool
+	oauthError     string
 
 	// Config panel
 	timezones     []string
@@ -84,6 +122,8 @@ type SetupModel struct {
 	configSaving  bool
 
 	// Shared
+	isFirstRun  bool
+	welcome     WelcomeModel
 	activePanel Panel
 	spinner     spinner.Model
 	width       int
@@ -123,7 +163,6 @@ func NewSetupModel() SetupModel {
 func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 	endpointInput := textinput.New()
 	endpointInput.Placeholder = "api.rootly.com"
-	endpointInput.Focus()
 	endpointInput.Width = 40
 
 	apiKeyInput := textinput.New()
@@ -139,10 +178,20 @@ func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 	tzIndex := 0
 	langIndex := 0
 	layoutIndex := 0
+	authMethod := AuthMethodOAuth // Default to OAuth
+
+	// Check if we already have OAuth tokens
+	oauthLoggedIn := cfg != nil && cfg.HasOAuthTokens()
 
 	if cfg != nil && cfg.IsValid() {
 		endpointInput.SetValue(cfg.Endpoint)
 		apiKeyInput.SetValue(cfg.APIKey)
+
+		if cfg.UseOAuth {
+			authMethod = AuthMethodOAuth
+		} else if cfg.APIKey != "" {
+			authMethod = AuthMethodAPIKey
+		}
 
 		for i, tz := range timezones {
 			if tz == cfg.Timezone {
@@ -178,11 +227,18 @@ func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 	s.Spinner = spinner.Dot
 	s.Style = styles.Spinner
 
+	firstRun := cfg == nil || !cfg.IsValid()
+	welcome := NewWelcomeModel()
+
 	return SetupModel{
+		authMethod:            authMethod,
 		endpoint:              endpointInput,
 		apiKey:                apiKeyInput,
-		connFocus:             ConnFieldEndpoint,
+		connFocus:             ConnFieldAuthMethod,
 		connButton:            0,
+		oauthLoggedIn:         oauthLoggedIn,
+		isFirstRun:            firstRun,
+		welcome:               welcome,
 		timezones:             timezones,
 		timezoneIndex:         tzIndex,
 		languages:             languages,
@@ -199,6 +255,9 @@ func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 }
 
 func (m SetupModel) Init() tea.Cmd {
+	if m.isFirstRun {
+		return tea.Batch(textinput.Blink, m.welcome.Init())
+	}
 	return textinput.Blink
 }
 
@@ -207,7 +266,7 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.testing || m.connSaving || m.configSaving {
+		if m.testing || m.connSaving || m.configSaving || m.oauthLoggingIn {
 			return m, nil
 		}
 
@@ -216,6 +275,41 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 		m, cmd, handled = m.handleKeyMsg(msg)
 		if handled {
 			return m, cmd
+		}
+
+	case OAuthLoginResultMsg:
+		m.oauthLoggingIn = false
+		if msg.Success {
+			m.oauthLoggedIn = true
+			m.oauthError = ""
+			m.testResult = testResultSuccess
+			if m.isFirstRun {
+				// Auto-save and proceed to main screen
+				m.connSaving = true
+				return m, m.doSaveConnection()
+			}
+		} else {
+			m.oauthError = msg.Error
+			m.testResult = testResultError
+			m.testError = msg.Error
+		}
+		return m, nil
+
+	case OAuthLogoutResultMsg:
+		if msg.Success {
+			m.oauthLoggedIn = false
+			m.testResult = ""
+			m.testError = ""
+			m.connSaved = false
+			m.connButton = 0
+		}
+		return m, nil
+
+	case welcomeTickMsg:
+		if m.isFirstRun {
+			var cmd tea.Cmd
+			m.welcome, cmd = m.welcome.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 
 	case spinner.TickMsg:
@@ -287,6 +381,9 @@ func (m SetupModel) handleKeyMsg(msg tea.KeyMsg) (SetupModel, tea.Cmd, bool) {
 }
 
 func (m SetupModel) handleKeyTab() SetupModel {
+	if m.isFirstRun {
+		return m // No tab switching during first-run wizard
+	}
 	if m.activePanel == PanelConnection {
 		m.activePanel = PanelConfig
 		m.endpoint.Blur()
@@ -301,8 +398,12 @@ func (m SetupModel) handleKeyTab() SetupModel {
 func (m SetupModel) handleKeyDown() SetupModel {
 	if m.activePanel == PanelConnection {
 		m.connFocus++
+		// Skip API key field when using OAuth
+		if m.authMethod == AuthMethodOAuth && m.connFocus == ConnFieldAPIKey {
+			m.connFocus++
+		}
 		if m.connFocus > ConnFieldButtons {
-			m.connFocus = ConnFieldEndpoint
+			m.connFocus = ConnFieldAuthMethod
 		}
 		m.updateConnectionFocus()
 	} else {
@@ -317,7 +418,11 @@ func (m SetupModel) handleKeyDown() SetupModel {
 func (m SetupModel) handleKeyUp() SetupModel {
 	if m.activePanel == PanelConnection {
 		m.connFocus--
-		if m.connFocus < ConnFieldEndpoint {
+		// Skip API key field when using OAuth
+		if m.authMethod == AuthMethodOAuth && m.connFocus == ConnFieldAPIKey {
+			m.connFocus--
+		}
+		if m.connFocus < ConnFieldAuthMethod {
 			m.connFocus = ConnFieldButtons
 		}
 		m.updateConnectionFocus()
@@ -332,8 +437,16 @@ func (m SetupModel) handleKeyUp() SetupModel {
 
 func (m SetupModel) handleKeyLeft() SetupModel {
 	if m.activePanel == PanelConnection {
-		if m.connFocus == ConnFieldButtons && m.connButton > 0 {
-			m.connButton--
+		switch m.connFocus {
+		case ConnFieldAuthMethod:
+			if m.authMethod > AuthMethodOAuth {
+				m.authMethod--
+				m.resetAuthState()
+			}
+		case ConnFieldButtons:
+			if m.connButton > 0 {
+				m.connButton--
+			}
 		}
 	} else {
 		m.handleConfigLeft()
@@ -361,13 +474,29 @@ func (m *SetupModel) handleConfigLeft() {
 
 func (m SetupModel) handleKeyRight() SetupModel {
 	if m.activePanel == PanelConnection {
-		if m.connFocus == ConnFieldButtons && m.connButton < 1 {
-			m.connButton++
+		switch m.connFocus {
+		case ConnFieldAuthMethod:
+			if m.authMethod < AuthMethodAPIKey {
+				m.authMethod++
+				m.resetAuthState()
+			}
+		case ConnFieldButtons:
+			if m.connButton < m.maxConnButton() {
+				m.connButton++
+			}
 		}
 	} else {
 		m.handleConfigRight()
 	}
 	return m
+}
+
+func (m *SetupModel) resetAuthState() {
+	m.testResult = ""
+	m.testError = ""
+	m.oauthError = ""
+	m.connSaved = false
+	m.connButton = 0
 }
 
 func (m *SetupModel) handleConfigRight() {
@@ -395,25 +524,55 @@ func (m SetupModel) handleKeyEnter() (SetupModel, tea.Cmd) {
 	return m.handleConfigEnter()
 }
 
+func (m SetupModel) maxConnButton() int {
+	if m.isFirstRun {
+		return 0 // Just Login/Test
+	}
+	if m.authMethod == AuthMethodOAuth && m.oauthLoggedIn {
+		return 2 // Login | Save | Logout
+	}
+	return 1 // Login/Test | Save
+}
+
 func (m SetupModel) handleConnectionEnter() (SetupModel, tea.Cmd) {
 	if m.connFocus == ConnFieldButtons {
 		if m.connButton == 0 {
-			// Test connection
+			if m.authMethod == AuthMethodOAuth {
+				// Start OAuth login flow
+				m.oauthLoggingIn = true
+				m.oauthError = ""
+				m.testResult = ""
+				m.testError = ""
+				m.connSaved = false
+				return m, tea.Batch(m.spinner.Tick, m.doOAuthLogin())
+			}
+			// Test API key connection
 			m.testing = true
 			m.testResult = ""
 			m.testError = ""
 			m.connSaved = false
 			return m, tea.Batch(m.spinner.Tick, m.doTestConnection())
 		}
-		// Save connection
-		if m.testResult == testResultSuccess {
-			m.connSaving = true
-			return m, m.doSaveConnection()
+		if m.connButton == 1 {
+			// Save connection
+			if m.testResult == testResultSuccess {
+				m.connSaving = true
+				return m, m.doSaveConnection()
+			}
+			return m, nil
+		}
+		if m.connButton == 2 {
+			// Logout
+			return m, m.doOAuthLogout()
 		}
 		return m, nil
 	}
 	// Move to next field on enter
 	m.connFocus++
+	// Skip API key field when using OAuth
+	if m.authMethod == AuthMethodOAuth && m.connFocus == ConnFieldAPIKey {
+		m.connFocus++
+	}
 	if m.connFocus > ConnFieldButtons {
 		m.connFocus = ConnFieldButtons
 	}
@@ -443,7 +602,18 @@ func (m *SetupModel) updateConnectionFocus() {
 	case ConnFieldEndpoint:
 		m.endpoint.Focus()
 	case ConnFieldAPIKey:
-		m.apiKey.Focus()
+		if m.authMethod == AuthMethodAPIKey {
+			m.apiKey.Focus()
+		}
+	}
+}
+
+func (m SetupModel) doOAuthLogout() tea.Cmd {
+	return func() tea.Msg {
+		if err := oauth.ClearTokens(); err != nil {
+			return OAuthLogoutResultMsg{Success: false, Error: err.Error()}
+		}
+		return OAuthLogoutResultMsg{Success: true}
 	}
 }
 
@@ -468,6 +638,133 @@ func (m SetupModel) doTestConnection() tea.Cmd {
 	}
 }
 
+func (m SetupModel) doOAuthLogin() tea.Cmd {
+	endpointVal := m.endpoint.Value()
+	return func() tea.Msg {
+		authBaseURL := oauth.DeriveAuthBaseURL(endpointVal)
+		debug.Logger.Debug("OAuth config",
+			"endpoint_input", endpointVal,
+			"auth_base_url", authBaseURL,
+			"token_url", authBaseURL+"/oauth/token",
+		)
+		cfg := oauth.NewConfig(authBaseURL)
+
+		state, err := oauth.GenerateState()
+		if err != nil {
+			return OAuthLoginResultMsg{Success: false, Error: err.Error()}
+		}
+
+		verifier := oauth2.GenerateVerifier()
+
+		authURL := cfg.AuthCodeURL(state, oauth2.S256ChallengeOption(verifier))
+
+		debug.Logger.Debug("OAuth login starting",
+			"auth_url", authURL,
+			"state_length", len(state),
+		)
+
+		// Start callback server BEFORE opening browser
+		codeCh := make(chan string, 1)
+		errCh := make(chan error, 1)
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+			gotState := r.URL.Query().Get("state")
+			debug.Logger.Debug("OAuth callback received",
+				"got_state", gotState,
+				"expected_state", state,
+				"full_url", r.URL.String(),
+			)
+
+			if errParam := r.URL.Query().Get("error"); errParam != "" {
+				desc := r.URL.Query().Get("error_description")
+				w.Header().Set("Content-Type", "text/html")
+				_, _ = fmt.Fprintf(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>%s: %s</p></div></body></html>`, errParam, desc)
+				errCh <- fmt.Errorf("%s: %s", errParam, desc)
+				return
+			}
+
+			if gotState != state {
+				w.Header().Set("Content-Type", "text/html")
+				_, _ = fmt.Fprintf(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>State mismatch</p><p style="font-size:0.8em;color:#888;">Expected: %s</p><p style="font-size:0.8em;color:#888;">Got: %s</p></div></body></html>`, state, gotState)
+				errCh <- fmt.Errorf("state mismatch: expected %q, got %q", state, gotState)
+				return
+			}
+
+			code := r.URL.Query().Get("code")
+			if code == "" {
+				w.Header().Set("Content-Type", "text/html")
+				_, _ = fmt.Fprint(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>No code received</p></div></body></html>`)
+				errCh <- fmt.Errorf("no code received")
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html")
+			_, _ = fmt.Fprint(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#7C3AED;">Login Successful</h1><p>You can close this window and return to your terminal.</p></div></body></html>`)
+			codeCh <- code
+		})
+
+		// Use a listener so we know the server is ready before opening the browser
+		lc := net.ListenConfig{}
+		listener, err := lc.Listen(context.Background(), "tcp", oauth.CallbackPort)
+		if err != nil {
+			return OAuthLoginResultMsg{Success: false, Error: "Failed to start callback server: " + err.Error()}
+		}
+
+		srv := &http.Server{
+			Handler: mux,
+		}
+
+		go func() {
+			if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+				errCh <- err
+			}
+		}()
+
+		// Now open browser — server is guaranteed to be listening
+		if err := openBrowser(authURL); err != nil {
+			_ = srv.Close()
+			return OAuthLoginResultMsg{Success: false, Error: "Failed to open browser: " + err.Error()}
+		}
+
+		// Wait with 5 minute timeout
+		timer := time.NewTimer(5 * time.Minute)
+		defer timer.Stop()
+		defer func() { _ = srv.Close() }()
+
+		select {
+		case code := <-codeCh:
+			ctx := context.Background()
+			tok, err := oauth.ExchangeCode(ctx, cfg, code, verifier)
+			if err != nil {
+				return OAuthLoginResultMsg{Success: false, Error: "Token exchange failed: " + err.Error()}
+			}
+			if err := oauth.SaveOAuth2Token(tok); err != nil {
+				return OAuthLoginResultMsg{Success: false, Error: "Failed to save tokens: " + err.Error()}
+			}
+			return OAuthLoginResultMsg{Success: true}
+		case err := <-errCh:
+			return OAuthLoginResultMsg{Success: false, Error: err.Error()}
+		case <-timer.C:
+			return OAuthLoginResultMsg{Success: false, Error: "Login timed out (5 minutes)"}
+		}
+	}
+}
+
+func openBrowser(url string) error {
+	ctx := context.Background()
+	switch runtime.GOOS {
+	case "darwin":
+		return exec.CommandContext(ctx, "open", url).Start()
+	case "linux":
+		return exec.CommandContext(ctx, "xdg-open", url).Start()
+	case "windows":
+		return exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", url).Start()
+	default:
+		return fmt.Errorf("unsupported platform")
+	}
+}
+
 func (m SetupModel) doSaveConnection() tea.Cmd {
 	timezone := ""
 	if m.timezoneIndex >= 0 && m.timezoneIndex < len(m.timezones) {
@@ -482,13 +779,26 @@ func (m SetupModel) doSaveConnection() tea.Cmd {
 		layout = m.layouts[m.layoutIndex]
 	}
 
+	useOAuth := m.authMethod == AuthMethodOAuth
+	apiKeyVal := m.apiKey.Value()
+	endpointVal := m.endpoint.Value()
+
 	return func() tea.Msg {
-		cfg := &config.Config{
-			Endpoint: m.endpoint.Value(),
-			APIKey:   m.apiKey.Value(),
-			Timezone: timezone,
-			Language: language,
-			Layout:   layout,
+		// Load existing config to preserve OAuth tokens
+		cfg, err := config.Load()
+		if err != nil {
+			cfg = &config.Config{}
+		}
+
+		cfg.Endpoint = endpointVal
+		cfg.APIKey = apiKeyVal
+		cfg.Timezone = timezone
+		cfg.Language = language
+		cfg.Layout = layout
+		cfg.UseOAuth = useOAuth
+
+		if useOAuth {
+			cfg.APIKey = "" // Clear API key when using OAuth
 		}
 
 		if err := config.Save(cfg); err != nil {
@@ -580,6 +890,14 @@ func (m *SetupModel) SetDimensions(width, height int) {
 	m.height = height
 }
 
+func (m SetupModel) IsFirstRun() bool {
+	return m.isFirstRun
+}
+
+func (m SetupModel) DoSaveConnection() tea.Cmd {
+	return m.doSaveConnection()
+}
+
 func (m SetupModel) IsConnectionSaved() bool {
 	return m.connSaved
 }
@@ -589,7 +907,121 @@ func (m SetupModel) IsConfigSaved() bool {
 }
 
 func (m SetupModel) View() string {
-	// Panel styles - width accommodates input fields (40) + padding (4) + border (2) + extra space
+	if m.isFirstRun {
+		return m.renderFirstRunView()
+	}
+	return m.renderFullSetupView()
+}
+
+func (m SetupModel) renderFirstRunView() string {
+	panelWidth := 54
+
+	var parts []string
+
+	// Animated logo
+	parts = append(parts, m.welcome.View())
+
+	// Subtitle
+	if sub := m.welcome.RenderSubtitle(); sub != "" {
+		parts = append(parts, sub, "")
+	}
+
+	// Auth panel after animation
+	if m.welcome.ShowPanel() {
+		parts = append(parts,
+			styles.TextDim.Render("Let's connect to your Rootly account."), "",
+			m.renderFirstRunPanel(panelWidth), "",
+			styles.HelpBar.Render("Configure preferences later with "+styles.HelpKey.Render("s")),
+		)
+	}
+
+	content := lipgloss.JoinVertical(lipgloss.Center, parts...)
+
+	if m.width > 0 && m.height > 0 {
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
+	}
+	return content
+}
+
+func (m SetupModel) renderFirstRunPanel(panelWidth int) string {
+	var b strings.Builder
+
+	// Auth method selector
+	authLabel := styles.InputLabel.Render("Authentication")
+	b.WriteString(authLabel + "\n")
+	var oauthOpt, apikeyOpt string
+	if m.authMethod == AuthMethodOAuth {
+		oauthOpt = styles.Primary.Bold(true).Render("● OAuth2")
+		apikeyOpt = styles.TextDim.Render("○ API Key")
+	} else {
+		oauthOpt = styles.TextDim.Render("○ OAuth2")
+		apikeyOpt = styles.Primary.Bold(true).Render("● API Key")
+	}
+	authDisplay := oauthOpt + "  " + apikeyOpt
+	if m.connFocus == ConnFieldAuthMethod {
+		b.WriteString(styles.InputFieldFocused.Render(authDisplay))
+	} else {
+		b.WriteString(styles.InputField.Render(authDisplay))
+	}
+	b.WriteString("\n\n")
+
+	// Endpoint
+	b.WriteString(styles.InputLabel.Render("API Endpoint") + "\n")
+	if m.connFocus == ConnFieldEndpoint {
+		b.WriteString(styles.InputFieldFocused.Render(m.endpoint.View()))
+	} else {
+		b.WriteString(styles.InputField.Render(m.endpoint.View()))
+	}
+	b.WriteString("\n\n")
+
+	// API key field or OAuth hint
+	if m.authMethod == AuthMethodAPIKey {
+		b.WriteString(styles.InputLabel.Render("API Key") + "\n")
+		if m.connFocus == ConnFieldAPIKey {
+			b.WriteString(styles.InputFieldFocused.Render(m.apiKey.View()))
+		} else {
+			b.WriteString(styles.InputField.Render(m.apiKey.View()))
+		}
+		b.WriteString("\n\n")
+	}
+
+	// Status
+	if m.testing || m.oauthLoggingIn {
+		label := "Testing connection..."
+		if m.oauthLoggingIn {
+			label = "Waiting for browser login..."
+		}
+		b.WriteString(m.spinner.View() + " " + label + "\n\n")
+	} else if m.testResult == testResultError {
+		errMsg := m.testError
+		if len(errMsg) > 40 {
+			errMsg = errMsg[:37] + "..."
+		}
+		b.WriteString(styles.Error.Render("Error: "+errMsg) + "\n\n")
+	} else if m.connSaving {
+		b.WriteString(m.spinner.View() + " Saving...\n\n")
+	}
+
+	// Button
+	actionLabel := "Login"
+	if m.authMethod == AuthMethodAPIKey {
+		actionLabel = "Connect"
+	}
+	if m.connFocus == ConnFieldButtons && m.connButton == 0 {
+		b.WriteString(styles.ButtonFocused.Render(actionLabel))
+	} else {
+		b.WriteString(styles.Button.Render(actionLabel))
+	}
+
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(styles.ColorPurple).
+		Padding(1, 2).
+		Width(panelWidth).
+		Render(b.String())
+}
+
+func (m SetupModel) renderFullSetupView() string {
 	panelWidth := 52
 	activeBorder := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -626,7 +1058,7 @@ func (m SetupModel) View() string {
 	help := styles.HelpBar.Render(i18n.T("setup.help_panels"))
 
 	// Combine all
-	content := lipgloss.JoinVertical(lipgloss.Left, panels, "", help)
+	content := lipgloss.JoinVertical(lipgloss.Center, panels, "", help)
 
 	// Center on screen
 	if m.width > 0 && m.height > 0 {
@@ -644,6 +1076,26 @@ func (m SetupModel) renderConnectionPanel() string {
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
+	// Auth method selector
+	authLabel := styles.InputLabel.Render("Authentication")
+	b.WriteString(authLabel)
+	b.WriteString("\n")
+	var oauthOpt, apikeyOpt string
+	if m.authMethod == AuthMethodOAuth {
+		oauthOpt = styles.Primary.Bold(true).Render("● OAuth2")
+		apikeyOpt = styles.TextDim.Render("○ API Key")
+	} else {
+		oauthOpt = styles.TextDim.Render("○ OAuth2")
+		apikeyOpt = styles.Primary.Bold(true).Render("● API Key")
+	}
+	authDisplay := oauthOpt + "  " + apikeyOpt
+	if m.activePanel == PanelConnection && m.connFocus == ConnFieldAuthMethod {
+		b.WriteString(styles.InputFieldFocused.Render(authDisplay))
+	} else {
+		b.WriteString(styles.InputField.Render(authDisplay))
+	}
+	b.WriteString("\n\n")
+
 	// Endpoint field
 	endpointLabel := styles.InputLabel.Render(i18n.T("setup.api_endpoint"))
 	b.WriteString(endpointLabel)
@@ -655,27 +1107,41 @@ func (m SetupModel) renderConnectionPanel() string {
 	}
 	b.WriteString("\n\n")
 
-	// API Key field
-	apiKeyLabel := styles.InputLabel.Render(i18n.T("setup.api_key"))
-	b.WriteString(apiKeyLabel)
-	b.WriteString("\n")
-	if m.activePanel == PanelConnection && m.connFocus == ConnFieldAPIKey {
-		b.WriteString(styles.InputFieldFocused.Render(m.apiKey.View()))
+	if m.authMethod == AuthMethodAPIKey {
+		// API Key field (only for API key auth)
+		apiKeyLabel := styles.InputLabel.Render(i18n.T("setup.api_key"))
+		b.WriteString(apiKeyLabel)
+		b.WriteString("\n")
+		if m.activePanel == PanelConnection && m.connFocus == ConnFieldAPIKey {
+			b.WriteString(styles.InputFieldFocused.Render(m.apiKey.View()))
+		} else {
+			b.WriteString(styles.InputField.Render(m.apiKey.View()))
+		}
+		b.WriteString("\n\n")
 	} else {
-		b.WriteString(styles.InputField.Render(m.apiKey.View()))
+		// OAuth status
+		if m.oauthLoggedIn {
+			b.WriteString(styles.SuccessMsg.Render("Logged in via OAuth2"))
+			b.WriteString("\n\n")
+		} else {
+			b.WriteString(styles.TextDim.Render("Opens browser for login"))
+			b.WriteString("\n\n")
+		}
 	}
-	b.WriteString("\n\n")
 
-	// Test result
-	if m.testing {
-		b.WriteString(m.spinner.View() + " " + i18n.T("setup.testing_connection"))
+	// Status messages
+	if m.testing || m.oauthLoggingIn {
+		label := i18n.T("setup.testing_connection")
+		if m.oauthLoggingIn {
+			label = "Waiting for browser login..."
+		}
+		b.WriteString(m.spinner.View() + " " + label)
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultSuccess {
 		b.WriteString(styles.SuccessMsg.Render(i18n.T("setup.connection_success")))
 		b.WriteString("\n\n")
 	} else if m.testResult == testResultError {
 		errMsg := i18n.T("common.error") + ": " + m.testError
-		// Truncate error if too long
 		if len(errMsg) > 40 {
 			errMsg = errMsg[:37] + "..."
 		}
@@ -697,28 +1163,49 @@ func (m SetupModel) renderConnectionPanel() string {
 	}
 
 	// Buttons
-	var testBtn, saveBtn string
+	var actionBtn string
+	actionLabel := i18n.T("setup.test")
+	if m.authMethod == AuthMethodOAuth {
+		actionLabel = "Login"
+	}
 	if m.activePanel == PanelConnection && m.connFocus == ConnFieldButtons && m.connButton == 0 {
-		testBtn = styles.ButtonFocused.Render(i18n.T("setup.test"))
+		actionBtn = styles.ButtonFocused.Render(actionLabel)
 	} else {
-		testBtn = styles.Button.Render(i18n.T("setup.test"))
+		actionBtn = styles.Button.Render(actionLabel)
 	}
 
-	if m.activePanel == PanelConnection && m.connFocus == ConnFieldButtons && m.connButton == 1 {
-		if m.testResult == testResultSuccess {
-			saveBtn = styles.ButtonFocused.Render(i18n.T("setup.save"))
+	buttons := actionBtn
+
+	if !m.isFirstRun {
+		var saveBtn string
+		if m.activePanel == PanelConnection && m.connFocus == ConnFieldButtons && m.connButton == 1 {
+			if m.testResult == testResultSuccess {
+				saveBtn = styles.ButtonFocused.Render(i18n.T("setup.save"))
+			} else {
+				saveBtn = styles.ButtonDisabled.Render(i18n.T("setup.save"))
+			}
 		} else {
-			saveBtn = styles.ButtonDisabled.Render(i18n.T("setup.save"))
+			if m.testResult == testResultSuccess {
+				saveBtn = styles.Button.Render(i18n.T("setup.save"))
+			} else {
+				saveBtn = styles.ButtonDisabled.Render(i18n.T("setup.save"))
+			}
 		}
-	} else {
-		if m.testResult == testResultSuccess {
-			saveBtn = styles.Button.Render(i18n.T("setup.save"))
-		} else {
-			saveBtn = styles.ButtonDisabled.Render(i18n.T("setup.save"))
+		buttons += " " + saveBtn
+
+		// Show logout button when OAuth is active and logged in
+		if m.authMethod == AuthMethodOAuth && m.oauthLoggedIn {
+			var logoutBtn string
+			if m.activePanel == PanelConnection && m.connFocus == ConnFieldButtons && m.connButton == 2 {
+				logoutBtn = styles.ButtonFocused.Background(styles.ColorDanger).Render("Logout")
+			} else {
+				logoutBtn = styles.Button.Render("Logout")
+			}
+			buttons += " " + logoutBtn
 		}
 	}
 
-	b.WriteString(testBtn + " " + saveBtn)
+	b.WriteString(buttons)
 
 	return b.String()
 }
@@ -822,6 +1309,8 @@ func (m SetupModel) FocusIndex() SetupField {
 	// Map new structure to old SetupField for tests
 	if m.activePanel == PanelConnection {
 		switch m.connFocus {
+		case ConnFieldAuthMethod:
+			return FieldEndpoint // Map to first field for compat
 		case ConnFieldEndpoint:
 			return FieldEndpoint
 		case ConnFieldAPIKey:

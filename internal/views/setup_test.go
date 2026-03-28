@@ -3,11 +3,19 @@ package views
 import (
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Note: TestMain in help_test.go sets i18n.LangEnglish for all tests in this package
+
+// newFullSetupModel creates a setup model in "returning user" mode (not first-run).
+func newFullSetupModel() SetupModel {
+	m := NewSetupModel()
+	m.isFirstRun = false
+	return m
+}
 
 func TestNewSetupModel(t *testing.T) {
 	m := NewSetupModel()
@@ -28,6 +36,10 @@ func TestNewSetupModel(t *testing.T) {
 	if m.IsTesting() {
 		t.Error("expected testing to be false")
 	}
+
+	if !m.isFirstRun {
+		t.Error("expected isFirstRun to be true for NewSetupModel()")
+	}
 }
 
 func TestSetupModelInit(t *testing.T) {
@@ -40,7 +52,7 @@ func TestSetupModelInit(t *testing.T) {
 }
 
 func TestSetupModelPanelSwitch(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Initially on connection panel
 	if m.ActivePanel() != PanelConnection {
@@ -60,8 +72,24 @@ func TestSetupModelPanelSwitch(t *testing.T) {
 	}
 }
 
+func TestSetupModelFirstRunBlocksTab(t *testing.T) {
+	m := NewSetupModel() // first-run mode
+
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	if m.ActivePanel() != PanelConnection {
+		t.Error("expected tab to be blocked during first-run")
+	}
+}
+
 func TestSetupModelConnectionPanelNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
+
+	// Start at auth method field; down moves to endpoint
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	if m.FocusIndex() != FieldEndpoint {
+		t.Errorf("expected focus on endpoint after down, got %v", m.FocusIndex())
+	}
 
 	// Down moves to API key
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
@@ -75,7 +103,7 @@ func TestSetupModelConnectionPanelNavigation(t *testing.T) {
 		t.Errorf("expected focus on buttons after down, got %v", m.FocusIndex())
 	}
 
-	// Down wraps to endpoint
+	// Down wraps to auth method (maps to endpoint in compat)
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus on endpoint after wrap, got %v", m.FocusIndex())
@@ -89,7 +117,7 @@ func TestSetupModelConnectionPanelNavigation(t *testing.T) {
 }
 
 func TestSetupModelConfigPanelNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Switch to config panel
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -125,9 +153,11 @@ func TestSetupModelConfigPanelNavigation(t *testing.T) {
 }
 
 func TestSetupModelConnectionButtonNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
 
-	// Navigate to buttons (down twice)
+	// Navigate to buttons (auth method -> endpoint -> api key -> buttons)
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 
@@ -159,7 +189,14 @@ func TestSetupModelConnectionButtonNavigation(t *testing.T) {
 }
 
 func TestSetupModelEnterMovesToNextInConnectionPanel(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
+
+	// Start at auth method; enter moves to endpoint
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if m.FocusIndex() != FieldEndpoint {
+		t.Errorf("expected focus on endpoint after enter, got %v", m.FocusIndex())
+	}
 
 	// Enter on endpoint moves to API key
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -175,7 +212,7 @@ func TestSetupModelEnterMovesToNextInConnectionPanel(t *testing.T) {
 }
 
 func TestSetupModelEnterMovesToNextInConfigPanel(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Switch to config panel
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -271,7 +308,8 @@ func TestSetupModelSetTesting(t *testing.T) {
 }
 
 func TestSetupModelView(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
 	m.SetDimensions(150, 50)
 
 	view := m.View()
@@ -300,8 +338,35 @@ func TestSetupModelView(t *testing.T) {
 	}
 }
 
+func TestSetupModelFirstRunView(t *testing.T) {
+	m := NewSetupModel() // first-run mode
+	m.SetDimensions(150, 50)
+
+	// At tick 0, animation is in progress - view should render without panic
+	view := m.View()
+	if view == "" {
+		t.Error("expected non-empty first-run view")
+	}
+
+	// Should NOT contain preferences panel
+	if strings.Contains(view, "Preferences") {
+		t.Error("expected first-run view to NOT contain Preferences panel")
+	}
+
+	// Advance animation to completion by simulating many ticks
+	for range 200 {
+		m.welcome, _ = m.welcome.Update(welcomeTickMsg(time.Now()))
+	}
+	view = m.View()
+
+	// After animation, should show the auth panel prompt
+	if !strings.Contains(view, "connect") {
+		t.Error("expected first-run view to show connect prompt after animation")
+	}
+}
+
 func TestSetupModelViewWithTestResult(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 	m.SetDimensions(150, 50)
 
 	// Success state - set via HandleValidationResult
@@ -320,7 +385,7 @@ func TestSetupModelViewWithTestResult(t *testing.T) {
 }
 
 func TestSetupModelViewWhileTesting(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 	m.SetDimensions(150, 50)
 	m.SetTesting(true)
 
@@ -355,7 +420,7 @@ func TestSetupModelSetDimensions(t *testing.T) {
 }
 
 func TestSetupModelTimezoneNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Switch to config panel
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -382,7 +447,7 @@ func TestSetupModelTimezoneNavigation(t *testing.T) {
 }
 
 func TestSetupModelLanguageNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Switch to config panel and navigate to language
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -410,7 +475,7 @@ func TestSetupModelLanguageNavigation(t *testing.T) {
 }
 
 func TestSetupModelLayoutNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Switch to config panel and navigate to layout
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -441,9 +506,11 @@ func TestSetupModelLayoutNavigation(t *testing.T) {
 }
 
 func TestSetupModelEnterOnTestButton(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
 
-	// Navigate to buttons
+	// Navigate to buttons (auth method -> endpoint -> api key -> buttons)
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 
@@ -463,7 +530,7 @@ func TestSetupModelEnterOnTestButton(t *testing.T) {
 }
 
 func TestSetupModelEnterOnSaveButtonWithoutSuccess(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Navigate to save button
 	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
@@ -484,7 +551,7 @@ func TestSetupModelEnterOnSaveButtonWithoutSuccess(t *testing.T) {
 }
 
 func TestSetupModelEnterOnSaveButtonWithSuccess(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
 
 	// Set test result to success
 	m.HandleValidationResult(APIKeyValidatedMsg{Valid: true})
@@ -527,7 +594,11 @@ func TestSetupModelPreferencesSaved(t *testing.T) {
 }
 
 func TestSetupModelJKNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
+
+	// Navigate to endpoint field first (initial is auth method)
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 
 	// In text fields, j/k should be typed as text.
 	initialEndpoint := m.endpoint.Value()
@@ -562,7 +633,11 @@ func TestSetupModelJKNavigation(t *testing.T) {
 }
 
 func TestSetupModelHLNavigation(t *testing.T) {
-	m := NewSetupModel()
+	m := newFullSetupModel()
+	m.authMethod = AuthMethodAPIKey
+
+	// Navigate to endpoint field first (initial is auth method)
+	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 
 	// In text fields, h/l should be typed as text.
 	initialEndpoint := m.endpoint.Value()

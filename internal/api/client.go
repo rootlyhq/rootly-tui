@@ -13,6 +13,7 @@ import (
 
 	"github.com/rootlyhq/rootly-tui/internal/config"
 	"github.com/rootlyhq/rootly-tui/internal/debug"
+	"github.com/rootlyhq/rootly-tui/internal/oauth"
 )
 
 // DefaultCacheTTL is the default cache duration
@@ -22,10 +23,12 @@ const DefaultCacheTTL = 5 * time.Minute
 var Version = "dev"
 
 type Client struct {
-	client   *rootly.ClientWithResponses
-	endpoint string
-	apiKey   string
-	cache    *PersistentCache
+	client     *rootly.ClientWithResponses
+	endpoint   string
+	apiKey     string
+	cache      *PersistentCache
+	useOAuth   bool
+	httpClient *http.Client
 }
 
 type Incident struct {
@@ -282,14 +285,42 @@ func parseIncidentData(d incidentResponseData) Incident {
 
 func NewClient(cfg *config.Config) (*Client, error) {
 	endpoint := cfg.Endpoint
-	if endpoint != "" && !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
-		endpoint = "https://" + endpoint
+	if cfg.UseOAuth {
+		// For OAuth, the user enters the app host; derive the API endpoint
+		endpoint = deriveAPIEndpoint(endpoint)
+	} else {
+		endpoint = normalizeEndpoint(endpoint)
 	}
 
 	debug.Logger.Debug("Creating API client", "endpoint", endpoint)
 
-	client, err := rootly.NewClientWithResponses(endpoint,
-		rootly.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	// Determine if we should use OAuth (OAuth wins over API key)
+	useOAuth := false
+	var oauthHTTPClient *http.Client
+	if cfg.UseOAuth {
+		td, err := oauth.LoadTokens()
+		if err == nil && td.HasValidTokens() {
+			useOAuth = true
+			authBaseURL := oauth.DeriveAuthBaseURL(cfg.Endpoint)
+			oauthCfg := oauth.NewConfig(authBaseURL)
+			oauthHTTPClient = oauth.NewHTTPClient(oauthCfg, http.DefaultTransport, "rootly-tui/"+Version)
+			debug.Logger.Debug("Using OAuth2 authentication")
+		}
+	}
+
+	var opts []rootly.ClientOption
+	if useOAuth && oauthHTTPClient != nil {
+		opts = append(opts, rootly.WithHTTPClient(oauthHTTPClient), rootly.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+			req.Header.Set("Content-Type", "application/vnd.api+json")
+			// User-Agent and Authorization are set by the OAuth transport
+			debug.Logger.Debug("API request (OAuth)",
+				"method", req.Method,
+				"url", req.URL.String(),
+			)
+			return nil
+		}))
+	} else {
+		opts = append(opts, rootly.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
 			req.Header.Set("Content-Type", "application/vnd.api+json")
 			req.Header.Set("User-Agent", "rootly-tui/"+Version)
@@ -298,8 +329,10 @@ func NewClient(cfg *config.Config) (*Client, error) {
 				"url", req.URL.String(),
 			)
 			return nil
-		}),
-	)
+		}))
+	}
+
+	client, err := rootly.NewClientWithResponses(endpoint, opts...)
 	if err != nil {
 		debug.Logger.Error("Failed to create client", "error", err)
 		return nil, fmt.Errorf("failed to create rootly client: %w", err)
@@ -308,21 +341,80 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	cache, err := NewPersistentCache(DefaultCacheTTL)
 	if err != nil {
 		debug.Logger.Warn("Failed to create persistent cache, using in-memory", "error", err)
-		// Fall back to in-memory cache
 		return &Client{
-			client:   client,
-			endpoint: cfg.Endpoint,
-			apiKey:   cfg.APIKey,
-			cache:    nil,
+			client:     client,
+			endpoint:   endpoint,
+			apiKey:     cfg.APIKey,
+			cache:      nil,
+			useOAuth:   useOAuth,
+			httpClient: oauthHTTPClient,
 		}, nil
 	}
 
 	return &Client{
-		client:   client,
-		endpoint: cfg.Endpoint,
-		apiKey:   cfg.APIKey,
-		cache:    cache,
+		client:     client,
+		endpoint:   endpoint,
+		apiKey:     cfg.APIKey,
+		cache:      cache,
+		useOAuth:   useOAuth,
+		httpClient: oauthHTTPClient,
 	}, nil
+}
+
+// ensureScheme adds http:// for localhost/127.0.0.1, https:// for everything else.
+func ensureScheme(host string) string {
+	if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
+		return host
+	}
+	if strings.HasPrefix(host, "localhost") || strings.HasPrefix(host, "127.0.0.1") {
+		return "http://" + host
+	}
+	return "https://" + host
+}
+
+// normalizeEndpoint ensures the endpoint has a scheme.
+// For OAuth with local dev servers, the user enters the app host (e.g. localhost:22056)
+// and we need to append /api for API calls.
+func normalizeEndpoint(endpoint string) string {
+	if endpoint == "" {
+		return ""
+	}
+	return ensureScheme(endpoint)
+}
+
+// deriveAPIEndpoint returns the API endpoint for a given host.
+// For local dev servers without a path, appends /api since the API lives at /api.
+// For production (api.rootly.com), returns as-is.
+func deriveAPIEndpoint(endpoint string) string {
+	ep := ensureScheme(endpoint)
+	if strings.HasPrefix(ep, "http://") {
+		rest := ep[len("http://"):]
+		if !strings.Contains(rest, "/") {
+			return ep + "/api"
+		}
+	}
+	return ep
+}
+
+// doRequest executes an HTTP request using the appropriate client (OAuth or default).
+func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
+	if c.useOAuth && c.httpClient != nil {
+		return c.httpClient.Do(req)
+	}
+	return http.DefaultClient.Do(req)
+}
+
+// setAuthHeaders sets auth headers on a raw HTTP request.
+func (c *Client) setAuthHeaders(req *http.Request) {
+	if c.useOAuth && c.httpClient != nil {
+		// OAuth transport handles Authorization; just set Content-Type and User-Agent
+		req.Header.Set("Content-Type", "application/vnd.api+json")
+		req.Header.Set("User-Agent", "rootly-tui/"+Version)
+	} else {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+		req.Header.Set("Content-Type", "application/vnd.api+json")
+		req.Header.Set("User-Agent", "rootly-tui/"+Version)
+	}
 }
 
 // ClearCache clears all cached data
@@ -394,10 +486,9 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
+	c.setAuthHeaders(req)
 
-	httpResp, err := http.DefaultClient.Do(req)
+	httpResp, err := c.doRequest(req)
 	if err != nil {
 		debug.Logger.Error("Failed to list incidents", "error", err)
 		return nil, fmt.Errorf("failed to list incidents: %w", err)
@@ -699,10 +790,9 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
+	c.setAuthHeaders(req)
 
-	httpResp, err := http.DefaultClient.Do(req)
+	httpResp, err := c.doRequest(req)
 	if err != nil {
 		debug.Logger.Error("Failed to fetch incident", "error", err)
 		return nil, fmt.Errorf("failed to fetch incident: %w", err)
@@ -1143,10 +1233,9 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
+	c.setAuthHeaders(req)
 
-	httpResp, err := http.DefaultClient.Do(req)
+	httpResp, err := c.doRequest(req)
 	if err != nil {
 		debug.Logger.Error("Failed to fetch alert", "error", err)
 		return nil, fmt.Errorf("failed to fetch alert: %w", err)
