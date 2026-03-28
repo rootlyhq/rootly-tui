@@ -81,7 +81,7 @@ func RegisterClient(ctx context.Context, authBaseURL string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not register OAuth client: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // 1 MB max
 
