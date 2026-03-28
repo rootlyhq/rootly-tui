@@ -66,8 +66,7 @@ func DeriveAuthBaseURL(apiHost string) string {
 	return "https://" + host
 }
 
-// isLocalHost returns true for localhost, 127.0.0.1, or any host with a
-// non-standard port that looks like a dev server.
+// isLocalHost returns true for localhost or 127.0.0.1.
 func isLocalHost(host string) bool {
 	// Strip port to check hostname
 	hostname := host

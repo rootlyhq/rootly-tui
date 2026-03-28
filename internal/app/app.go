@@ -837,10 +837,7 @@ func (m *Model) handleOAuthExpired(err error) bool {
 	debug.Logger.Warn("OAuth session expired, redirecting to setup screen")
 	// Clear stale OAuth tokens from config
 	if m.cfg != nil {
-		m.cfg.UseOAuth = false
-		m.cfg.OAuthAccessToken = ""
-		m.cfg.OAuthRefreshToken = ""
-		m.cfg.OAuthTokenType = ""
+		m.cfg.ClearOAuthTokens()
 		_ = config.Save(m.cfg)
 	}
 	m.screen = ScreenSetup

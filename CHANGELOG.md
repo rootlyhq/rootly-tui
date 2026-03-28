@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forward `WindowSizeMsg` to setup screen for proper centering
 
 ### Dependencies
-- Add `golang.org/x/oauth2` v0.36.0
+- Add `golang.org/x/oauth2` v0.35.0
 - Bump charmbracelet/glamour from 0.10.0 to 1.0.0
 - Bump charmbracelet/log from 0.4.2 to 1.0.0
 

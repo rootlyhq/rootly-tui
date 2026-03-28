@@ -712,7 +712,8 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 		}
 
 		srv := &http.Server{
-			Handler: mux,
+			Handler:           mux,
+			ReadHeaderTimeout: 30 * time.Second,
 		}
 
 		go func() {
