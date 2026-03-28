@@ -54,11 +54,6 @@ func DeriveAuthBaseURL(apiHost string) string {
 		return stripPath(apiHost)
 	}
 
-	// api.rootly.com -> app.rootly.com (production)
-	if apiHost == "api.rootly.com" || strings.HasPrefix(apiHost, "api.rootly.com/") {
-		return "https://app.rootly.com"
-	}
-
 	// Extract host part (strip /api or other paths)
 	host := apiHost
 	if idx := strings.Index(host, "/"); idx != -1 {

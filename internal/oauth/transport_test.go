@@ -3,10 +3,9 @@ package oauth
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
-
-	"golang.org/x/oauth2"
 
 	"github.com/rootlyhq/rootly-tui/internal/config"
 )
@@ -55,7 +54,7 @@ func TestUserAgentTransportNilBase(t *testing.T) {
 	}
 }
 
-func TestNewHTTPClientNoTokens(t *testing.T) {
+func TestNewHTTPClientWithTokensNoTokens(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
@@ -65,24 +64,16 @@ func TestNewHTTPClientNoTokens(t *testing.T) {
 	}
 
 	oauthCfg := NewConfig("https://app.rootly.com")
-	td, _ := LoadTokens()
-	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
+	client := NewHTTPClientWithTokens(oauthCfg, nil, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
 		t.Fatal("expected non-nil client")
 	}
 }
 
-func TestNewHTTPClientWithTokens(t *testing.T) {
+func TestNewHTTPClientWithTokensValid(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
-
-	// Start a token server for refresh
-	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"access_token":"refreshed","token_type":"Bearer","expires_in":3600,"refresh_token":"new-refresh"}`))
-	}))
-	defer tokenSrv.Close()
 
 	cfg := &config.Config{
 		Endpoint:          "api.rootly.com",
@@ -96,16 +87,29 @@ func TestNewHTTPClientWithTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	td := &TokenData{
+		AccessToken:  "test-access",
+		RefreshToken: "test-refresh",
+		TokenType:    "Bearer",
+		ExpiresAt:    time.Now().Add(1 * time.Hour),
+	}
+
+	// Token server for potential refresh
+	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"refreshed","token_type":"Bearer","expires_in":3600,"refresh_token":"new-refresh"}`))
+	}))
+	defer tokenSrv.Close()
+
 	oauthCfg := NewConfig(tokenSrv.URL)
-	td2, _ := LoadTokens()
-	client := NewHTTPClientWithTokens(oauthCfg, td2, http.DefaultTransport, "rootly-tui/test")
+	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
 		t.Fatal("expected non-nil client")
 	}
 }
 
-func TestPersistingTokenSource(t *testing.T) {
+func TestRetryOn401(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
@@ -114,31 +118,53 @@ func TestPersistingTokenSource(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tok := &oauth2.Token{
-		AccessToken:  "new-access",
-		RefreshToken: "new-refresh",
+	var apiCalls atomic.Int32
+
+	// API server that returns 401 on first call, 200 on second
+	apiSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		call := apiCalls.Add(1)
+		if call == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		// Verify the refreshed token is used
+		auth := r.Header.Get("Authorization")
+		if auth != "Bearer refreshed-token" {
+			t.Errorf("expected refreshed token, got %q", auth)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer apiSrv.Close()
+
+	// Token server that issues a new token
+	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"refreshed-token","token_type":"Bearer","expires_in":3600,"refresh_token":"new-refresh"}`))
+	}))
+	defer tokenSrv.Close()
+
+	td := &TokenData{
+		AccessToken:  "old-token",
+		RefreshToken: "test-refresh",
 		TokenType:    "Bearer",
-		Expiry:       time.Now().Add(1 * time.Hour),
+		ExpiresAt:    time.Now().Add(1 * time.Hour),
 	}
 
-	src := &persistingTokenSource{
-		src: oauth2.StaticTokenSource(tok),
-	}
+	oauthCfg := NewConfig(tokenSrv.URL)
+	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
 
-	got, err := src.Token()
+	req, _ := http.NewRequestWithContext(t.Context(), "GET", apiSrv.URL, http.NoBody)
+	resp, err := client.Do(req)
 	if err != nil {
-		t.Fatalf("Token() error: %v", err)
+		t.Fatalf("request error: %v", err)
 	}
-	if got.AccessToken != "new-access" {
-		t.Errorf("AccessToken = %q, want %q", got.AccessToken, "new-access")
-	}
+	defer resp.Body.Close()
 
-	// Verify token was persisted to config
-	loaded, err := LoadTokens()
-	if err != nil {
-		t.Fatalf("LoadTokens() error: %v", err)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected 200 after retry, got %d", resp.StatusCode)
 	}
-	if loaded.AccessToken != "new-access" {
-		t.Errorf("persisted AccessToken = %q, want %q", loaded.AccessToken, "new-access")
+	if apiCalls.Load() != 2 {
+		t.Errorf("expected 2 API calls (initial + retry), got %d", apiCalls.Load())
 	}
 }
