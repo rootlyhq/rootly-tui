@@ -51,9 +51,9 @@ func TestGenerateState(t *testing.T) {
 }
 
 func TestNewConfig(t *testing.T) {
-	cfg := NewConfig("https://api.rootly.com")
-	if cfg.ClientID != ClientID {
-		t.Errorf("ClientID = %q, want %q", cfg.ClientID, ClientID)
+	cfg := NewConfig("https://api.rootly.com", "test-client-id")
+	if cfg.ClientID != "test-client-id" {
+		t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-client-id")
 	}
 	if cfg.RedirectURL != RedirectURL {
 		t.Errorf("RedirectURL = %q, want %q", cfg.RedirectURL, RedirectURL)

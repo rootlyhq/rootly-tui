@@ -22,12 +22,17 @@ func LoadTokens() (*TokenData, error) {
 	if err != nil {
 		return nil, err
 	}
+	return TokenDataFromConfig(cfg), nil
+}
+
+// TokenDataFromConfig extracts OAuth2 tokens from an already-loaded config.
+func TokenDataFromConfig(cfg *config.Config) *TokenData {
 	return &TokenData{
 		AccessToken:  cfg.OAuthAccessToken,
 		RefreshToken: cfg.OAuthRefreshToken,
 		TokenType:    cfg.OAuthTokenType,
 		ExpiresAt:    cfg.OAuthExpiresAt,
-	}, nil
+	}
 }
 
 // SaveTokens writes OAuth2 tokens to the config file.

@@ -647,7 +647,20 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 			"auth_base_url", authBaseURL,
 			"token_url", authBaseURL+"/oauth/token",
 		)
-		cfg := oauth.NewConfig(authBaseURL)
+
+		// Get or register client_id
+		clientID := oauth.LoadClientID()
+		if clientID == "" {
+			debug.Logger.Info("No cached client_id, registering new OAuth client")
+			var err error
+			clientID, err = oauth.RegisterClient(context.Background(), authBaseURL)
+			if err != nil {
+				return OAuthLoginResultMsg{Success: false, Error: "Could not register OAuth client: " + err.Error()}
+			}
+		}
+		debug.Logger.Debug("Using OAuth client_id", "client_id", clientID)
+
+		cfg := oauth.NewConfig(authBaseURL, clientID)
 
 		state, err := oauth.GenerateState()
 		if err != nil {
@@ -745,7 +758,13 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 			}
 			return OAuthLoginResultMsg{Success: true}
 		case err := <-errCh:
-			return OAuthLoginResultMsg{Success: false, Error: err.Error()}
+			errMsg := err.Error()
+			// If authorization failed (possibly stale client_id), clear it so next attempt re-registers
+			if strings.Contains(errMsg, "invalid_client") || strings.Contains(errMsg, "client_not_found") {
+				debug.Logger.Warn("OAuth client may be stale, clearing cached client_id")
+				_ = oauth.ClearClientID()
+			}
+			return OAuthLoginResultMsg{Success: false, Error: errMsg}
 		case <-timer.C:
 			return OAuthLoginResultMsg{Success: false, Error: "Login timed out (5 minutes)"}
 		}

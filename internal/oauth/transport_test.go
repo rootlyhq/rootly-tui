@@ -63,7 +63,7 @@ func TestNewHTTPClientWithTokensNoTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oauthCfg := NewConfig("https://app.rootly.com")
+	oauthCfg := NewConfig("https://app.rootly.com", "test-client")
 	client := NewHTTPClientWithTokens(oauthCfg, nil, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {

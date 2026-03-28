@@ -30,6 +30,7 @@ type Config struct {
 	OAuthRefreshToken string    `yaml:"oauth_refresh_token,omitempty"`
 	OAuthTokenType    string    `yaml:"oauth_token_type,omitempty"`
 	OAuthExpiresAt    time.Time `yaml:"oauth_expires_at,omitempty"`
+	OAuthClientID     string    `yaml:"oauth_client_id,omitempty"`
 }
 
 // HasOAuthTokens returns true if OAuth tokens are present.
@@ -44,6 +45,11 @@ func (c *Config) ClearOAuthTokens() {
 	c.OAuthTokenType = ""
 	c.OAuthExpiresAt = time.Time{}
 	c.UseOAuth = false
+}
+
+// ClearOAuthClientID removes the cached OAuth client ID.
+func (c *Config) ClearOAuthClientID() {
+	c.OAuthClientID = ""
 }
 
 const DefaultTimezone = "UTC"
