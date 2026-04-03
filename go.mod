@@ -1,6 +1,6 @@
 module github.com/rootlyhq/rootly-tui
 
-go 1.24.2
+go 1.25.0
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
@@ -13,7 +13,7 @@ require (
 	github.com/rootlyhq/rootly-go v0.8.0
 	go.etcd.io/bbolt v1.4.3
 	golang.design/x/clipboard v0.7.1
-	golang.org/x/text v0.34.0
+	golang.org/x/text v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
