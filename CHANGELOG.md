@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- OAuth2 login with PKCE flow as default authentication method
+- Browser-based login via setup screen (local callback server on port 19798)
+- Logout button in setup screen when OAuth is active
+- Animated ASCII welcome screen for first-run experience with gradient logo and shimmer effect
+- Auto-refresh transport that persists refreshed OAuth tokens to disk
+- `DeriveAuthBaseURL` with automatic scheme detection (http for localhost, https for production)
+- Auto-derive `/api` path for local dev OAuth endpoints
+
+### Changed
+- Setup screen now offers OAuth2 (default) or API Key authentication
+- First-run wizard shows single Login button and auto-proceeds to main screen
+- OAuth tokens stored in `~/.rootly-tui/config.yaml` alongside existing config
+- API client uses Bearer token via OAuth transport when `use_oauth` is enabled
+- Raw HTTP requests now use `application/vnd.api+json` content type (was `application/json`)
+- Forward `WindowSizeMsg` to setup screen for proper centering
+
+### Dependencies
+- Add `golang.org/x/oauth2` v0.35.0
+- Bump charmbracelet/glamour from 0.10.0 to 1.0.0
+- Bump charmbracelet/log from 0.4.2 to 1.0.0
+
 ## [0.2.3] - 2026-03-06
 
 ### Fixed

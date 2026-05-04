@@ -23,6 +23,33 @@ type Config struct {
 	Timezone string `yaml:"timezone"`
 	Language string `yaml:"language"`
 	Layout   string `yaml:"layout"`
+	UseOAuth bool   `yaml:"use_oauth,omitempty"`
+
+	// OAuth2 tokens (stored in same config file)
+	OAuthAccessToken  string    `yaml:"oauth_access_token,omitempty"`
+	OAuthRefreshToken string    `yaml:"oauth_refresh_token,omitempty"`
+	OAuthTokenType    string    `yaml:"oauth_token_type,omitempty"`
+	OAuthExpiresAt    time.Time `yaml:"oauth_expires_at,omitempty"`
+	OAuthClientID     string    `yaml:"oauth_client_id,omitempty"`
+}
+
+// HasOAuthTokens returns true if OAuth tokens are present.
+func (c *Config) HasOAuthTokens() bool {
+	return c.OAuthAccessToken != "" && c.OAuthRefreshToken != ""
+}
+
+// ClearOAuthTokens removes OAuth token data from the config.
+func (c *Config) ClearOAuthTokens() {
+	c.OAuthAccessToken = ""
+	c.OAuthRefreshToken = ""
+	c.OAuthTokenType = ""
+	c.OAuthExpiresAt = time.Time{}
+	c.UseOAuth = false
+}
+
+// ClearOAuthClientID removes the cached OAuth client ID.
+func (c *Config) ClearOAuthClientID() {
+	c.OAuthClientID = ""
 }
 
 const DefaultTimezone = "UTC"
@@ -115,7 +142,7 @@ func Save(cfg *Config) error {
 }
 
 func (c *Config) IsValid() bool {
-	return c.APIKey != "" && c.Endpoint != ""
+	return (c.APIKey != "" || c.UseOAuth) && c.Endpoint != ""
 }
 
 // DetectTimezone returns the local system timezone name.

@@ -14,10 +14,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"golang.design/x/clipboard"
 
+	"errors"
+
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 	"github.com/rootlyhq/rootly-tui/internal/i18n"
+	"github.com/rootlyhq/rootly-tui/internal/oauth"
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 	"github.com/rootlyhq/rootly-tui/internal/views"
 )
@@ -99,6 +102,8 @@ func New(version string) Model {
 		cfg, err := config.Load()
 		if err == nil && cfg.IsValid() {
 			m.cfg = cfg
+			// Re-initialize setup with config so auth method is preserved
+			m.setup = views.NewSetupModelWithConfig(cfg)
 			// Set language from config
 			if cfg.Language != "" {
 				i18n.SetLanguage(i18n.Language(cfg.Language))
@@ -362,6 +367,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		m.setup.SetDimensions(msg.Width, msg.Height)
 		m.incidents.SetDimensions(msg.Width-4, msg.Height-10)
 		m.alerts.SetDimensions(msg.Width-4, msg.Height-10)
 		m.logs.SetDimensions(msg.Width, msg.Height)
@@ -398,9 +404,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	// Setup screen messages
+	case views.OAuthLoginResultMsg:
+		var cmd tea.Cmd
+		m.setup, cmd = m.setup.Update(msg)
+		return m, cmd
+
+	case views.OAuthLogoutResultMsg:
+		m.setup, _ = m.setup.Update(msg)
+		return m, nil
+
 	case views.APIKeyValidatedMsg:
 		m.setup.HandleValidationResult(msg)
 		m.setup.SetTesting(false)
+		if msg.Valid && m.setup.IsFirstRun() {
+			// Auto-save and proceed on first-run
+			return m, m.setup.DoSaveConnection()
+		}
 		return m, nil
 
 	case views.ConfigSavedMsg:
@@ -490,6 +509,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.initialLoading = false
 		if msg.Err != nil {
+			if m.handleOAuthExpired(msg.Err) {
+				return m, m.setup.Init()
+			}
 			m.errorMsg = msg.Err.Error()
 			m.incidents.SetError(msg.Err.Error())
 		} else {
@@ -501,6 +523,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case AlertsLoadedMsg:
 		if msg.Err != nil {
+			if m.handleOAuthExpired(msg.Err) {
+				return m, m.setup.Init()
+			}
 			m.alerts.SetError(msg.Err.Error())
 		} else {
 			m.alerts.SetAlerts(msg.Alerts, msg.Pagination)
@@ -510,6 +535,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case IncidentDetailLoadedMsg:
 		m.incidents.ClearDetailLoading()
 		if msg.Err != nil {
+			if m.handleOAuthExpired(msg.Err) {
+				return m, m.setup.Init()
+			}
 			m.errorMsg = msg.Err.Error()
 		} else if msg.Incident != nil {
 			m.incidents.UpdateIncidentDetail(msg.Index, msg.Incident)
@@ -522,6 +550,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AlertDetailLoadedMsg:
 		m.alerts.ClearDetailLoading()
 		if msg.Err != nil {
+			if m.handleOAuthExpired(msg.Err) {
+				return m, m.setup.Init()
+			}
 			m.errorMsg = msg.Err.Error()
 		} else if msg.Alert != nil {
 			m.alerts.UpdateAlertDetail(msg.Index, msg.Alert)
@@ -535,6 +566,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.errorMsg = msg.Err.Error()
 		m.loading = false
 		return m, nil
+
+	default:
+		// Forward unhandled messages to setup screen (e.g., animation ticks)
+		if m.screen == ScreenSetup {
+			var cmd tea.Cmd
+			m.setup, cmd = m.setup.Update(msg)
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+		}
 	}
 
 	return m, tea.Batch(cmds...)
@@ -785,4 +826,22 @@ func openURLInBrowser(url string) error {
 		return fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 	}
 	return cmd.Start()
+}
+
+// handleOAuthExpired checks if an error is due to an expired/revoked OAuth token.
+// If so, it clears tokens, switches to setup screen, and returns true.
+func (m *Model) handleOAuthExpired(err error) bool {
+	if !errors.Is(err, oauth.ErrTokenRefreshFailed) {
+		return false
+	}
+	debug.Logger.Warn("OAuth session expired, redirecting to setup screen")
+	// Clear stale OAuth tokens from config
+	if m.cfg != nil {
+		m.cfg.ClearOAuthTokens()
+		_ = config.Save(m.cfg)
+	}
+	m.screen = ScreenSetup
+	m.errorMsg = "Session expired — please login again"
+	m.setup = views.NewSetupModelWithConfig(m.cfg)
+	return true
 }
