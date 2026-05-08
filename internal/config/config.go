@@ -31,6 +31,7 @@ type Config struct {
 	OAuthTokenType    string    `yaml:"oauth_token_type,omitempty"`
 	OAuthExpiresAt    time.Time `yaml:"oauth_expires_at,omitempty"`
 	OAuthClientID     string    `yaml:"oauth_client_id,omitempty"`
+	OAuthScopes       string    `yaml:"oauth_scopes,omitempty"`
 }
 
 // HasOAuthTokens returns true if OAuth tokens are present.

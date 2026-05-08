@@ -63,7 +63,7 @@ func TestNewHTTPClientWithTokensNoTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oauthCfg := NewConfig("https://app.rootly.com", "test-client")
+	oauthCfg := NewConfig("https://app.rootly.com", "test-client", nil)
 	client := NewHTTPClientWithTokens(oauthCfg, nil, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
@@ -101,7 +101,7 @@ func TestNewHTTPClientWithTokensValid(t *testing.T) {
 	}))
 	defer tokenSrv.Close()
 
-	oauthCfg := NewConfig(tokenSrv.URL, "test-client")
+	oauthCfg := NewConfig(tokenSrv.URL, "test-client", nil)
 	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
 
 	if client == nil {
@@ -151,7 +151,7 @@ func TestRetryOn401(t *testing.T) {
 		ExpiresAt:    time.Now().Add(1 * time.Hour),
 	}
 
-	oauthCfg := NewConfig(tokenSrv.URL, "test-client")
+	oauthCfg := NewConfig(tokenSrv.URL, "test-client", nil)
 	client := NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/test")
 
 	req, _ := http.NewRequestWithContext(t.Context(), "GET", apiSrv.URL, http.NoBody)

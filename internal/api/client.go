@@ -300,15 +300,15 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	if cfg.UseOAuth {
 		td := oauth.TokenDataFromConfig(cfg)
 		if td.HasValidTokens() {
-			clientID := cfg.OAuthClientID
-			if clientID != "" {
+			reg := oauth.LoadClientRegistration()
+			if reg != nil {
 				useOAuth = true
 				authBaseURL := oauth.DeriveAuthBaseURL(cfg.Endpoint)
-				oauthCfg := oauth.NewConfig(authBaseURL, clientID)
+				oauthCfg := oauth.NewConfig(authBaseURL, reg.ClientID, reg.Scopes)
 				oauthHTTPClient = oauth.NewHTTPClientWithTokens(oauthCfg, td, http.DefaultTransport, "rootly-tui/"+Version)
 				debug.Logger.Debug("Using OAuth2 authentication")
 			} else {
-				debug.Logger.Warn("OAuth tokens exist but no client_id cached, skipping OAuth")
+				debug.Logger.Warn("OAuth tokens exist but no client registration cached, skipping OAuth")
 			}
 		}
 	}

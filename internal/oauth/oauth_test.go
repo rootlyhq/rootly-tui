@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestDeriveAuthBaseURL(t *testing.T) {
+func TestDeriveAPIBaseURL(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
@@ -19,6 +19,33 @@ func TestDeriveAuthBaseURL(t *testing.T) {
 		{"http://localhost:22166/api", "http://localhost:22166"},
 		{"https://api.example.com", "https://api.example.com"},
 		{"https://api.example.com/v1", "https://api.example.com"},
+		{"custom.rootly.io", "https://custom.rootly.io"},
+		{"staging.rootly.com", "https://staging.rootly.com"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := DeriveAPIBaseURL(tt.input)
+			if result != tt.expected {
+				t.Errorf("DeriveAPIBaseURL(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDeriveAuthBaseURL(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"api.rootly.com", "https://rootly.com"},
+		{"api.rootly.com/api", "https://rootly.com"},
+		{"staging.rootly.com", "https://staging.rootly.com"},
+		{"localhost:22166", "http://localhost:22166"},
+		{"localhost:22166/api", "http://localhost:22166"},
+		{"127.0.0.1:22166", "http://127.0.0.1:22166"},
+		{"http://localhost:22166", "http://localhost:22166"},
+		{"https://api.example.com", "https://example.com"},
 		{"custom.rootly.io", "https://custom.rootly.io"},
 	}
 
@@ -51,7 +78,7 @@ func TestGenerateState(t *testing.T) {
 }
 
 func TestNewConfig(t *testing.T) {
-	cfg := NewConfig("https://api.rootly.com", "test-client-id")
+	cfg := NewConfig("https://api.rootly.com", "test-client-id", []string{"openid", "profile"})
 	if cfg.ClientID != "test-client-id" {
 		t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-client-id")
 	}
@@ -63,5 +90,15 @@ func TestNewConfig(t *testing.T) {
 	}
 	if cfg.Endpoint.TokenURL != "https://api.rootly.com/oauth/token" {
 		t.Errorf("TokenURL = %q", cfg.Endpoint.TokenURL)
+	}
+	if len(cfg.Scopes) != 2 || cfg.Scopes[0] != "openid" {
+		t.Errorf("Scopes = %v, want [openid profile]", cfg.Scopes)
+	}
+}
+
+func TestNewConfigDefaultScopes(t *testing.T) {
+	cfg := NewConfig("https://api.rootly.com", "test-client-id", nil)
+	if len(cfg.Scopes) != len(DefaultScopes) {
+		t.Errorf("Scopes = %v, want %v", cfg.Scopes, DefaultScopes)
 	}
 }

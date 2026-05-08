@@ -641,26 +641,27 @@ func (m SetupModel) doTestConnection() tea.Cmd {
 func (m SetupModel) doOAuthLogin() tea.Cmd {
 	endpointVal := m.endpoint.Value()
 	return func() tea.Msg {
+		apiBaseURL := oauth.DeriveAPIBaseURL(endpointVal)
 		authBaseURL := oauth.DeriveAuthBaseURL(endpointVal)
 		debug.Logger.Debug("OAuth config",
 			"endpoint_input", endpointVal,
+			"api_base_url", apiBaseURL,
 			"auth_base_url", authBaseURL,
-			"token_url", authBaseURL+"/oauth/token",
 		)
 
-		// Get or register client_id
-		clientID := oauth.LoadClientID()
-		if clientID == "" {
-			debug.Logger.Info("No cached client_id, registering new OAuth client")
+		// Get or register client
+		reg := oauth.LoadClientRegistration()
+		if reg == nil {
+			debug.Logger.Info("No cached client registration, registering new OAuth client")
 			var err error
-			clientID, err = oauth.RegisterClient(context.Background(), authBaseURL)
+			reg, err = oauth.RegisterClient(context.Background(), apiBaseURL)
 			if err != nil {
 				return OAuthLoginResultMsg{Success: false, Error: "Could not register OAuth client: " + err.Error()}
 			}
 		}
-		debug.Logger.Debug("Using OAuth client_id", "client_id", clientID)
+		debug.Logger.Debug("Using OAuth client", "client_id", reg.ClientID, "scopes", reg.Scopes)
 
-		cfg := oauth.NewConfig(authBaseURL, clientID)
+		cfg := oauth.NewConfig(authBaseURL, reg.ClientID, reg.Scopes)
 
 		state, err := oauth.GenerateState()
 		if err != nil {
@@ -762,7 +763,7 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 			// If authorization failed (possibly stale client_id), clear it so next attempt re-registers
 			if strings.Contains(errMsg, "invalid_client") || strings.Contains(errMsg, "client_not_found") {
 				debug.Logger.Warn("OAuth client may be stale, clearing cached client_id")
-				_ = oauth.ClearClientID()
+				_ = oauth.ClearClientRegistration()
 			}
 			return OAuthLoginResultMsg{Success: false, Error: errMsg}
 		case <-timer.C:
