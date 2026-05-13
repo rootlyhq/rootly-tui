@@ -613,6 +613,7 @@ func (m SetupModel) doOAuthLogout() tea.Cmd {
 		if err := oauth.ClearTokens(); err != nil {
 			return OAuthLogoutResultMsg{Success: false, Error: err.Error()}
 		}
+		_ = oauth.ClearClientRegistration()
 		return OAuthLogoutResultMsg{Success: true}
 	}
 }
@@ -700,8 +701,8 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 
 			if gotState != state {
 				w.Header().Set("Content-Type", "text/html")
-				_, _ = fmt.Fprintf(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>State mismatch</p><p style="font-size:0.8em;color:#888;">Expected: %s</p><p style="font-size:0.8em;color:#888;">Got: %s</p></div></body></html>`, state, gotState)
-				errCh <- fmt.Errorf("state mismatch: expected %q, got %q", state, gotState)
+				_, _ = fmt.Fprint(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>State mismatch — please try again</p></div></body></html>`)
+				errCh <- fmt.Errorf("state mismatch")
 				return
 			}
 
