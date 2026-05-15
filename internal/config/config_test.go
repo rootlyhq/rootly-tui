@@ -91,6 +91,16 @@ func TestConfigIsValid(t *testing.T) {
 			config:   Config{},
 			expected: false,
 		},
+		{
+			name:     "oauth without api key",
+			config:   Config{UseOAuth: true, Endpoint: "api.rootly.com"},
+			expected: true,
+		},
+		{
+			name:     "oauth without endpoint",
+			config:   Config{UseOAuth: true, Endpoint: ""},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -99,6 +109,43 @@ func TestConfigIsValid(t *testing.T) {
 				t.Errorf("Config.IsValid() = %v, want %v", got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestHasOAuthTokens(t *testing.T) {
+	c := Config{OAuthAccessToken: "a", OAuthRefreshToken: "r"}
+	if !c.HasOAuthTokens() {
+		t.Error("expected HasOAuthTokens() = true")
+	}
+
+	c = Config{OAuthAccessToken: "", OAuthRefreshToken: "r"}
+	if c.HasOAuthTokens() {
+		t.Error("expected HasOAuthTokens() = false without access token")
+	}
+
+	c = Config{}
+	if c.HasOAuthTokens() {
+		t.Error("expected HasOAuthTokens() = false for empty config")
+	}
+}
+
+func TestClearOAuthTokens(t *testing.T) {
+	c := Config{
+		UseOAuth:          true,
+		OAuthAccessToken:  "a",
+		OAuthRefreshToken: "r",
+		OAuthTokenType:    "Bearer",
+	}
+	c.ClearOAuthTokens()
+
+	if c.UseOAuth {
+		t.Error("expected UseOAuth = false after clear")
+	}
+	if c.OAuthAccessToken != "" {
+		t.Error("expected empty access token after clear")
+	}
+	if c.OAuthRefreshToken != "" {
+		t.Error("expected empty refresh token after clear")
 	}
 }
 
