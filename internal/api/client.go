@@ -713,9 +713,9 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 	}
 
 	// Use Meta values, fall back to page parameter if Meta.CurrentPage is 0
-	currentPage := result.Meta.CurrentPage
-	if currentPage == 0 {
-		currentPage = page
+	currentPage := page
+	if cp, err := result.Meta.CurrentPage.Get(); err == nil && cp > 0 {
+		currentPage = cp
 	}
 
 	alertsResult := &AlertsResult{
