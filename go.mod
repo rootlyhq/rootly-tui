@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/log v1.0.0
 	github.com/evertras/bubble-table v0.19.2
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
-	github.com/rootlyhq/rootly-go v0.10.1
+	github.com/rootlyhq/rootly-go v0.10.2
 	go.etcd.io/bbolt v1.4.3
 	golang.design/x/clipboard v0.7.1
 	golang.org/x/oauth2 v0.36.0
@@ -34,7 +34,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.5.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/getkin/kin-openapi v0.137.0 // indirect
+	github.com/getkin/kin-openapi v0.138.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-openapi/jsonpointer v0.22.4 // indirect
 	github.com/go-openapi/swag/jsonname v0.25.4 // indirect
