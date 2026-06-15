@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/rootlyhq/rootly-tui/internal/debug"
 )
@@ -95,26 +95,26 @@ func TestLogsModelUpdate(t *testing.T) {
 
 	// Test 'f' to toggle follow mode
 	initialAutoTail := m.autoTail
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'f'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'f', Text: "f"})
 	if m.autoTail == initialAutoTail {
 		t.Error("expected autoTail to toggle after 'f'")
 	}
 
 	// Test 'G' goes to bottom and enables follow
 	m.autoTail = false
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'G', Text: "G"})
 	if !m.autoTail {
 		t.Error("expected autoTail to be true after 'G'")
 	}
 
 	// Test 'g' goes to top and disables follow
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'g'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
 	if m.autoTail {
 		t.Error("expected autoTail to be false after 'g'")
 	}
 
 	// Test clear with 'c'
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
 	if m.lineCount != 0 {
 		t.Errorf("expected 0 lines after clear, got %d", m.lineCount)
 	}
@@ -126,7 +126,7 @@ func TestLogsModelUpdateWhenHidden(t *testing.T) {
 
 	// Updates should be ignored when hidden
 	initialAutoTail := m.autoTail
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'f'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'f', Text: "f"})
 	if m.autoTail != initialAutoTail {
 		t.Error("expected autoTail to remain unchanged when hidden")
 	}
@@ -192,7 +192,7 @@ func TestLogsModelSelectAll(t *testing.T) {
 	m.lineCount = 10
 
 	// Press 'a' to select all
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
 
 	if !m.hasSelection {
 		t.Error("expected hasSelection to be true")
@@ -212,7 +212,7 @@ func TestLogsModelEscapeClearsSelection(t *testing.T) {
 	m.selectStart = 1
 	m.selectEnd = 5
 
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 
 	if m.hasSelection {
 		t.Error("expected hasSelection to be false after escape")
@@ -248,7 +248,7 @@ func TestLogsModelCopyYKeypress(t *testing.T) {
 	m.Refresh()
 
 	// Press 'y' to copy
-	m, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	m, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 
 	// Behavior depends on clipboard availability (requires CGO_ENABLED=1)
 	if m.clipboardAvailable {
@@ -339,7 +339,7 @@ func TestLogsModelScrollDisablesAutoTail(t *testing.T) {
 	m.autoTail = true
 
 	// Scroll up should disable auto-tail
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.autoTail {
 		t.Error("expected autoTail to be false after scroll up")
 	}
@@ -348,7 +348,7 @@ func TestLogsModelScrollDisablesAutoTail(t *testing.T) {
 	m.autoTail = true
 
 	// Scroll down should also disable auto-tail
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.autoTail {
 		t.Error("expected autoTail to be false after scroll down")
 	}

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"golang.design/x/clipboard"
 
 	"errors"
@@ -141,7 +141,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		// Handle quit/escape - if on setup screen with valid config, return to main instead of exiting
 		if key.Matches(msg, m.keys.Quit) || (m.screen == ScreenSetup && msg.String() == "esc") {
 			if m.screen == ScreenSetup && m.cfg != nil && m.cfg.IsValid() {
@@ -581,17 +581,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
+	var content string
+
 	if m.width == 0 {
-		return i18n.T("common.loading")
+		content = i18n.T("common.loading")
+	} else if m.screen == ScreenSetup {
+		content = m.setup.View()
+	} else {
+		content = m.renderMainView()
 	}
 
-	// Setup screen
-	if m.screen == ScreenSetup {
-		return m.setup.View()
-	}
+	v := tea.NewView(content)
+	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion
+	return v
+}
 
-	// Main screen
+func (m Model) renderMainView() string {
 	var b strings.Builder
 
 	// Header with tabs

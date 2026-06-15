@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
 )
 
 // ringBuffer is a thread-safe circular buffer for log entries

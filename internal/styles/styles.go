@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/glamour/v2"
+	"charm.land/lipgloss/v2"
 )
 
 // Spacing constants (padding and margin)
@@ -555,7 +555,7 @@ func getMarkdownRenderer(width int) *glamour.TermRenderer {
 		}`, ColorInfo, ColorInfo)
 
 		r, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
+			glamour.WithEnvironmentConfig(),
 			glamour.WithWordWrap(width),
 			glamour.WithStylesFromJSONBytes([]byte(styleJSON)),
 		)

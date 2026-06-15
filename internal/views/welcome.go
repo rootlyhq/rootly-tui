@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/rootlyhq/rootly-tui/internal/styles"
 )
@@ -31,7 +31,7 @@ var asciiLogo = []string{
 }
 
 // Gradient palette from purple to indigo to cyan
-var gradientColors = []lipgloss.Color{
+var gradientColors = []string{
 	"#7C3AED", // purple
 	"#7C3AED",
 	"#6D5AED",
@@ -45,7 +45,7 @@ var gradientColors = []lipgloss.Color{
 }
 
 // Shimmer colors (bright highlights)
-var shimmerColors = []lipgloss.Color{
+var shimmerColors = []string{
 	"#C4B5FD", // light purple
 	"#DDD6FE",
 	"#EDE9FE",
@@ -67,11 +67,11 @@ var (
 func init() {
 	gradientStyles = make([]lipgloss.Style, len(gradientColors))
 	for i, c := range gradientColors {
-		gradientStyles[i] = lipgloss.NewStyle().Foreground(c).Bold(true)
+		gradientStyles[i] = lipgloss.NewStyle().Foreground(lipgloss.Color(c)).Bold(true)
 	}
 	shimmerStyles = make([]lipgloss.Style, len(shimmerColors))
 	for i, c := range shimmerColors {
-		shimmerStyles[i] = lipgloss.NewStyle().Foreground(c).Bold(true)
+		shimmerStyles[i] = lipgloss.NewStyle().Foreground(lipgloss.Color(c)).Bold(true)
 	}
 }
 

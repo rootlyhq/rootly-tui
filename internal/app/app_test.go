@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 	"github.com/rootlyhq/rootly-tui/internal/config"
@@ -59,7 +59,7 @@ func TestModelUpdateQuit(t *testing.T) {
 	m.screen = ScreenMain // Set to main screen
 
 	// Test quit with 'q'
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -75,7 +75,7 @@ func TestModelUpdateQuitFromSetup(t *testing.T) {
 	m.screen = ScreenSetup
 
 	// Test quit with 'q' from setup screen
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 
 	// Should return quit command even from setup
 	if cmd == nil {
@@ -89,7 +89,7 @@ func TestModelUpdateTabSwitch(t *testing.T) {
 	m.activeTab = TabIncidents
 
 	// Test tab switch
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	model := newModel.(Model)
 
 	if model.activeTab != TabAlerts {
@@ -97,7 +97,7 @@ func TestModelUpdateTabSwitch(t *testing.T) {
 	}
 
 	// Switch back
-	newModel, _ = model.Update(tea.KeyMsg{Type: tea.KeyTab})
+	newModel, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	model = newModel.(Model)
 
 	if model.activeTab != TabIncidents {
@@ -111,7 +111,7 @@ func TestModelUpdateHelp(t *testing.T) {
 	m.help.Visible = false
 
 	// Test help toggle with '?'
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: '?', Text: "?"})
 	model := newModel.(Model)
 
 	if !model.help.Visible {
@@ -119,7 +119,7 @@ func TestModelUpdateHelp(t *testing.T) {
 	}
 
 	// Toggle off
-	newModel, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	newModel, _ = model.Update(tea.KeyPressMsg{Code: '?', Text: "?"})
 	model = newModel.(Model)
 
 	if model.help.Visible {
@@ -147,8 +147,8 @@ func TestModelView(t *testing.T) {
 
 	// Test view before window size is set
 	view := m.View()
-	if view != "Loading..." {
-		t.Errorf("expected 'Loading...' before window size, got '%s'", view)
+	if view.Content != "Loading..." {
+		t.Errorf("expected 'Loading...' before window size, got '%s'", view.Content)
 	}
 
 	// Set window size
@@ -156,7 +156,7 @@ func TestModelView(t *testing.T) {
 	m = newModel.(Model)
 
 	view = m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view after window size set")
 	}
 }
@@ -232,7 +232,7 @@ func TestModelUpdateLogs(t *testing.T) {
 	m.logs.Visible = false
 
 	// Test logs toggle with 'l'
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	model := newModel.(Model)
 
 	if !model.logs.Visible {
@@ -240,7 +240,7 @@ func TestModelUpdateLogs(t *testing.T) {
 	}
 
 	// Toggle off with 'l'
-	newModel, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	newModel, _ = model.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	model = newModel.(Model)
 
 	if model.logs.Visible {
@@ -254,7 +254,7 @@ func TestModelUpdateLogsEscape(t *testing.T) {
 	m.logs.Visible = true
 
 	// Test closing logs with Escape
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	model := newModel.(Model)
 
 	if model.logs.Visible {
@@ -269,7 +269,7 @@ func TestModelLogsBlocksOtherKeys(t *testing.T) {
 	m.logs.Visible = true
 
 	// Tab should not switch tabs when logs overlay is visible
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	model := newModel.(Model)
 
 	if model.activeTab != TabIncidents {
@@ -377,7 +377,7 @@ func TestModelOpenKeyBinding(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press 'o' key - should not panic even without a real browser
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -403,7 +403,7 @@ func TestModelOpenKeyBindingWithFallbackURL(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press 'o' key - should not panic
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -426,7 +426,7 @@ func TestModelOpenKeyBindingForAlerts(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press 'o' key - should not panic
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'o'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -444,7 +444,7 @@ func TestModelViewWithSetupScreen(t *testing.T) {
 	m.setup.SetDimensions(120, 40)
 
 	view := m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view for setup screen")
 	}
 }
@@ -461,7 +461,7 @@ func TestModelViewWithMainScreen(t *testing.T) {
 	m.alerts.SetDimensions(116, 30)
 
 	view := m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view for main screen")
 	}
 }
@@ -474,7 +474,7 @@ func TestModelViewWithHelpOverlay(t *testing.T) {
 	m.help.Visible = true
 
 	view := m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view with help overlay")
 	}
 }
@@ -488,7 +488,7 @@ func TestModelViewWithLogsOverlay(t *testing.T) {
 	m.logs.SetDimensions(120, 40)
 
 	view := m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view with logs overlay")
 	}
 }
@@ -501,7 +501,7 @@ func TestModelViewWithInitialLoading(t *testing.T) {
 	m.initialLoading = true
 
 	view := m.View()
-	if view == "" {
+	if view.Content == "" {
 		t.Error("expected non-empty view during initial loading")
 	}
 }
@@ -645,7 +645,7 @@ func TestModelSetupKeyBinding(t *testing.T) {
 	m.screen = ScreenMain
 
 	// Press 's' to go to setup
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
 	model := newModel.(Model)
 
 	if model.screen != ScreenSetup {
@@ -659,7 +659,7 @@ func TestModelRefreshKeyBinding(t *testing.T) {
 	m.loading = false
 
 	// Press 'r' to refresh
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'r'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
 	model := newModel.(Model)
 
 	if !model.loading {
@@ -683,7 +683,7 @@ func TestModelPaginationPrevPage(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 2, HasPrev: true, HasNext: true})
 
 	// Press '[' for previous page
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'['}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: '[', Text: "["})
 	model := newModel.(Model)
 
 	// Should return a command to load data
@@ -708,7 +708,7 @@ func TestModelPaginationNextPage(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1, HasPrev: false, HasNext: true})
 
 	// Press ']' for next page
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{']'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: ']', Text: "]"})
 	model := newModel.(Model)
 
 	// Should return a command to load data
@@ -733,7 +733,7 @@ func TestModelPaginationNoPrevPage(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1, HasPrev: false, HasNext: true})
 
 	// Press '[' for previous page (should be no-op)
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'['}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: '[', Text: "["})
 	model := newModel.(Model)
 
 	// Should not return a command
@@ -758,7 +758,7 @@ func TestModelEnterKeyLoadDetail(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press Enter to load detail
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model := newModel.(Model)
 
 	// Should return a command (but will fail without client)
@@ -778,7 +778,7 @@ func TestModelEnterKeyFocusDetail(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press Enter to focus detail
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model := newModel.(Model)
 
 	// Should focus detail pane
@@ -796,7 +796,7 @@ func TestModelMouseMsg(t *testing.T) {
 	m.incidents.SetDimensions(116, 30)
 
 	// Send mouse message - should not panic
-	newModel, _ := m.Update(tea.MouseMsg{Action: tea.MouseActionMotion, X: 50, Y: 20})
+	newModel, _ := m.Update(tea.MouseMotionMsg{})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -835,7 +835,7 @@ func TestModelQuitFromSetupWithValidConfig(t *testing.T) {
 	m.cfg = &config.Config{APIKey: "test", Endpoint: "api.rootly.com"}
 
 	// Press 'q' with valid config - should return to main
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	model := newModel.(Model)
 
 	if model.screen != ScreenMain {
@@ -854,7 +854,7 @@ func TestModelEscapeFromSetupWithValidConfig(t *testing.T) {
 	m.cfg = &config.Config{APIKey: "test", Endpoint: "api.rootly.com"}
 
 	// Press Escape with valid config - should return to main
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	model := newModel.(Model)
 
 	if model.screen != ScreenMain {
@@ -873,7 +873,7 @@ func TestModelHelpEscape(t *testing.T) {
 	m.help.Visible = true
 
 	// Press Escape to close help
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	model := newModel.(Model)
 
 	if model.help.Visible {
@@ -892,7 +892,7 @@ func TestModelAlertsPagination(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1, HasPrev: false, HasNext: true})
 
 	// Press ']' for next page
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{']'}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: ']', Text: "]"})
 	model := newModel.(Model)
 
 	// Should return a command
@@ -916,7 +916,7 @@ func TestModelAlertsPaginationPrev(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 2, HasPrev: true, HasNext: false})
 
 	// Press '[' for prev page
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'['}})
+	newModel, cmd := m.Update(tea.KeyPressMsg{Code: '[', Text: "["})
 	model := newModel.(Model)
 
 	// Should return a command
@@ -940,7 +940,7 @@ func TestModelEnterOnAlert(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press Enter to load detail
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 
 	// Should return a command (even if it fails without client)
 	_ = cmd
@@ -957,7 +957,7 @@ func TestModelEnterOnAlertWithDetailLoaded(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Press Enter to focus detail
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model := newModel.(Model)
 
 	// Should focus detail pane
@@ -973,7 +973,7 @@ func TestModelTabSwitchClearsFocus(t *testing.T) {
 	m.incidents.SetDetailFocused(true)
 
 	// Switch tab
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	model := newModel.(Model)
 
 	// Focus should be cleared
@@ -988,7 +988,7 @@ func TestModelSetupUpdate(t *testing.T) {
 	m.setup.SetDimensions(120, 40)
 
 	// Send key to setup screen
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
 	if newModel == nil {
 		t.Error("expected model to be non-nil")
 	}
@@ -1011,7 +1011,7 @@ func TestModelDownKeyPassedToView(t *testing.T) {
 	}
 
 	// Press 'j' to move down
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	model := newModel.(Model)
 
 	if model.incidents.SelectedIndex() != 1 {
@@ -1031,8 +1031,8 @@ func TestModelUpKeyPassedToView(t *testing.T) {
 	}, api.PaginationInfo{CurrentPage: 1})
 
 	// Move to second item first
-	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	newModel, _ := m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	model := newModel.(Model)
 
 	if model.incidents.SelectedIndex() != 0 {

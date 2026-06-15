@@ -1,9 +1,16 @@
 package styles
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
+
+var ansiRe = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\][^\x1b]*\x1b\\`)
+
+func stripANSI(s string) string {
+	return ansiRe.ReplaceAllString(s, "")
+}
 
 func TestRenderSeverity(t *testing.T) {
 	tests := []struct {
@@ -454,8 +461,9 @@ func TestRenderLink(t *testing.T) {
 	if !strings.Contains(result, url) {
 		t.Errorf("RenderLink should contain URL %s", url)
 	}
-	if !strings.Contains(result, text) {
-		t.Errorf("RenderLink should contain text %s", text)
+	plain := stripANSI(result)
+	if !strings.Contains(plain, text) {
+		t.Errorf("RenderLink should contain text %s, got plain %q", text, plain)
 	}
 }
 
@@ -486,8 +494,8 @@ func TestRenderMarkdownPlainText(t *testing.T) {
 	text := "Hello world"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "Hello world") {
-		t.Errorf("RenderMarkdown should contain plain text, got %q", result)
+	if !strings.Contains(stripANSI(result), "Hello world") {
+		t.Errorf("RenderMarkdown should contain plain text, got %q", stripANSI(result))
 	}
 }
 
@@ -504,7 +512,7 @@ func TestRenderMarkdownBold(t *testing.T) {
 	result := RenderMarkdown(text, 80)
 
 	// Glamour renders bold with ANSI codes, so just check text is present
-	if !strings.Contains(result, "bold text") {
+	if !strings.Contains(stripANSI(result), "bold text") {
 		t.Errorf("RenderMarkdown should contain bold text content, got %q", result)
 	}
 }
@@ -513,7 +521,7 @@ func TestRenderMarkdownItalic(t *testing.T) {
 	text := "*italic text*"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "italic text") {
+	if !strings.Contains(stripANSI(result), "italic text") {
 		t.Errorf("RenderMarkdown should contain italic text content, got %q", result)
 	}
 }
@@ -522,7 +530,7 @@ func TestRenderMarkdownCode(t *testing.T) {
 	text := "`inline code`"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "inline code") {
+	if !strings.Contains(stripANSI(result), "inline code") {
 		t.Errorf("RenderMarkdown should contain inline code content, got %q", result)
 	}
 }
@@ -531,7 +539,7 @@ func TestRenderMarkdownLink(t *testing.T) {
 	text := "[Example](https://example.com)"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "Example") {
+	if !strings.Contains(stripANSI(result), "Example") {
 		t.Errorf("RenderMarkdown should contain link text, got %q", result)
 	}
 }
@@ -540,10 +548,10 @@ func TestRenderMarkdownList(t *testing.T) {
 	text := "- item 1\n- item 2\n- item 3"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "item 1") {
+	if !strings.Contains(stripANSI(result), "item 1") {
 		t.Errorf("RenderMarkdown should contain list items, got %q", result)
 	}
-	if !strings.Contains(result, "item 2") {
+	if !strings.Contains(stripANSI(result), "item 2") {
 		t.Errorf("RenderMarkdown should contain list items, got %q", result)
 	}
 }
@@ -553,7 +561,7 @@ func TestRenderMarkdownDefaultWidth(t *testing.T) {
 	text := "Hello world"
 	result := RenderMarkdown(text, 0)
 
-	if !strings.Contains(result, "Hello world") {
+	if !strings.Contains(stripANSI(result), "Hello world") {
 		t.Errorf("RenderMarkdown with zero width should still work, got %q", result)
 	}
 }
@@ -563,7 +571,7 @@ func TestRenderMarkdownNegativeWidth(t *testing.T) {
 	text := "Hello world"
 	result := RenderMarkdown(text, -10)
 
-	if !strings.Contains(result, "Hello world") {
+	if !strings.Contains(stripANSI(result), "Hello world") {
 		t.Errorf("RenderMarkdown with negative width should still work, got %q", result)
 	}
 }
@@ -574,7 +582,7 @@ func TestRenderMarkdownNoLeftMargin(t *testing.T) {
 	result := RenderMarkdown(text, 80)
 
 	// The result should not start with spaces (no left margin)
-	if result != "" && result[0] == ' ' {
+	if plain := stripANSI(result); plain != "" && plain[0] == ' ' {
 		t.Errorf("RenderMarkdown should not have left margin, got %q", result)
 	}
 }
@@ -583,10 +591,10 @@ func TestRenderMarkdownMultiline(t *testing.T) {
 	text := "Line 1\n\nLine 2"
 	result := RenderMarkdown(text, 80)
 
-	if !strings.Contains(result, "Line 1") {
+	if !strings.Contains(stripANSI(result), "Line 1") {
 		t.Errorf("RenderMarkdown should contain first line, got %q", result)
 	}
-	if !strings.Contains(result, "Line 2") {
+	if !strings.Contains(stripANSI(result), "Line 2") {
 		t.Errorf("RenderMarkdown should contain second line, got %q", result)
 	}
 }

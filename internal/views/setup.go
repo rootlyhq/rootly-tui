@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"golang.org/x/oauth2"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
@@ -163,13 +163,13 @@ func NewSetupModel() SetupModel {
 func NewSetupModelWithConfig(cfg *config.Config) SetupModel {
 	endpointInput := textinput.New()
 	endpointInput.Placeholder = "api.rootly.com"
-	endpointInput.Width = 40
+	endpointInput.SetWidth(40)
 
 	apiKeyInput := textinput.New()
 	apiKeyInput.Placeholder = "Enter your API key"
 	apiKeyInput.EchoMode = textinput.EchoPassword
 	apiKeyInput.EchoCharacter = '*'
-	apiKeyInput.Width = 40
+	apiKeyInput.SetWidth(40)
 
 	timezones := config.ListTimezones()
 	languages := i18n.ListLanguages()
@@ -265,7 +265,7 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if m.testing || m.connSaving || m.configSaving || m.oauthLoggingIn {
 			return m, nil
 		}
@@ -338,7 +338,7 @@ func (m SetupModel) Update(msg tea.Msg) (SetupModel, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m SetupModel) handleKeyMsg(msg tea.KeyMsg) (SetupModel, tea.Cmd, bool) {
+func (m SetupModel) handleKeyMsg(msg tea.KeyPressMsg) (SetupModel, tea.Cmd, bool) {
 	textInputFocused := m.activePanel == PanelConnection && (m.connFocus == ConnFieldEndpoint || m.connFocus == ConnFieldAPIKey)
 
 	switch msg.String() {
