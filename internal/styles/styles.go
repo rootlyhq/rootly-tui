@@ -555,7 +555,7 @@ func getMarkdownRenderer(width int) *glamour.TermRenderer {
 		}`, ColorInfo, ColorInfo)
 
 		r, err := glamour.NewTermRenderer(
-			glamour.WithStylePath("dark"),
+			glamour.WithEnvironmentConfig(),
 			glamour.WithWordWrap(width),
 			glamour.WithStylesFromJSONBytes([]byte(styleJSON)),
 		)
