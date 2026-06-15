@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"golang.design/x/clipboard"
 
 	"github.com/rootlyhq/rootly-tui/internal/debug"
@@ -56,9 +56,7 @@ type LogsModel struct {
 }
 
 func NewLogsModel() LogsModel {
-	vp := viewport.New(80, 20)
-	vp.Style = lipgloss.NewStyle()
-	vp.MouseWheelEnabled = true
+	vp := viewport.New(viewport.WithWidth(80), viewport.WithHeight(20))
 
 	return LogsModel{
 		viewport: vp,
@@ -88,7 +86,7 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 		m.statusMsg = ""
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "j", "down":
 			m.autoTail = false
@@ -147,14 +145,14 @@ func (m LogsModel) Update(msg tea.Msg) (LogsModel, tea.Cmd) {
 			cmds = append(cmds, vpCmd)
 		}
 
-	case tea.MouseMsg:
-		// Forward scroll events to viewport
+	case tea.MouseWheelMsg:
 		m.viewport, vpCmd = m.viewport.Update(msg)
 		cmds = append(cmds, vpCmd)
-		// Disable auto-tail on manual scroll
-		if msg.Action == tea.MouseActionPress && (msg.Button == tea.MouseButtonWheelUp || msg.Button == tea.MouseButtonWheelDown) {
-			m.autoTail = false
-		}
+		m.autoTail = false
+
+	case tea.MouseMsg:
+		m.viewport, vpCmd = m.viewport.Update(msg)
+		cmds = append(cmds, vpCmd)
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -177,8 +175,8 @@ func (m *LogsModel) updateViewportSize() {
 		vpWidth = 20
 	}
 
-	m.viewport.Width = vpWidth
-	m.viewport.Height = vpHeight
+	m.viewport.SetWidth(vpWidth)
+	m.viewport.SetHeight(vpHeight)
 }
 
 func (m *LogsModel) loadContent() {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 // Note: TestMain in help_test.go sets i18n.LangEnglish for all tests in this package
@@ -60,13 +60,13 @@ func TestSetupModelPanelSwitch(t *testing.T) {
 	}
 
 	// Tab switches to config panel
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.ActivePanel() != PanelConfig {
 		t.Error("expected config panel after tab")
 	}
 
 	// Tab switches back to connection panel
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.ActivePanel() != PanelConnection {
 		t.Error("expected connection panel after second tab")
 	}
@@ -75,7 +75,7 @@ func TestSetupModelPanelSwitch(t *testing.T) {
 func TestSetupModelFirstRunBlocksTab(t *testing.T) {
 	m := NewSetupModel() // first-run mode
 
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.ActivePanel() != PanelConnection {
 		t.Error("expected tab to be blocked during first-run")
 	}
@@ -86,31 +86,31 @@ func TestSetupModelConnectionPanelNavigation(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Start at auth method field; down moves to endpoint
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus on endpoint after down, got %v", m.FocusIndex())
 	}
 
 	// Down moves to API key
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldAPIKey {
 		t.Errorf("expected focus on API key after down, got %v", m.FocusIndex())
 	}
 
 	// Down moves to buttons
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldButtons {
 		t.Errorf("expected focus on buttons after down, got %v", m.FocusIndex())
 	}
 
 	// Down wraps to auth method (maps to endpoint in compat)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus on endpoint after wrap, got %v", m.FocusIndex())
 	}
 
 	// Up goes to buttons
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyUp})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyUp})
 	if m.FocusIndex() != FieldButtons {
 		t.Errorf("expected focus on buttons after up, got %v", m.FocusIndex())
 	}
@@ -120,7 +120,7 @@ func TestSetupModelConfigPanelNavigation(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Switch to config panel
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 
 	// Initially on timezone
 	if m.FocusIndex() != FieldTimezone {
@@ -128,25 +128,25 @@ func TestSetupModelConfigPanelNavigation(t *testing.T) {
 	}
 
 	// Down moves to language
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldLanguage {
 		t.Errorf("expected focus on language after down, got %v", m.FocusIndex())
 	}
 
 	// Down moves to layout
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldLayout {
 		t.Errorf("expected focus on layout after down, got %v", m.FocusIndex())
 	}
 
 	// Down moves to button
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldButtons {
 		t.Errorf("expected focus on button after down, got %v", m.FocusIndex())
 	}
 
 	// Down wraps to timezone
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	if m.FocusIndex() != FieldTimezone {
 		t.Errorf("expected focus on timezone after wrap, got %v", m.FocusIndex())
 	}
@@ -157,9 +157,9 @@ func TestSetupModelConnectionButtonNavigation(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Navigate to buttons (auth method -> endpoint -> api key -> buttons)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// Should be at buttons with index 0 (Test button)
 	if m.FocusIndex() != FieldButtons {
@@ -170,19 +170,19 @@ func TestSetupModelConnectionButtonNavigation(t *testing.T) {
 	}
 
 	// Right moves to save button
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 	if m.ButtonIndex() != 1 {
 		t.Errorf("expected button index 1 after right, got %d", m.ButtonIndex())
 	}
 
 	// Right at end stays at end
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 	if m.ButtonIndex() != 1 {
 		t.Errorf("expected button index to stay 1, got %d", m.ButtonIndex())
 	}
 
 	// Left moves back
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyLeft})
 	if m.ButtonIndex() != 0 {
 		t.Errorf("expected button index 0 after left, got %d", m.ButtonIndex())
 	}
@@ -193,19 +193,19 @@ func TestSetupModelEnterMovesToNextInConnectionPanel(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Start at auth method; enter moves to endpoint
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus on endpoint after enter, got %v", m.FocusIndex())
 	}
 
 	// Enter on endpoint moves to API key
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldAPIKey {
 		t.Errorf("expected focus on API key after enter, got %v", m.FocusIndex())
 	}
 
 	// Enter on API key moves to buttons
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldButtons {
 		t.Errorf("expected focus on buttons after enter, got %v", m.FocusIndex())
 	}
@@ -215,22 +215,22 @@ func TestSetupModelEnterMovesToNextInConfigPanel(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Switch to config panel
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 
 	// Enter on timezone moves to language
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldLanguage {
 		t.Errorf("expected focus on language after enter, got %v", m.FocusIndex())
 	}
 
 	// Enter on language moves to layout
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldLayout {
 		t.Errorf("expected focus on layout after enter, got %v", m.FocusIndex())
 	}
 
 	// Enter on layout moves to button
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.FocusIndex() != FieldButtons {
 		t.Errorf("expected focus on button after enter, got %v", m.FocusIndex())
 	}
@@ -242,7 +242,7 @@ func TestSetupModelUpdateIgnoredWhileTesting(t *testing.T) {
 
 	// Keys should be ignored while testing
 	initialPanel := m.ActivePanel()
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.ActivePanel() != initialPanel {
 		t.Error("expected panel to stay same while testing")
 	}
@@ -423,7 +423,7 @@ func TestSetupModelTimezoneNavigation(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Switch to config panel
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 
 	// Should be on timezone field
 	if m.FocusIndex() != FieldTimezone {
@@ -434,13 +434,13 @@ func TestSetupModelTimezoneNavigation(t *testing.T) {
 	initialIndex := m.TimezoneIndex()
 
 	// Move right (if there are more timezones)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 	if m.TimezoneIndex() != initialIndex+1 && initialIndex < 100 {
 		t.Errorf("expected timezone index to increase after right")
 	}
 
 	// Move left
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyLeft})
 	if m.TimezoneIndex() != initialIndex {
 		t.Errorf("expected timezone index %d after left, got %d", initialIndex, m.TimezoneIndex())
 	}
@@ -450,8 +450,8 @@ func TestSetupModelLanguageNavigation(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Switch to config panel and navigate to language
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// Should be on language field
 	if m.FocusIndex() != FieldLanguage {
@@ -462,13 +462,13 @@ func TestSetupModelLanguageNavigation(t *testing.T) {
 	initialIndex := m.LanguageIndex()
 
 	// Move right
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 	if m.LanguageIndex() != initialIndex+1 {
 		t.Errorf("expected language index to increase after right")
 	}
 
 	// Move left
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyLeft})
 	if m.LanguageIndex() != initialIndex {
 		t.Errorf("expected language index %d after left, got %d", initialIndex, m.LanguageIndex())
 	}
@@ -478,9 +478,9 @@ func TestSetupModelLayoutNavigation(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Switch to config panel and navigate to layout
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// Should be on layout field
 	if m.FocusIndex() != FieldLayout {
@@ -493,13 +493,13 @@ func TestSetupModelLayoutNavigation(t *testing.T) {
 	}
 
 	// Move right
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 	if m.LayoutIndex() != 1 {
 		t.Errorf("expected layout index 1 after right, got %d", m.LayoutIndex())
 	}
 
 	// Move left
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyLeft})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyLeft})
 	if m.LayoutIndex() != 0 {
 		t.Errorf("expected layout index 0 after left, got %d", m.LayoutIndex())
 	}
@@ -510,16 +510,16 @@ func TestSetupModelEnterOnTestButton(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Navigate to buttons (auth method -> endpoint -> api key -> buttons)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// Should be at buttons with test button focused
 	if m.FocusIndex() != FieldButtons || m.ButtonIndex() != 0 {
 		t.Fatal("expected to be at test button")
 	}
 
-	m, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 
 	if !m.IsTesting() {
 		t.Error("expected testing to be true after pressing enter on test button")
@@ -533,16 +533,16 @@ func TestSetupModelEnterOnSaveButtonWithoutSuccess(t *testing.T) {
 	m := newFullSetupModel()
 
 	// Navigate to save button
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 
 	// Should be at save button
 	if m.ButtonIndex() != 1 {
 		t.Fatal("expected to be at save button")
 	}
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 
 	// Should not save without successful test
 	if cmd != nil {
@@ -557,16 +557,16 @@ func TestSetupModelEnterOnSaveButtonWithSuccess(t *testing.T) {
 	m.HandleValidationResult(APIKeyValidatedMsg{Valid: true})
 
 	// Navigate to save button
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRight})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyRight})
 
 	// Should be at save button
 	if m.ButtonIndex() != 1 {
 		t.Fatal("expected to be at save button")
 	}
 
-	m, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 
 	if cmd == nil {
 		t.Error("expected non-nil command when saving with successful test")
@@ -598,12 +598,12 @@ func TestSetupModelJKNavigation(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Navigate to endpoint field first (initial is auth method)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// In text fields, j/k should be typed as text.
 	initialEndpoint := m.endpoint.Value()
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus to remain on endpoint while typing, got %v", m.FocusIndex())
 	}
@@ -612,21 +612,21 @@ func TestSetupModelJKNavigation(t *testing.T) {
 	}
 
 	// In non-text controls, j/k should navigate.
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown}) // API key
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown}) // Buttons
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown}) // API key
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown}) // Buttons
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.FocusIndex() != FieldEndpoint {
 		t.Errorf("expected focus on endpoint after 'j' from buttons, got %v", m.FocusIndex())
 	}
 
 	// In config panel (non-text controls), j/k should navigate.
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.FocusIndex() != FieldLanguage {
 		t.Errorf("expected focus on language after 'j' in config panel, got %v", m.FocusIndex())
 	}
 
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.FocusIndex() != FieldTimezone {
 		t.Errorf("expected focus on timezone after 'k' in config panel, got %v", m.FocusIndex())
 	}
@@ -637,29 +637,29 @@ func TestSetupModelHLNavigation(t *testing.T) {
 	m.authMethod = AuthMethodAPIKey
 
 	// Navigate to endpoint field first (initial is auth method)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 
 	// In text fields, h/l should be typed as text.
 	initialEndpoint := m.endpoint.Value()
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'h', Text: "h"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	if m.endpoint.Value() != initialEndpoint+"hl" {
 		t.Errorf("expected endpoint value to append 'hl', got %q", m.endpoint.Value())
 	}
 
 	// Switch to config panel for selector fields
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyTab})
+	m, _ = m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 
 	initialTZ := m.TimezoneIndex()
 
 	// 'l' moves right (increases index)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	if m.TimezoneIndex() != initialTZ+1 {
 		t.Errorf("expected timezone index to increase after 'l'")
 	}
 
 	// 'h' moves left (decreases index)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'h', Text: "h"})
 	if m.TimezoneIndex() != initialTZ {
 		t.Errorf("expected timezone index to decrease after 'h'")
 	}

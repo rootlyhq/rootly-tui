@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/list"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/list"
 	"github.com/evertras/bubble-table/table"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
@@ -160,7 +160,7 @@ func (m IncidentsModel) Update(msg tea.Msg) (IncidentsModel, tea.Cmd) {
 	prevCursor := m.table.GetHighlightedRowIndex()
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		// When detail is focused, handle scrolling keys
 		if m.detailFocused {
 			switch msg.String() {
@@ -414,12 +414,11 @@ func (m *IncidentsModel) updateDimensions() {
 
 	// Update or create viewport
 	if !m.detailViewportReady {
-		m.detailViewport = viewport.New(viewportWidth, viewportHeight)
-		m.detailViewport.MouseWheelEnabled = true
+		m.detailViewport = viewport.New(viewport.WithWidth(viewportWidth), viewport.WithHeight(viewportHeight))
 		m.detailViewportReady = true
 	} else {
-		m.detailViewport.Width = viewportWidth
-		m.detailViewport.Height = viewportHeight
+		m.detailViewport.SetWidth(viewportWidth)
+		m.detailViewport.SetHeight(viewportHeight)
 	}
 }
 

@@ -1,11 +1,12 @@
 package views
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 )
@@ -93,31 +94,31 @@ func TestAlertsModelNavigation(t *testing.T) {
 	m.SetDimensions(100, 30)
 
 	// Test move down
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected cursor 1 after 'j', got %d", m.SelectedIndex())
 	}
 
 	// Test move up
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 after 'k', got %d", m.SelectedIndex())
 	}
 
 	// Test move up at top
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 
 	// Test go to bottom
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'G', Text: "G"})
 	if m.SelectedIndex() != len(alerts)-1 {
 		t.Errorf("expected cursor %d at bottom, got %d", len(alerts)-1, m.SelectedIndex())
 	}
 
 	// Test go to top
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'g'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
@@ -164,7 +165,7 @@ func TestAlertsModelCursorBounds(t *testing.T) {
 
 	// Move cursor beyond bounds
 	for i := 0; i < len(alerts)+5; i++ {
-		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	}
 
 	if m.SelectedIndex() >= len(alerts) {
@@ -258,9 +259,9 @@ func TestAlertsModelNextPage(t *testing.T) {
 	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
 	m.SetDimensions(100, 30)
 	// Move cursor to non-zero
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 
 	m.NextPage()
 
@@ -324,7 +325,7 @@ func TestAlertsModelPrevPage(t *testing.T) {
 	m.SetAlerts(api.MockAlerts(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})
 	m.SetDimensions(100, 30)
 	// Move cursor to non-zero
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}}) // Go to bottom
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'G', Text: "G"}) // Go to bottom
 
 	m.PrevPage()
 
@@ -366,7 +367,7 @@ func TestAlertsModelSetAlertsCursorAdjustment(t *testing.T) {
 	m.SetDimensions(100, 30)
 	// Move cursor beyond 2
 	for i := 0; i < 5; i++ {
-		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	}
 
 	// Set only 2 alerts - cursor should be adjusted
@@ -457,13 +458,13 @@ func TestAlertsModelSelectedIndex(t *testing.T) {
 	}
 
 	// Move cursor down
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected index 1 after j, got %d", m.SelectedIndex())
 	}
 
 	// Move cursor down again
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 2 {
 		t.Errorf("expected index 2 after j, got %d", m.SelectedIndex())
 	}
@@ -728,6 +729,12 @@ func TestAlertsModelRenderLabelValue(t *testing.T) {
 	}
 }
 
+var ansiRe = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\][^\x1b]*\x1b\\`)
+
+func stripANSI(s string) string {
+	return ansiRe.ReplaceAllString(s, "")
+}
+
 func TestAlertsModelRenderLabelValueTruncation(t *testing.T) {
 	m := NewAlertsModel()
 	// Set a small width to trigger truncation
@@ -736,8 +743,8 @@ func TestAlertsModelRenderLabelValueTruncation(t *testing.T) {
 	longURL := "https://example.com/very/long/path/that/should/definitely/be/truncated/for/display/purposes"
 	result := m.renderLabelValue(longURL)
 
-	// Should contain ellipsis for truncated display
-	if !strings.Contains(result, "...") {
+	// Should contain ellipsis for truncated display (strip ANSI codes for comparison)
+	if !strings.Contains(stripANSI(result), "...") {
 		t.Error("expected truncated URL to contain '...'")
 	}
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/rootlyhq/rootly-tui/internal/api"
 )
@@ -94,31 +94,31 @@ func TestIncidentsModelNavigation(t *testing.T) {
 	m.SetDimensions(100, 30)
 
 	// Test move down
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected cursor 1 after 'j', got %d", m.SelectedIndex())
 	}
 
 	// Test move up
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 after 'k', got %d", m.SelectedIndex())
 	}
 
 	// Test move up at top (should stay at 0)
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
 
 	// Test go to bottom
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'G', Text: "G"})
 	if m.SelectedIndex() != len(incidents)-1 {
 		t.Errorf("expected cursor %d at bottom, got %d", len(incidents)-1, m.SelectedIndex())
 	}
 
 	// Test go to top
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'g'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
 	if m.SelectedIndex() != 0 {
 		t.Errorf("expected cursor 0 at top, got %d", m.SelectedIndex())
 	}
@@ -165,7 +165,7 @@ func TestIncidentsModelCursorBounds(t *testing.T) {
 
 	// Move cursor to last item
 	for i := 0; i < len(incidents)+5; i++ {
-		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	}
 
 	// Cursor should not exceed last index
@@ -260,9 +260,9 @@ func TestIncidentsModelNextPage(t *testing.T) {
 	m.SetIncidents(api.MockIncidents(), api.PaginationInfo{CurrentPage: 1, HasNext: true})
 	m.SetDimensions(100, 30)
 	// Move cursor to non-zero
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 
 	m.NextPage()
 
@@ -326,7 +326,7 @@ func TestIncidentsModelPrevPage(t *testing.T) {
 	m.SetIncidents(api.MockIncidents(), api.PaginationInfo{CurrentPage: 3, HasPrev: true})
 	m.SetDimensions(100, 30)
 	// Move cursor to non-zero
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'G'}}) // Go to bottom
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'G', Text: "G"}) // Go to bottom
 
 	m.PrevPage()
 
@@ -368,7 +368,7 @@ func TestIncidentsModelSetIncidentsCursorAdjustment(t *testing.T) {
 	m.SetDimensions(100, 30)
 	// Move cursor beyond 2
 	for i := 0; i < 5; i++ {
-		m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	}
 
 	// Set only 2 incidents - cursor should be adjusted
@@ -497,13 +497,13 @@ func TestIncidentsModelSelectedIndex(t *testing.T) {
 	}
 
 	// Move cursor down
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected index 1 after j, got %d", m.SelectedIndex())
 	}
 
 	// Move cursor down again
-	m, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	if m.SelectedIndex() != 2 {
 		t.Errorf("expected index 2 after j, got %d", m.SelectedIndex())
 	}
@@ -803,8 +803,8 @@ func TestIncidentsModelRenderLabelValueTruncation(t *testing.T) {
 	longURL := "https://example.com/very/long/path/that/should/definitely/be/truncated/for/display/purposes"
 	result := m.renderLabelValue(longURL)
 
-	// Should contain ellipsis for truncated display
-	if !strings.Contains(result, "...") {
+	// Should contain ellipsis for truncated display (strip ANSI codes for comparison)
+	if !strings.Contains(stripANSI(result), "...") {
 		t.Error("expected truncated URL to contain '...'")
 	}
 
