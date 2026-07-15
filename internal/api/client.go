@@ -481,14 +481,14 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 		baseURL = "https://" + baseURL
 	}
 
-	url := fmt.Sprintf("%s/v1/incidents?page[number]=%d&page[size]=%d", baseURL, page, pageSize)
+	reqURL := fmt.Sprintf("%s/v1/incidents?page[number]=%d&page[size]=%d", baseURL, page, pageSize)
 	if sort != "" {
-		url += fmt.Sprintf("&sort=%s", sort)
+		reqURL += fmt.Sprintf("&sort=%s", sort)
 	}
 
 	debug.Logger.Debug("Fetching incidents", "page", page, "pageSize", pageSize, "sort", sort, "cache", "miss", "key", cacheKey)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -519,7 +519,7 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 		return nil, fmt.Errorf("access denied: API key lacks 'read incidents' permission")
 	}
 	if httpResp.StatusCode != 200 {
-		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
+		debug.Logger.Error("API error", "status", httpResp.StatusCode, "bodyLength", len(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
 	}
 
@@ -541,7 +541,7 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 	if err := json.Unmarshal(body, &result); err != nil {
 		debug.Logger.Error("Failed to parse incidents response",
 			"error", err,
-			"body", debug.PrettyJSON(body),
+			"bodyLength", len(body),
 		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
@@ -634,12 +634,12 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
 	}
 	if resp.StatusCode() != 200 {
-		debug.Logger.Error("API error", "status", resp.StatusCode(), "body", debug.PrettyJSON(resp.Body))
+		debug.Logger.Error("API error", "status", resp.StatusCode(), "bodyLength", len(resp.Body))
 		return nil, fmt.Errorf("API returned status %d", resp.StatusCode())
 	}
 
 	if resp.ApplicationVndAPIJSON200 == nil {
-		debug.Logger.Error("Failed to parse alerts response", "body", debug.PrettyJSON(resp.Body))
+		debug.Logger.Error("Failed to parse alerts response", "bodyLength", len(resp.Body))
 		return nil, fmt.Errorf("failed to parse response")
 	}
 
@@ -795,8 +795,8 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
 	}
-	url := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups,user", baseURL, url.PathEscape(id))
-	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	reqURL := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups,user", baseURL, url.PathEscape(id))
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -827,7 +827,7 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 		return nil, fmt.Errorf("access denied: API key lacks 'read incidents' permission")
 	}
 	if httpResp.StatusCode != 200 {
-		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
+		debug.Logger.Error("API error", "status", httpResp.StatusCode, "bodyLength", len(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
 	}
 
@@ -993,7 +993,7 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	if err := json.Unmarshal(body, &result); err != nil {
 		debug.Logger.Error("Failed to parse incident detail response",
 			"error", err,
-			"body", debug.PrettyJSON(body),
+			"bodyLength", len(body),
 		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
@@ -1240,8 +1240,8 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
 	}
-	url := fmt.Sprintf("%s/v1/alerts/%s?include=services,environments,groups,responders,alert_urgency", baseURL, url.PathEscape(id))
-	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	reqURL := fmt.Sprintf("%s/v1/alerts/%s?include=services,environments,groups,responders,alert_urgency", baseURL, url.PathEscape(id))
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -1272,7 +1272,7 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 		return nil, fmt.Errorf("access denied: API key lacks 'read alerts' permission")
 	}
 	if httpResp.StatusCode != 200 {
-		debug.Logger.Error("API error", "status", httpResp.StatusCode, "body", debug.PrettyJSON(body))
+		debug.Logger.Error("API error", "status", httpResp.StatusCode, "bodyLength", len(body))
 		return nil, fmt.Errorf("API returned status %d", httpResp.StatusCode)
 	}
 
@@ -1350,7 +1350,7 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	if err := json.Unmarshal(body, &result); err != nil {
 		debug.Logger.Error("Failed to parse alert detail response",
 			"error", err,
-			"body", debug.PrettyJSON(body),
+			"bodyLength", len(body),
 		)
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}

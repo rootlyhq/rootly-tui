@@ -2,10 +2,16 @@ package debug
 
 import (
 	"os"
+	"runtime"
+	"strings"
 	"testing"
 )
 
 func TestSetLogFilePermissions(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix file permissions not supported on Windows")
+	}
+
 	tmpDir := t.TempDir()
 	logPath := tmpDir + "/test-debug.log"
 
@@ -33,6 +39,39 @@ func TestSetLogFilePermissions(t *testing.T) {
 	fileOutput = nil
 }
 
+func TestSetLogFileChmodExisting(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix file permissions not supported on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	logPath := tmpDir + "/test-debug-existing.log"
+
+	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+	f.Close()
+
+	err = SetLogFile(logPath)
+	if err != nil {
+		t.Fatalf("SetLogFile failed: %v", err)
+	}
+
+	info, err := os.Stat(logPath)
+	if err != nil {
+		t.Fatalf("failed to stat log file: %v", err)
+	}
+
+	perm := info.Mode().Perm()
+	if perm != 0600 {
+		t.Errorf("existing log file permissions = %o after SetLogFile, want 0600", perm)
+	}
+
+	Disable()
+	fileOutput = nil
+}
+
 func TestResponseBodyNotLoggedWhenDisabled(t *testing.T) {
 	ClearLogs()
 	Disable()
@@ -45,7 +84,7 @@ func TestResponseBodyNotLoggedWhenDisabled(t *testing.T) {
 
 	logs := GetLogs()
 	for _, entry := range logs {
-		if contains(entry, "user@example.com") || contains(entry, "+1234567890") {
+		if strings.Contains(entry, "user@example.com") || strings.Contains(entry, "+1234567890") {
 			t.Errorf("sensitive data found in logs when debug disabled: %s", entry)
 		}
 	}
@@ -65,7 +104,7 @@ func TestResponseBodyLoggedWhenEnabled(t *testing.T) {
 	logs := GetLogs()
 	found := false
 	for _, entry := range logs {
-		if contains(entry, "status") {
+		if strings.Contains(entry, "status") {
 			found = true
 			break
 		}
@@ -73,17 +112,4 @@ func TestResponseBodyLoggedWhenEnabled(t *testing.T) {
 	if !found {
 		t.Error("expected response body in logs when debug is enabled")
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStr(s, substr))
-}
-
-func containsStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

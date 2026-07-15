@@ -60,14 +60,16 @@ func TestBearerTokenNotLoggedAsPrefix(t *testing.T) {
 	defer resp.Body.Close()
 
 	logs := debug.GetLogs()
-	tokenPrefix := accessToken[:23]
 
 	for _, entry := range logs {
-		if strings.Contains(entry, tokenPrefix) {
-			t.Errorf("log entry contains token prefix (%s): %s", tokenPrefix, entry)
-		}
 		if strings.Contains(entry, accessToken) {
 			t.Errorf("log entry contains full token: %s", entry)
+		}
+		if strings.Contains(entry, accessToken[:10]) {
+			t.Errorf("log entry contains token prefix: %s", entry)
+		}
+		if strings.Contains(entry, accessToken[len(accessToken)-4:]) {
+			t.Errorf("log entry contains token suffix: %s", entry)
 		}
 	}
 }

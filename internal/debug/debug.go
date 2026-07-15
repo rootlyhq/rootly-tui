@@ -120,6 +120,7 @@ func SetLogFile(path string) error {
 	if err != nil {
 		return err
 	}
+	_ = f.Chmod(0600)
 	fileOutput = f
 	LogFilePath = path
 	Logger.SetOutput(io.MultiWriter(LogBuffer, f))
