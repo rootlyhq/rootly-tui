@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -509,7 +510,9 @@ func (c *Client) ListIncidents(ctx context.Context, page int, sort string) (*Inc
 		"status", httpResp.StatusCode,
 		"bodyLength", len(body),
 	)
-	debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(body))
+	if debug.Enabled {
+		debug.Logger.Debug("Incidents response body", "json", debug.PrettyJSON(body))
+	}
 
 	if httpResp.StatusCode == 403 {
 		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
@@ -622,7 +625,9 @@ func (c *Client) ListAlerts(ctx context.Context, page int) (*AlertsResult, error
 		"status", resp.StatusCode(),
 		"bodyLength", len(resp.Body),
 	)
-	debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(resp.Body))
+	if debug.Enabled {
+		debug.Logger.Debug("Alerts response body", "json", debug.PrettyJSON(resp.Body))
+	}
 
 	if resp.StatusCode() == 403 {
 		debug.Logger.Error("API forbidden", "status", resp.StatusCode())
@@ -790,7 +795,7 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
 	}
-	url := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups,user", baseURL, id)
+	url := fmt.Sprintf("%s/v1/incidents/%s?include=roles,causes,incident_types,functionalities,services,environments,groups,user", baseURL, url.PathEscape(id))
 	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -813,7 +818,9 @@ func (c *Client) GetIncident(ctx context.Context, id string, updatedAt time.Time
 		"status", httpResp.StatusCode,
 		"bodyLength", len(body),
 	)
-	debug.Logger.Debug("Incident detail response body", "json", debug.PrettyJSON(body))
+	if debug.Enabled {
+		debug.Logger.Debug("Incident detail response body", "json", debug.PrettyJSON(body))
+	}
 
 	if httpResp.StatusCode == 403 {
 		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)
@@ -1233,7 +1240,7 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		baseURL = "https://" + baseURL
 	}
-	url := fmt.Sprintf("%s/v1/alerts/%s?include=services,environments,groups,responders,alert_urgency", baseURL, id)
+	url := fmt.Sprintf("%s/v1/alerts/%s?include=services,environments,groups,responders,alert_urgency", baseURL, url.PathEscape(id))
 	req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -1256,7 +1263,9 @@ func (c *Client) GetAlert(ctx context.Context, id string, updatedAt time.Time) (
 		"status", httpResp.StatusCode,
 		"bodyLength", len(body),
 	)
-	debug.Logger.Debug("Alert detail response body", "json", debug.PrettyJSON(body))
+	if debug.Enabled {
+		debug.Logger.Debug("Alert detail response body", "json", debug.PrettyJSON(body))
+	}
 
 	if httpResp.StatusCode == 403 {
 		debug.Logger.Error("API forbidden", "status", httpResp.StatusCode)

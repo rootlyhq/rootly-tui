@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"html"
 	"net"
 	"net/http"
 	"os/exec"
@@ -694,7 +695,7 @@ func (m SetupModel) doOAuthLogin() tea.Cmd {
 			if errParam := r.URL.Query().Get("error"); errParam != "" {
 				desc := r.URL.Query().Get("error_description")
 				w.Header().Set("Content-Type", "text/html")
-				_, _ = fmt.Fprintf(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>%s: %s</p></div></body></html>`, errParam, desc)
+				_, _ = fmt.Fprintf(w, `<!DOCTYPE html><html><body style="font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0;"><div style="text-align:center;"><h1 style="color:#EF4444;">Login Failed</h1><p>%s: %s</p></div></body></html>`, html.EscapeString(errParam), html.EscapeString(desc))
 				errCh <- fmt.Errorf("%s: %s", errParam, desc)
 				return
 			}

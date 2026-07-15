@@ -116,7 +116,7 @@ func Disable() {
 
 // SetLogFile writes logs to a file in addition to buffer
 func SetLogFile(path string) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
