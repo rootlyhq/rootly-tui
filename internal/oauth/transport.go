@@ -78,7 +78,7 @@ func (t *retryOn401Transport) RoundTrip(req *http.Request) (*http.Response, erro
 	// Set auth header and execute
 	req2 := req.Clone(req.Context())
 	tok.SetAuthHeader(req2)
-	debug.Logger.Debug("OAuth request", "auth_header", req2.Header.Get("Authorization")[:min(30, len(req2.Header.Get("Authorization")))]+"...")
+	debug.Logger.Debug("OAuth request", "auth_header_len", len(req2.Header.Get("Authorization")))
 	resp, err := t.base.RoundTrip(req2)
 	if err != nil {
 		debug.Logger.Error("OAuth request failed", "error", err)
