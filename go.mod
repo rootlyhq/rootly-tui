@@ -10,7 +10,7 @@ require (
 	charm.land/log/v2 v2.0.0
 	github.com/evertras/bubble-table v0.22.3
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
-	github.com/rootlyhq/rootly-go v0.11.0
+	github.com/rootlyhq/rootly-go v0.12.0
 	go.etcd.io/bbolt v1.5.0
 	golang.design/x/clipboard v0.8.0
 	golang.org/x/oauth2 v0.36.0
@@ -44,8 +44,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/oapi-codegen/nullable v1.1.0 // indirect
-	github.com/oapi-codegen/runtime v1.4.1 // indirect
+	github.com/oapi-codegen/nullable v1.2.0 // indirect
+	github.com/oapi-codegen/runtime v1.4.2 // indirect
 	github.com/oasdiff/yaml v0.1.0 // indirect
 	github.com/oasdiff/yaml3 v0.0.13 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
