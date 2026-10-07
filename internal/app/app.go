@@ -345,7 +345,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					debug.Logger.Error("Failed to initialize clipboard", "error", err)
 					m.statusMsg = i18n.T("logs.clipboard_unavailable")
 				} else {
-					clipboard.Write(clipboard.FmtText, []byte(text))
+					_, _ = clipboard.Write(context.Background(), clipboard.FmtText, []byte(text))
 					m.statusMsg = i18n.T("logs.copied")
 				}
 			}

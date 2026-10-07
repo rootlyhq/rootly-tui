@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -247,7 +248,7 @@ func (m *LogsModel) copyToClipboard() {
 		return
 	}
 
-	clipboard.Write(clipboard.FmtText, []byte(text))
+	_, _ = clipboard.Write(context.Background(), clipboard.FmtText, []byte(text))
 	m.statusMsg = i18n.T("logs.copied")
 }
 
