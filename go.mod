@@ -10,7 +10,7 @@ require (
 	charm.land/log/v2 v2.0.1
 	github.com/evertras/bubble-table v0.23.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
-	github.com/rootlyhq/rootly-go v0.13.0
+	github.com/rootlyhq/rootly-go v0.14.0
 	go.etcd.io/bbolt v1.5.0
 	golang.design/x/clipboard v0.11.0
 	golang.org/x/oauth2 v0.37.0
