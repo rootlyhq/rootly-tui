@@ -91,5 +91,5 @@ release:
     name: rootly-tui
   draft: false
   prerelease: auto
-  mode: replace
+  mode: keep-existing
   name_template: "v{{ .Version }}"
