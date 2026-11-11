@@ -197,7 +197,7 @@ Log viewer controls:
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.26.11+
 - Make
 
 ### Build

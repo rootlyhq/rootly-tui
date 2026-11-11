@@ -1,6 +1,6 @@
 module github.com/rootlyhq/rootly-tui
 
-go 1.26.10
+go 1.26.11
 
 require (
 	charm.land/bubbles/v2 v2.2.1
@@ -10,10 +10,10 @@ require (
 	charm.land/log/v2 v2.0.1
 	github.com/evertras/bubble-table v0.23.0
 	github.com/nicksnyder/go-i18n/v2 v2.7.0
-	github.com/rootlyhq/rootly-go v0.15.0
+	github.com/rootlyhq/rootly-go v0.16.0
 	go.etcd.io/bbolt v1.5.0
 	golang.design/x/clipboard v0.11.0
-	golang.org/x/oauth2 v0.37.0
+	golang.org/x/oauth2 v0.38.0
 	golang.org/x/text v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
 )
