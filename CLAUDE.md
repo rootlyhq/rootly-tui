@@ -4,7 +4,7 @@ A terminal user interface for viewing Rootly incidents and alerts.
 
 ## Tech Stack
 
-- **Go 1.24+**
+- **Go 1.26.11+**
 - **Bubble Tea** - TUI framework (Elm Architecture)
 - **Bubbles** - UI components (text input, spinner, list)
 - **Lipgloss** - Terminal styling
